@@ -11,10 +11,21 @@ cmake_policy(SET CMP0072 NEW)
 # Find dependencies.                                                                                     #
 # ########################################################################################################
 find_package(ament_cmake REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sfg_imgui_vendor REQUIRED)
 find_package(sfg_utils REQUIRED)
+
+include(FetchContent)
+
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY "https://github.com/g-truc/glm.git"
+  GIT_TAG 1.0.3
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(glm)
 
 # ########################################################################################################
 # Add nodes and libraries.                                                                               #
@@ -29,6 +40,10 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   rclcpp_components
   sfg_imgui_vendor
   sfg_utils
+  SYSTEM_DEPENDENCIES
+  PRIVATE
+  glm::glm
+  magic_enum::magic_enum
 )
 
 if(BUILD_TESTING)

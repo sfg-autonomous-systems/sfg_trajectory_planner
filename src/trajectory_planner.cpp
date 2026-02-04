@@ -8,7 +8,7 @@ namespace sfg_trajectory_planner
     {
         m_main_window = std::make_unique<sfg_imgui_vendor::MainWindow>(
             get_name(),
-            std::make_unique<sfg_trajectory_planner::TrajectoryPlannerGui>(),
+            std::make_unique<sfg_trajectory_planner::TrajectoryPlannerGui>(this),
             ImVec2(800, 600),
             ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
     }
