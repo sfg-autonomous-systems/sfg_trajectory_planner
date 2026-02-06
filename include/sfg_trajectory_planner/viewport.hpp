@@ -57,6 +57,8 @@ namespace sfg_trajectory_planner
             glm::vec4 m_viewport;
         };
 
+        void process_input();
+        void render_settings();
         void render_line(glm::vec3 start, glm::vec3 end, ImU32 color, float thickness = 1.0f);
         void update_camera_matrices();
 

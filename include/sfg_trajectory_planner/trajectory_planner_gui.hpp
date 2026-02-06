@@ -6,7 +6,8 @@
 #include <ImGuizmo.h>
 #include <rclcpp/rclcpp.hpp>
 
-#include "sfg_trajectory_planner/trajectory.hpp"
+#include "sfg_trajectory_planner/trajectories_inspector.hpp"
+#include "sfg_trajectory_planner/transform_inspector.hpp"
 #include "sfg_trajectory_planner/viewport.hpp"
 
 namespace sfg_trajectory_planner
@@ -24,11 +25,11 @@ namespace sfg_trajectory_planner
         void render_internal() override;
 
     private:
-        void render_viewport();
-        void render_trajectories_inspector();
-        void render_transform_inspector();
+        void render_title(std::string_view title, const ImVec2 &position);
 
         Viewport m_viewport;
+        TrajectoriesInspector m_trajectories_inspector;
+        TransformInspector m_transform_inspector;
         std::vector<Trajectory> m_trajectories;
     };
 }

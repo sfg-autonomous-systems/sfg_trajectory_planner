@@ -33,9 +33,11 @@ FetchContent_MakeAvailable(glm)
 sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanner"
   SOURCES
   "src/gfx_math.cpp"
+  "src/trajectories_inspector.cpp"
   "src/trajectory_planner_component.cpp"
   "src/trajectory_planner_gui.cpp"
   "src/trajectory_planner.cpp"
+  "src/transform_inspector.cpp"
   "src/viewport.cpp"
   AMENT_DEPENDENCIES
   rclcpp
