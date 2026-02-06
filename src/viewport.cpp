@@ -8,7 +8,7 @@
 
 namespace sfg_trajectory_planner
 {
-    Viewport::Viewport(rclcpp::Node *node) : GuiElement()
+    Viewport::Viewport(rclcpp::Node *node, std::vector<Trajectory> &trajectories) : GuiElement(), m_trajectories(trajectories)
     {
         // Declare and retrieve ROS parameters.
         m_config.m_grid_origin = glm::vec3(
@@ -43,9 +43,9 @@ namespace sfg_trajectory_planner
         io.MouseDelta = ImVec2(0, 0);
         ImGuizmo::ViewManipulate(
             glm::value_ptr(m_camera.m_view_matrix),
-            Config::c_view_gizmo_distance,
-            ImVec2(m_camera.m_viewport.z - Config::c_view_gizmo_size, m_camera.m_viewport.y),
-            ImVec2(Config::c_view_gizmo_size, Config::c_view_gizmo_size),
+            Config::s_view_gizmo_distance,
+            ImVec2(m_camera.m_viewport.z - Config::s_view_gizmo_size, m_camera.m_viewport.y),
+            ImVec2(Config::s_view_gizmo_size, Config::s_view_gizmo_size),
             0);
         io.MouseDelta = old_mouse_delta;
 
@@ -79,19 +79,19 @@ namespace sfg_trajectory_planner
         // Implement orbiting. If the right mouse button is held, adjust the camera orientation based on mouse movement.
         if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
         {
-            m_camera.m_orientation.y = glm::clamp(m_camera.m_orientation.y - io.MouseDelta.y * m_camera.m_orbit_speed, m_camera.c_min_pitch, m_camera.c_max_pitch);
+            m_camera.m_orientation.y = glm::clamp(m_camera.m_orientation.y - io.MouseDelta.y * m_camera.m_orbit_speed, m_camera.s_min_pitch, m_camera.s_max_pitch);
             m_camera.m_orientation.z += -io.MouseDelta.x * m_camera.m_orbit_speed;
         }
 
         // Implement zooming. Use the mouse wheel to adjust the camera distance.
-        m_camera.m_zoom_level = glm::clamp(m_camera.m_zoom_level - ImGui::GetIO().MouseWheel * m_camera.m_zoom_speed, m_camera.c_near_plane, m_camera.c_far_plane);
+        m_camera.m_zoom_level = glm::clamp(m_camera.m_zoom_level - ImGui::GetIO().MouseWheel * m_camera.m_zoom_speed, m_camera.s_near_plane, m_camera.s_far_plane);
 
         // Implement panning. If the middle mouse button is clicked, record the starting point for panning.
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
         {
             // The starting point for panning is the intersection between the mouse ray and the plane defined by the camera's focus point and inverse of the camera's forward vector.
             auto ray = gfx_math::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
-            auto distance = gfx_math::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_math::forward);
+            auto distance = gfx_math::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_math::s_forward);
             // Because the plane is oriented towards the camera, we can always assume that we hit the plane.
             auto intersection = ray.origin + distance * ray.direction;
             m_camera.m_pan_start = intersection;
@@ -100,7 +100,7 @@ namespace sfg_trajectory_planner
         {
             // If the middle mouse button is held, calculate the pan offset and adjust the camera focus point.
             auto ray = gfx_math::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
-            auto distance = gfx_math::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_math::forward);
+            auto distance = gfx_math::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_math::s_forward);
             auto intersection = ray.origin + distance * ray.direction;
             m_camera.m_focus_point -= intersection - m_camera.m_pan_start;
         }
@@ -154,13 +154,13 @@ namespace sfg_trajectory_planner
                 {
                 // We switched from perspective to orthographic mode.
                 case Camera::Projection::Orthographic:
-                    m_camera.m_zoom_level = glm::tan(Camera::c_vertical_fov / 2.0f) * m_camera.m_zoom_level;
+                    m_camera.m_zoom_level = glm::tan(Camera::s_vertical_fov / 2.0f) * m_camera.m_zoom_level;
                     ImGuizmo::SetOrthographic(true);
                     break;
 
                 // We switched from orthographic to perspective mode.
                 case Camera::Projection::Perspective:
-                    m_camera.m_zoom_level = m_camera.m_zoom_level / glm::tan(Camera::c_vertical_fov / 2.0f);
+                    m_camera.m_zoom_level = m_camera.m_zoom_level / glm::tan(Camera::s_vertical_fov / 2.0f);
                     ImGuizmo::SetOrthographic(false);
                     break;
                 default:
@@ -208,11 +208,11 @@ namespace sfg_trajectory_planner
                 aspect_ratio * m_camera.m_zoom_level,
                 -m_camera.m_zoom_level,
                 m_camera.m_zoom_level,
-                m_camera.c_near_plane,
-                m_camera.c_far_plane);
+                m_camera.s_near_plane,
+                m_camera.s_far_plane);
             break;
         case Camera::Projection::Perspective:
-            m_camera.m_projection_matrix = glm::perspective(m_camera.c_vertical_fov, aspect_ratio, m_camera.c_near_plane, m_camera.c_far_plane);
+            m_camera.m_projection_matrix = glm::perspective(m_camera.s_vertical_fov, aspect_ratio, m_camera.s_near_plane, m_camera.s_far_plane);
             break;
         default:
             break;
@@ -221,7 +221,7 @@ namespace sfg_trajectory_planner
         if (ImGuizmo::IsUsingViewManipulate())
         {
             glm::mat4 view_inverse = glm::inverse(m_camera.m_view_matrix);
-            glm::vec3 camera_forward = glm::normalize(view_inverse * gfx_math::forward);
+            glm::vec3 camera_forward = glm::normalize(view_inverse * gfx_math::s_forward);
             m_camera.m_orientation.y = -glm::asin(glm::clamp(camera_forward.y, -1.0f, 1.0f));
 
             const auto epsilon = 0.001f;
@@ -232,11 +232,11 @@ namespace sfg_trajectory_planner
             }
         }
 
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.z, gfx_math::up.xyz()) * glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.y, gfx_math::right.xyz());
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.z, gfx_math::s_up.xyz()) * glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.y, gfx_math::s_right.xyz());
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_camera.m_focus_point);
         // If we are in perspective mode, we need to translate the camera back by the zoom level to maintain the correct distance from the focus point.
         // Otherwise, in orthographic mode, we translate the camera back by half the far plane distance to ensure the entire scene is visible.
-        glm::mat4 center_offset = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, m_camera.m_projection == Camera::Projection::Perspective ? m_camera.m_zoom_level : Camera::c_far_plane / 2.0f));
+        glm::mat4 center_offset = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, m_camera.m_projection == Camera::Projection::Perspective ? m_camera.m_zoom_level : Camera::s_far_plane / 2.0f));
         m_camera.m_view_matrix = glm::inverse(translation * rotation * center_offset);
     }
 }

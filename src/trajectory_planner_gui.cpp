@@ -4,7 +4,10 @@
 
 namespace sfg_trajectory_planner
 {
-    TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node) : GuiElement(), m_viewport(node)
+    TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
+        : GuiElement(),
+          m_viewport(node, m_trajectories),
+          m_trajectories_inspector(m_trajectories)
     {
     }
 

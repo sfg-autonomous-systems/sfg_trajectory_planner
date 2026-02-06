@@ -10,24 +10,26 @@ namespace sfg_trajectory_planner
 
     void TransformInspector::render_internal()
     {
-        if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+        if (!ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::Text("Position:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::DragFloat3("##position", glm::value_ptr(m_translation));
-
-            ImGui::Text("Rotation:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::DragFloat3("##rotation", glm::value_ptr(m_rotation));
-
-            ImGui::Text("Scale:   ");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::DragFloat3("##scale", glm::value_ptr(m_scale));
-            ImGui::Spacing();
+            return;
         }
+
+        ImGui::Text("Position:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::DragFloat3("##position", glm::value_ptr(m_translation));
+
+        ImGui::Text("Rotation:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::DragFloat3("##rotation", glm::value_ptr(m_rotation));
+
+        ImGui::Text("Scale:   ");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::DragFloat3("##scale", glm::value_ptr(m_scale));
+        ImGui::Spacing();
     }
 
     void TransformInspector::set_translation(const glm::vec3 &translation)
@@ -64,9 +66,9 @@ namespace sfg_trajectory_planner
     {
         glm::mat4 translation_matrix = glm::translate(glm::mat4(1.0f), m_translation);
         glm::mat4 rotation_matrix = glm::mat4(1.0f);
-        rotation_matrix = glm::rotate(rotation_matrix, glm::radians(m_rotation.y), gfx_math::up.xyz());
-        rotation_matrix = glm::rotate(rotation_matrix, glm::radians(m_rotation.x), gfx_math::right.xyz());
-        rotation_matrix = glm::rotate(rotation_matrix, glm::radians(m_rotation.z), gfx_math::forward.xyz());
+        rotation_matrix = glm::rotate(rotation_matrix, glm::radians(m_rotation.y), gfx_math::s_up.xyz());
+        rotation_matrix = glm::rotate(rotation_matrix, glm::radians(m_rotation.x), gfx_math::s_right.xyz());
+        rotation_matrix = glm::rotate(rotation_matrix, glm::radians(m_rotation.z), gfx_math::s_forward.xyz());
         glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), m_scale);
         return translation_matrix * rotation_matrix * scale_matrix;
     }

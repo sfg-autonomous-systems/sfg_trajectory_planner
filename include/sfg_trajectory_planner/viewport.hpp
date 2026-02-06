@@ -6,21 +6,22 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "sfg_imgui_vendor/gui_element.hpp"
+#include "sfg_trajectory_planner/trajectory.hpp"
 
 namespace sfg_trajectory_planner
 {
     class Viewport : public sfg_imgui_vendor::GuiElement
     {
     public:
-        Viewport(rclcpp::Node *node);
+        Viewport(rclcpp::Node *node, std::vector<Trajectory> &trajectories);
 
         void render_internal() override;
 
     private:
         struct Config
         {
-            static constexpr float c_view_gizmo_size = 128.0f;
-            static constexpr float c_view_gizmo_distance = 10.0f;
+            static constexpr float s_view_gizmo_size = 128.0f;
+            static constexpr float s_view_gizmo_distance = 10.0f;
 
             // Ros parameters
             glm::vec3 m_grid_origin = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -36,11 +37,11 @@ namespace sfg_trajectory_planner
                 Orthographic
             };
 
-            static constexpr float c_near_plane = 0.1f;
-            static constexpr float c_far_plane = 1000.0f;
-            static constexpr float c_vertical_fov = glm::radians(45.0f);
-            static constexpr float c_min_pitch = glm::radians(-90.0f);
-            static constexpr float c_max_pitch = glm::radians(90.0f);
+            static constexpr float s_near_plane = 0.1f;
+            static constexpr float s_far_plane = 1000.0f;
+            static constexpr float s_vertical_fov = glm::radians(45.0f);
+            static constexpr float s_min_pitch = glm::radians(-90.0f);
+            static constexpr float s_max_pitch = glm::radians(90.0f);
 
             // Ros parameters
             float m_orbit_speed = 0.005f;
@@ -67,5 +68,6 @@ namespace sfg_trajectory_planner
         glm::mat4 m_grid_matrix;
         ImGuizmo::MODE m_gizmo_mode = ImGuizmo::LOCAL;
         ImGuizmo::OPERATION m_gizmo_operation = ImGuizmo::TRANSLATE;
+        std::vector<Trajectory> &m_trajectories;
     };
 }
