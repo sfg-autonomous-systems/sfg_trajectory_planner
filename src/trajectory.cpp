@@ -1,6 +1,7 @@
 #include "sfg_trajectory_planner/trajectory.hpp"
 
 #include <imgui/imgui.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_trajectory_planner/core/scene.hpp"
 
@@ -36,6 +37,18 @@ namespace sfg_trajectory_planner
         }
 
         ImGui::AlignTextToFramePadding();
+        ImGui::Text("Topic Name:         ");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::InputText("##topic_name", &m_topic_name);
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Frame ID:           ");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::InputText("##frame_id", &m_frame_id);
+
+        ImGui::AlignTextToFramePadding();
         ImGui::Text("Time from start [s]:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
@@ -50,6 +63,11 @@ namespace sfg_trajectory_planner
         if (m_times_from_last.size() != child_count)
         {
             m_times_from_last.resize(child_count);
+        }
+
+        if (child_count == 0)
+        {
+            return;
         }
 
         ImGui::BeginTable("waypoints_table", 2, s_waypoints_table_flags);

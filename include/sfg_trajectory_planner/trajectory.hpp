@@ -14,6 +14,8 @@ namespace sfg_trajectory_planner
         void render_inspector_internal() override;
 
     private:
+        std::string m_topic_name;
+        std::string m_frame_id;
         float m_time_from_start;
         std::vector<float> m_times_from_last;
     };
