@@ -6,14 +6,15 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "sfg_imgui_vendor/gui_element.hpp"
-#include "sfg_trajectory_planner/scene.hpp"
+#include "sfg_trajectory_planner/core/scene.hpp"
+#include "sfg_trajectory_planner/editor/selection_context.hpp"
 
-namespace sfg_trajectory_planner
+namespace sfg_trajectory_planner::editor
 {
     class Viewport : public sfg_imgui_vendor::GuiElement
     {
     public:
-        Viewport(rclcpp::Node *node, Scene &scene);
+        Viewport(rclcpp::Node *node, core::Scene &scene, SelectionContext &selection_context);
 
         void render_internal() override;
 
@@ -67,6 +68,7 @@ namespace sfg_trajectory_planner
         glm::mat4 m_grid_matrix;
         ImGuizmo::MODE m_gizmo_mode = ImGuizmo::LOCAL;
         ImGuizmo::OPERATION m_gizmo_operation = ImGuizmo::TRANSLATE;
-        Scene &m_scene;
+        core::Scene &m_scene;
+        SelectionContext &m_selection_context;
     };
 }

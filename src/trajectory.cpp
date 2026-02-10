@@ -1,10 +1,12 @@
 #include "sfg_trajectory_planner/trajectory.hpp"
 
-#include "sfg_trajectory_planner/gfx_utils.hpp"
+#include "sfg_trajectory_planner/core/gfx/utils.hpp"
+
+#define STRINGIFY(x) #x
 
 namespace sfg_trajectory_planner
 {
-    Trajectory::Trajectory(SceneObjectKey key, Scene &scene) : SceneObject(key, scene)
+    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene) : SceneObject(key, scene, STRINGIFY(sfg_trajectory_planner::Trajectory))
     {
     }
 
@@ -12,7 +14,7 @@ namespace sfg_trajectory_planner
     {
         for (size_t child_index = 1; child_index < m_children.size(); child_index++)
         {
-            gfx_utils::render_line(
+            core::gfx::utils::render_line(
                 view_matrix,
                 projection_matrix,
                 viewport,
@@ -28,3 +30,5 @@ namespace sfg_trajectory_planner
         SceneObject::render_inspector();
     }
 }
+
+#undef STRINGIFY

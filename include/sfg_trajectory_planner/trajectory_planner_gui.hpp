@@ -6,9 +6,10 @@
 #include <imgui/ImGuizmo.h>
 #include <rclcpp/rclcpp.hpp>
 
-#include "sfg_trajectory_planner/inspector.hpp"
-#include "sfg_trajectory_planner/scene_hierarchy.hpp"
-#include "sfg_trajectory_planner/viewport.hpp"
+#include "sfg_trajectory_planner/editor/inspector.hpp"
+#include "sfg_trajectory_planner/editor/scene_hierarchy.hpp"
+#include "sfg_trajectory_planner/editor/selection_context.hpp"
+#include "sfg_trajectory_planner/editor/viewport.hpp"
 
 namespace sfg_trajectory_planner
 {
@@ -27,9 +28,10 @@ namespace sfg_trajectory_planner
     private:
         void render_title(std::string_view title, const ImVec2 &position);
 
-        Scene m_scene;
-        SceneHierarchy m_scene_hierarchy;
-        Viewport m_viewport;
-        Inspector m_inspector;
+        core::Scene m_scene;
+        editor::SelectionContext m_selection_context;
+        editor::SceneHierarchy m_scene_hierarchy;
+        editor::Viewport m_viewport;
+        editor::Inspector m_inspector;
     };
 }

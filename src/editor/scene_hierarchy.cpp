@@ -1,10 +1,8 @@
-#include "sfg_trajectory_planner/scene_hierarchy.hpp"
+#include "sfg_trajectory_planner/editor/scene_hierarchy.hpp"
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
-#include "sfg_trajectory_planner/selection.hpp"
-#include "sfg_trajectory_planner/trajectory.hpp"
 
-namespace sfg_trajectory_planner
+namespace sfg_trajectory_planner::editor
 {
     static constexpr auto s_scene_objects_table_flags = ImGuiTableFlags_BordersV |
                                                         ImGuiTableFlags_BordersOuterH |
@@ -16,10 +14,15 @@ namespace sfg_trajectory_planner
 
     static constexpr auto s_add_button_text = "+";
     static constexpr auto s_remove_button_text = "-";
+    static constexpr auto s_create_object_popup_id = "create_object_popup";
 
-    SceneHierarchy::SceneHierarchy(Scene &scene) : GuiElement(), m_scene(scene), m_reparent_request({nullptr, nullptr})
+    SceneHierarchy::SceneHierarchy(core::Scene &scene, SelectionContext &selection_context) : GuiElement(), m_scene(scene), m_selection_context(selection_context), m_reparent_request({nullptr, nullptr})
     {
-        m_scene.create_object<Trajectory>("Trajectory");
+        add_create_object_action(
+            {"Scene Object", [&]
+             {
+                 m_scene.create_object<core::SceneObject>("Scene Object");
+             }});
     }
 
     void SceneHierarchy::render_internal()
@@ -41,7 +44,19 @@ namespace sfg_trajectory_planner
 
             if (ImGui::Button(s_add_button_text))
             {
-                m_scene.create_object<SceneObject>("New Object");
+                ImGui::OpenPopup(s_create_object_popup_id);
+            }
+
+            if (ImGui::BeginPopup(s_create_object_popup_id))
+            {
+                for (const auto &action : m_create_object_actions)
+                {
+                    if (ImGui::MenuItem(action.m_name.c_str()))
+                    {
+                        action.m_action();
+                    }
+                }
+                ImGui::EndPopup();
             }
 
             for (auto &child : m_scene.get_root()->get_children())
@@ -59,7 +74,12 @@ namespace sfg_trajectory_planner
         }
     }
 
-    void SceneHierarchy::render_object(SceneObject &object)
+    void SceneHierarchy::add_create_object_action(const EditorAction &action)
+    {
+        m_create_object_actions.push_back(action);
+    }
+
+    void SceneHierarchy::render_object(core::SceneObject &object)
     {
         sfg_imgui_vendor::PushIdGuard id_guard(&object);
         ImGui::TableNextRow();
@@ -82,7 +102,7 @@ namespace sfg_trajectory_planner
             flags = flags | ImGuiTreeNodeFlags_Leaf;
         }
 
-        if (&object == Selection::get_selected_object())
+        if (&object == m_selection_context.get_selected_object())
         {
             flags = flags | ImGuiTreeNodeFlags_Selected;
         }
@@ -91,7 +111,7 @@ namespace sfg_trajectory_planner
 
         if (ImGui::IsItemClicked())
         {
-            Selection::select_object(&object);
+            m_selection_context.select_object(&object);
         }
 
         if (ImGui::BeginDragDropSource())
@@ -105,7 +125,7 @@ namespace sfg_trajectory_planner
         {
             if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_DRAGGED_OBJECT"))
             {
-                auto dragged_object = *static_cast<SceneObject **>(payload->Data);
+                auto dragged_object = *static_cast<core::SceneObject **>(payload->Data);
                 m_reparent_request.m_parent = &object;
                 m_reparent_request.m_child = dragged_object;
             }
@@ -117,9 +137,9 @@ namespace sfg_trajectory_planner
 
         if (ImGui::Button(s_remove_button_text))
         {
-            if (Selection::get_selected_object() == &object)
+            if (m_selection_context.get_selected_object() == &object)
             {
-                Selection::select_object(nullptr);
+                m_selection_context.select_object(nullptr);
             }
             m_scene.destroy_object(&object);
 
@@ -140,7 +160,7 @@ namespace sfg_trajectory_planner
         }
     }
 
-    void SceneHierarchy::render_object_separator(SceneObject *parent)
+    void SceneHierarchy::render_object_separator(core::SceneObject *parent)
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
@@ -152,7 +172,7 @@ namespace sfg_trajectory_planner
         {
             if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_DRAGGED_OBJECT"))
             {
-                auto dragged_object = *static_cast<SceneObject **>(payload->Data);
+                auto dragged_object = *static_cast<core::SceneObject **>(payload->Data);
                 m_reparent_request.m_parent = parent;
                 m_reparent_request.m_child = dragged_object;
             }

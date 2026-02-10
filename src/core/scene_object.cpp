@@ -1,4 +1,4 @@
-#include "sfg_trajectory_planner/scene_object.hpp"
+#include "sfg_trajectory_planner/core/scene_object.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -6,14 +6,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include "sfg_trajectory_planner/gfx_utils.hpp"
-#include "sfg_trajectory_planner/scene.hpp"
+#include "sfg_trajectory_planner/core/gfx/utils.hpp"
+#include "sfg_trajectory_planner/core/scene.hpp"
 
-namespace sfg_trajectory_planner
+namespace sfg_trajectory_planner::core
 {
-    SceneObject::SceneObject(SceneObjectKey, Scene &scene)
+    SceneObject::SceneObject(SceneObjectKey, Scene &scene, std::string type)
         : m_scene(scene),
           m_name("New Object"),
+          m_type(std::move(type)),
           m_local_transform(glm::mat4(1.0f)),
           m_parent(nullptr),
           m_visible(true)
@@ -35,49 +36,58 @@ namespace sfg_trajectory_planner
 
     void SceneObject::render_inspector()
     {
+
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Name:");
         ImGui::SameLine();
         ImGui::InputText("##name", &m_name);
+
+        auto type = m_type;
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Type:");
+        ImGui::SameLine();
+        ImGui::BeginDisabled();
+        ImGui::InputText("##type", &type);
+        ImGui::EndDisabled();
 
         if (!ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
         {
             return;
         }
 
-        glm::vec3 scale;
-        glm::quat orientation;
-        glm::vec3 translation;
-        glm::vec3 skew;
-        glm::vec4 perspective;
-        glm::decompose(m_local_transform, scale, orientation, translation, skew, perspective);
-        glm::vec3 rotation = glm::degrees(glm::eulerAngles(orientation));
-        bool update_local_transform = false;
+        glm::vec3 scale = m_local_transform.get_scale();
+        glm::quat rotation = m_local_transform.get_rotation();
+        glm::vec3 rotation_in_euler_angles = glm::degrees(glm::eulerAngles(rotation));
+        glm::vec3 translation = m_local_transform.get_translation();
 
         ImGui::Text("Position:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        update_local_transform = ImGui::DragFloat3("##position", glm::value_ptr(translation), 0.1f);
+
+        if (ImGui::DragFloat3("##position", glm::value_ptr(translation), 0.1f))
+        {
+            m_local_transform.set_translation(translation);
+        }
 
         ImGui::Text("Rotation:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        update_local_transform |= ImGui::DragFloat3("##rotation", glm::value_ptr(rotation), 0.1f);
+        if (ImGui::DragFloat3("##rotation_in_euler_angles", glm::value_ptr(rotation_in_euler_angles), 0.1f))
+        {
+            m_local_transform.set_rotation(glm::quat(glm::radians(rotation_in_euler_angles)));
+        }
 
         ImGui::Text("Scale:   ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        update_local_transform |= ImGui::DragFloat3("##scale", glm::value_ptr(scale), 0.1f);
-        ImGui::Spacing();
 
-        if (!update_local_transform)
+        if (ImGui::DragFloat3("##scale", glm::value_ptr(scale), 0.1f))
         {
-            return;
+            m_local_transform.set_scale(glm::max(scale, glm::vec3(0.001f)));
         }
 
-        m_local_transform = glm::translate(glm::mat4(1.0f), translation) *
-                            glm::mat4_cast(glm::quat(glm::radians(rotation))) *
-                            glm::scale(glm::mat4(1.0f), glm::max(scale, glm::vec3(0.001f)));
+        ImGui::Spacing();
     }
 
     std::string SceneObject::get_name() const
@@ -85,18 +95,23 @@ namespace sfg_trajectory_planner
         return m_name;
     }
 
+    std::string SceneObject::get_type() const
+    {
+        return m_type;
+    }
+
     glm::mat4 SceneObject::get_local_transform() const
     {
-        return m_local_transform;
+        return m_local_transform.get_matrix();
     }
 
     glm::mat4 SceneObject::get_global_transform() const
     {
         if (m_parent)
         {
-            return m_parent->get_global_transform() * m_local_transform;
+            return m_parent->get_global_transform() * m_local_transform.get_matrix();
         }
-        return m_local_transform;
+        return m_local_transform.get_matrix();
     }
 
     SceneObject *SceneObject::get_parent() const

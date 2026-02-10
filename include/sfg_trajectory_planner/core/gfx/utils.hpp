@@ -1,11 +1,11 @@
 #pragma once
 
-#include "sfg_trajectory_planner/ray.hpp"
+#include "sfg_trajectory_planner/core/gfx/ray.hpp"
 
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
 
-namespace sfg_trajectory_planner::gfx_utils
+namespace sfg_trajectory_planner::core::gfx::utils
 {
     static constexpr glm::vec4 s_right = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
     static constexpr glm::vec4 s_up = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);

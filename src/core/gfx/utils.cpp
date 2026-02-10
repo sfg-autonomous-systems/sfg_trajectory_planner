@@ -1,11 +1,9 @@
-#include "sfg_trajectory_planner/gfx_utils.hpp"
+#include "sfg_trajectory_planner/core/gfx/utils.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <optional>
 
-#include "sfg_trajectory_planner/ray.hpp"
-
-namespace sfg_trajectory_planner::gfx_utils
+namespace sfg_trajectory_planner::core::gfx::utils
 {
     Ray screen_space_to_ray(const glm::vec2 &position, const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::vec4 viewport)
     {

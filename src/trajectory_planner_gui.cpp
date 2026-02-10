@@ -1,14 +1,22 @@
 #include "sfg_trajectory_planner/trajectory_planner_gui.hpp"
 
-#include "sfg_trajectory_planner/gfx_utils.hpp"
+#include "sfg_trajectory_planner/core/gfx/utils.hpp"
+#include "sfg_trajectory_planner/trajectory.hpp"
 
 namespace sfg_trajectory_planner
 {
     TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
         : GuiElement(),
-          m_scene_hierarchy(m_scene),
-          m_viewport(node, m_scene)
+          m_scene_hierarchy(m_scene, m_selection_context),
+          m_viewport(node, m_scene, m_selection_context),
+          m_inspector(m_selection_context)
     {
+        m_scene_hierarchy.add_create_object_action(
+            {"Trajectory",
+             [&]
+             {
+                 m_scene.create_object<Trajectory>("Trajectory");
+             }});
     }
 
     void TrajectoryPlannerGui::render_internal()

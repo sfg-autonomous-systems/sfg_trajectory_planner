@@ -1,11 +1,11 @@
 #pragma once
 
-#include "sfg_trajectory_planner/scene_object.hpp"
+#include "sfg_trajectory_planner/core/scene_object.hpp"
 
 #include <memory>
 #include <unordered_map>
 
-namespace sfg_trajectory_planner
+namespace sfg_trajectory_planner::core
 {
     class Scene
     {
@@ -22,4 +22,4 @@ namespace sfg_trajectory_planner
     };
 }
 
-#include "sfg_trajectory_planner/scene.tpp"
+#include "sfg_trajectory_planner/core/scene.tpp"

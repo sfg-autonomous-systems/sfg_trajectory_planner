@@ -1,6 +1,6 @@
-#include "sfg_trajectory_planner/scene.hpp"
+#include "sfg_trajectory_planner/core/scene.hpp"
 
-namespace sfg_trajectory_planner
+namespace sfg_trajectory_planner::core
 {
     template <typename ObjectType, typename... Args>
     ObjectType *Scene::create_object(const std::string &name, SceneObject *parent, Args &&...args)

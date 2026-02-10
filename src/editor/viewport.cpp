@@ -1,15 +1,14 @@
-#include "sfg_trajectory_planner/viewport.hpp"
+#include "sfg_trajectory_planner/editor/viewport.hpp"
 
-#include "sfg_trajectory_planner/gfx_utils.hpp"
-#include "sfg_trajectory_planner/selection.hpp"
+#include "sfg_trajectory_planner/core/gfx/utils.hpp"
 #include "sfg_utils/ros_utils.hpp"
 
 #include <magic_enum.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-namespace sfg_trajectory_planner
+namespace sfg_trajectory_planner::editor
 {
-    Viewport::Viewport(rclcpp::Node *node, Scene &scene) : GuiElement(), m_scene(scene)
+    Viewport::Viewport(rclcpp::Node *node, core::Scene &scene, SelectionContext &selection_context) : GuiElement(), m_scene(scene), m_selection_context(selection_context)
     {
         // Declare and retrieve ROS parameters.
         m_config.m_grid_origin = glm::vec3(
@@ -53,10 +52,14 @@ namespace sfg_trajectory_planner
 
         for (auto &object : m_scene.get_root()->get_children())
         {
+            if (!object->is_visible())
+            {
+                continue;
+            }
             object->render_object(m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
         }
 
-        if (auto selected_object = Selection::get_selected_object())
+        if (auto selected_object = m_selection_context.get_selected_object())
         {
             auto transform = selected_object->get_global_transform();
 
@@ -115,8 +118,8 @@ namespace sfg_trajectory_planner
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
         {
             // The starting point for panning is the intersection between the mouse ray and the plane defined by the camera's focus point and inverse of the camera's forward vector.
-            auto ray = gfx_utils::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
-            auto distance = gfx_utils::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_utils::s_forward);
+            auto ray = core::gfx::utils::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+            auto distance = core::gfx::utils::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * core::gfx::utils::s_forward);
             // Because the plane is oriented towards the camera, we can always assume that we hit the plane.
             auto intersection = ray.origin + distance * ray.direction;
             m_camera.m_pan_start = intersection;
@@ -124,8 +127,8 @@ namespace sfg_trajectory_planner
         else if (ImGui::IsMouseDown(ImGuiMouseButton_Middle))
         {
             // If the middle mouse button is held, calculate the pan offset and adjust the camera focus point.
-            auto ray = gfx_utils::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
-            auto distance = gfx_utils::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_utils::s_forward);
+            auto ray = core::gfx::utils::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+            auto distance = core::gfx::utils::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * core::gfx::utils::s_forward);
             auto intersection = ray.origin + distance * ray.direction;
             m_camera.m_focus_point -= intersection - m_camera.m_pan_start;
         }
@@ -222,7 +225,7 @@ namespace sfg_trajectory_planner
         if (ImGuizmo::IsUsingViewManipulate())
         {
             glm::mat4 view_inverse = glm::inverse(m_camera.m_view_matrix);
-            glm::vec3 camera_forward = glm::normalize(view_inverse * gfx_utils::s_forward);
+            glm::vec3 camera_forward = glm::normalize(view_inverse * core::gfx::utils::s_forward);
             m_camera.m_orientation.y = -glm::asin(glm::clamp(camera_forward.y, -1.0f, 1.0f));
 
             const auto epsilon = 0.001f;
@@ -233,7 +236,7 @@ namespace sfg_trajectory_planner
             }
         }
 
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.z, gfx_utils::s_up.xyz()) * glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.y, gfx_utils::s_right.xyz());
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.z, core::gfx::utils::s_up.xyz()) * glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.y, core::gfx::utils::s_right.xyz());
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_camera.m_focus_point);
         // If we are in perspective mode, we need to translate the camera back by the zoom level to maintain the correct distance from the focus point.
         // Otherwise, in orthographic mode, we translate the camera back by half the far plane distance to ensure the entire scene is visible.
