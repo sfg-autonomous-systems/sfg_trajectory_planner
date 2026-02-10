@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
+#include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
 
 #ifdef __GNUG__
@@ -50,6 +51,8 @@ namespace sfg_trajectory_planner::core
 
     void SceneObject::render_inspector()
     {
+        sfg_imgui_vendor::PushIdGuard guard(this);
+
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Name:");
         ImGui::SameLine();
