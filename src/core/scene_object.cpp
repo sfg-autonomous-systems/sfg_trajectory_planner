@@ -9,12 +9,26 @@
 #include "sfg_trajectory_planner/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
 
+#ifdef __GNUG__ // GCC/Clang
+#include <cxxabi.h>
+#include <memory>
+std::string demangle(const char *name)
+{
+    int status = -4;
+    std::unique_ptr<char, void (*)(void *)> res{
+        abi::__cxa_demangle(name, NULL, NULL, &status),
+        std::free};
+    return (status == 0) ? res.get() : name;
+}
+#else // MSVC
+std::string demangle(const char *name) { return name; }
+#endif
+
 namespace sfg_trajectory_planner::core
 {
-    SceneObject::SceneObject(SceneObjectKey, Scene &scene, std::string type)
+    SceneObject::SceneObject(SceneObjectKey, Scene &scene)
         : m_scene(scene),
           m_name("New Object"),
-          m_type(std::move(type)),
           m_local_transform(glm::mat4(1.0f)),
           m_parent(nullptr),
           m_visible(true)
@@ -40,14 +54,16 @@ namespace sfg_trajectory_planner::core
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Name:");
         ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         ImGui::InputText("##name", &m_name);
 
-        auto type = m_type;
+        auto type = get_type();
 
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Type:");
         ImGui::SameLine();
         ImGui::BeginDisabled();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         ImGui::InputText("##type", &type);
         ImGui::EndDisabled();
 
@@ -97,7 +113,7 @@ namespace sfg_trajectory_planner::core
 
     std::string SceneObject::get_type() const
     {
-        return m_type;
+        return demangle(typeid(*this).name());
     }
 
     glm::mat4 SceneObject::get_local_transform() const

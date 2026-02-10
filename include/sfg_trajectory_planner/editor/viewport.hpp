@@ -60,6 +60,7 @@ namespace sfg_trajectory_planner::editor
         };
 
         void process_input();
+        void render_object(core::SceneObject &object);
         void render_settings();
         void update_camera_matrices();
 

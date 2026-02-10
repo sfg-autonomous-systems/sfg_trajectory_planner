@@ -2,11 +2,9 @@
 
 #include "sfg_trajectory_planner/core/gfx/utils.hpp"
 
-#define STRINGIFY(x) #x
-
 namespace sfg_trajectory_planner
 {
-    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene) : SceneObject(key, scene, STRINGIFY(sfg_trajectory_planner::Trajectory))
+    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene) : SceneObject(key, scene)
     {
     }
 
@@ -30,5 +28,3 @@ namespace sfg_trajectory_planner
         SceneObject::render_inspector();
     }
 }
-
-#undef STRINGIFY

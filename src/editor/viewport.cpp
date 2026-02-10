@@ -52,11 +52,7 @@ namespace sfg_trajectory_planner::editor
 
         for (auto &object : m_scene.get_root()->get_children())
         {
-            if (!object->is_visible())
-            {
-                continue;
-            }
-            object->render_object(m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+            render_object(*object);
         }
 
         if (auto selected_object = m_selection_context.get_selected_object())
@@ -84,24 +80,24 @@ namespace sfg_trajectory_planner::editor
     {
         auto &io = ImGui::GetIO();
 
-        if (ImGui::IsKeyPressed(ImGuiKey_W))
+        if (!ImGui::IsWindowHovered() || ImGuizmo::IsUsingViewManipulate() || ImGuizmo::IsUsing())
+        {
+            return;
+        }
+
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_W))
         {
             m_gizmo_operation = ImGuizmo::TRANSLATE;
         }
 
-        if (ImGui::IsKeyPressed(ImGuiKey_E))
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_E))
         {
             m_gizmo_operation = ImGuizmo::ROTATE;
         }
 
-        if (ImGui::IsKeyPressed(ImGuiKey_R))
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_R))
         {
             m_gizmo_operation = ImGuizmo::SCALE;
-        }
-
-        if (!ImGui::IsWindowHovered() || ImGuizmo::IsUsingViewManipulate() || ImGuizmo::IsUsing())
-        {
-            return;
         }
 
         // Implement orbiting. If the right mouse button is held, adjust the camera orientation based on mouse movement.
@@ -131,6 +127,20 @@ namespace sfg_trajectory_planner::editor
             auto distance = core::gfx::utils::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * core::gfx::utils::s_forward);
             auto intersection = ray.origin + distance * ray.direction;
             m_camera.m_focus_point -= intersection - m_camera.m_pan_start;
+        }
+    }
+
+    void Viewport::render_object(core::SceneObject &object)
+    {
+        object.render_object(m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+
+        for (auto &child : object.get_children())
+        {
+            if (!child->is_visible())
+            {
+                continue;
+            }
+            render_object(*child);
         }
     }
 

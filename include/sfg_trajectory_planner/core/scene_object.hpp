@@ -6,8 +6,6 @@
 
 #include "sfg_trajectory_planner/core/transform.hpp"
 
-#define STRINGIFY(x) #x
-
 namespace sfg_trajectory_planner::core
 {
     class Scene;
@@ -25,7 +23,7 @@ namespace sfg_trajectory_planner::core
         friend class Scene;
 
     public:
-        SceneObject(SceneObjectKey key, Scene &scene, std::string type = STRINGIFY(sfg_trajectory_planner::core::SceneObject));
+        SceneObject(SceneObjectKey key, Scene &scene);
         virtual ~SceneObject();
         virtual void render_object(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, const glm::vec4 &viewport);
         virtual void render_inspector();
@@ -47,12 +45,9 @@ namespace sfg_trajectory_planner::core
         Scene &m_scene;
 
         std::string m_name;
-        const std::string m_type;
         Transform m_local_transform;
         SceneObject *m_parent;
         std::vector<SceneObject *> m_children;
         bool m_visible;
     };
 }
-
-#undef STRINGIFY
