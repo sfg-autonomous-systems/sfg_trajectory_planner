@@ -1,13 +1,13 @@
 #include "sfg_trajectory_planner/trajectory_planner_gui.hpp"
 
-#include "sfg_trajectory_planner/gfx_math.hpp"
+#include "sfg_trajectory_planner/gfx_utils.hpp"
 
 namespace sfg_trajectory_planner
 {
     TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
         : GuiElement(),
-          m_viewport(node, m_trajectories),
-          m_trajectories_inspector(m_trajectories)
+          m_scene_hierarchy(m_scene),
+          m_viewport(node, m_scene)
     {
     }
 
@@ -22,13 +22,22 @@ namespace sfg_trajectory_planner
             "##Main Window",
             nullptr,
             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
-        if (ImGui::BeginTable("TopColumns", 2, ImGuiTableFlags_Resizable))
+        if (ImGui::BeginTable("TopColumns", 3, ImGuiTableFlags_Resizable))
         {
+            constexpr auto scene_hierarchy_displayname = "Scene Hierarchy";
             constexpr auto viewport_displayname = "Viewport";
             constexpr auto inspector_displayname = "Inspector";
 
-            ImGui::TableSetupColumn(viewport_displayname, ImGuiTableColumnFlags_WidthStretch, 2.0f);
+            ImGui::TableSetupColumn(scene_hierarchy_displayname, ImGuiTableColumnFlags_WidthStretch, 1.0f);
+            ImGui::TableSetupColumn(viewport_displayname, ImGuiTableColumnFlags_WidthStretch, 3.0f);
             ImGui::TableSetupColumn(inspector_displayname, ImGuiTableColumnFlags_WidthStretch, 1.0f);
+
+            ImGui::TableNextColumn();
+            ImGui::BeginChild(scene_hierarchy_displayname, ImVec2(0, 0), ImGuiChildFlags_Border);
+            m_scene_hierarchy.render();
+            ImGui::EndChild();
+            auto scene_hierarchy_rect_min = ImGui::GetItemRectMin();
+            render_title(scene_hierarchy_displayname, ImVec2(scene_hierarchy_rect_min.x, scene_hierarchy_rect_min.y));
 
             ImGui::TableNextColumn();
             ImGui::BeginChild(viewport_displayname, ImVec2(0, 0), ImGuiChildFlags_Border);
@@ -39,8 +48,7 @@ namespace sfg_trajectory_planner
 
             ImGui::TableNextColumn();
             ImGui::BeginChild(inspector_displayname, ImVec2(0.0f, 0.0f), ImGuiChildFlags_Border);
-            m_transform_inspector.render();
-            m_trajectories_inspector.render();
+            m_inspector.render();
             ImGui::EndChild();
             auto inspector_rect_min = ImGui::GetItemRectMin();
             render_title(inspector_displayname, ImVec2(inspector_rect_min.x, inspector_rect_min.y));

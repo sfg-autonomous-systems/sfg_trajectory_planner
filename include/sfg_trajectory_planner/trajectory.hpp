@@ -1,15 +1,14 @@
 #pragma once
 
-#include <vector>
-
-#include "sfg_trajectory_planner/waypoint.hpp"
+#include "sfg_trajectory_planner/scene_object.hpp"
 
 namespace sfg_trajectory_planner
 {
-    struct Trajectory
+    class Trajectory : public SceneObject
     {
-        std::string m_name;
-        float m_delay_from_start;
-        std::vector<Waypoint> m_points;
+    public:
+        Trajectory(SceneObjectKey key, Scene &scene);
+        virtual void render_object(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, const glm::vec4 &viewport);
+        virtual void render_inspector();
     };
 }

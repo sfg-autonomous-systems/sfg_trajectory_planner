@@ -32,8 +32,13 @@ FetchContent_MakeAvailable(glm)
 # ########################################################################################################
 sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanner"
   SOURCES
-  "src/gfx_math.cpp"
-  "src/trajectories_inspector.cpp"
+  "src/gfx_utils.cpp"
+  "src/inspector.cpp"
+  "src/scene.cpp"
+  "src/scene_hierarchy.cpp"
+  "src/scene_object.cpp"
+  "src/selection.cpp"
+  "src/trajectory.cpp"
   "src/trajectory_planner_component.cpp"
   "src/trajectory_planner_gui.cpp"
   "src/trajectory_planner.cpp"
@@ -51,7 +56,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
 )
 
 # Add GLM_SWIZZLE to the compile definitions of the trajectory_planner library to enable swizzling for glm vector types.
-target_compile_definitions(${target_name} PRIVATE GLM_FORCE_SWIZZLE)
+target_compile_definitions(${target_name} PRIVATE GLM_FORCE_SWIZZLE GLM_ENABLE_EXPERIMENTAL)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

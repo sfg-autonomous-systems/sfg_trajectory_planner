@@ -1,6 +1,7 @@
 #include "sfg_trajectory_planner/viewport.hpp"
 
-#include "sfg_trajectory_planner/gfx_math.hpp"
+#include "sfg_trajectory_planner/gfx_utils.hpp"
+#include "sfg_trajectory_planner/selection.hpp"
 #include "sfg_utils/ros_utils.hpp"
 
 #include <magic_enum.hpp>
@@ -8,7 +9,7 @@
 
 namespace sfg_trajectory_planner
 {
-    Viewport::Viewport(rclcpp::Node *node, std::vector<Trajectory> &trajectories) : GuiElement(), m_trajectories(trajectories)
+    Viewport::Viewport(rclcpp::Node *node, Scene &scene) : GuiElement(), m_scene(scene)
     {
         // Declare and retrieve ROS parameters.
         m_config.m_grid_origin = glm::vec3(
@@ -36,6 +37,7 @@ namespace sfg_trajectory_planner
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         update_camera_matrices();
         ImGuizmo::DrawGrid(glm::value_ptr(m_camera.m_view_matrix), glm::value_ptr(m_camera.m_projection_matrix), glm::value_ptr(m_grid_matrix), m_config.m_grid_size);
+
         // ImGuizmo::ViewManipulate enables rotating the view by holding down the left mouse button and then moving the mouse.
         // But in our application we use the right mouse button for orbiting the camera, so we temporarily disable the left mouse button input.
         ImGuiIO &io = ImGui::GetIO();
@@ -44,11 +46,34 @@ namespace sfg_trajectory_planner
         ImGuizmo::ViewManipulate(
             glm::value_ptr(m_camera.m_view_matrix),
             Config::s_view_gizmo_distance,
-            ImVec2(m_camera.m_viewport.z - Config::s_view_gizmo_size, m_camera.m_viewport.y),
+            ImVec2(m_camera.m_viewport.x + m_camera.m_viewport.z - Config::s_view_gizmo_size, m_camera.m_viewport.y),
             ImVec2(Config::s_view_gizmo_size, Config::s_view_gizmo_size),
             0);
         io.MouseDelta = old_mouse_delta;
 
+        for (auto &object : m_scene.get_root()->get_children())
+        {
+            object->render_object(m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+        }
+
+        if (auto selected_object = Selection::get_selected_object())
+        {
+            auto transform = selected_object->get_global_transform();
+
+            if (ImGuizmo::Manipulate(
+                    glm::value_ptr(m_camera.m_view_matrix),
+                    glm::value_ptr(m_camera.m_projection_matrix),
+                    m_gizmo_operation,
+                    m_gizmo_mode,
+                    glm::value_ptr(transform)))
+            {
+                if (selected_object->get_parent())
+                {
+                    transform = glm::inverse(selected_object->get_parent()->get_global_transform()) * transform;
+                }
+                selected_object->set_local_transform(transform);
+            }
+        }
         render_settings();
     }
 
@@ -90,8 +115,8 @@ namespace sfg_trajectory_planner
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
         {
             // The starting point for panning is the intersection between the mouse ray and the plane defined by the camera's focus point and inverse of the camera's forward vector.
-            auto ray = gfx_math::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
-            auto distance = gfx_math::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_math::s_forward);
+            auto ray = gfx_utils::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+            auto distance = gfx_utils::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_utils::s_forward);
             // Because the plane is oriented towards the camera, we can always assume that we hit the plane.
             auto intersection = ray.origin + distance * ray.direction;
             m_camera.m_pan_start = intersection;
@@ -99,8 +124,8 @@ namespace sfg_trajectory_planner
         else if (ImGui::IsMouseDown(ImGuiMouseButton_Middle))
         {
             // If the middle mouse button is held, calculate the pan offset and adjust the camera focus point.
-            auto ray = gfx_math::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
-            auto distance = gfx_math::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_math::s_forward);
+            auto ray = gfx_utils::screen_space_to_ray(glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y), m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+            auto distance = gfx_utils::intersect_ray_plane(ray, m_camera.m_focus_point, glm::inverse(m_camera.m_view_matrix) * gfx_utils::s_forward);
             auto intersection = ray.origin + distance * ray.direction;
             m_camera.m_focus_point -= intersection - m_camera.m_pan_start;
         }
@@ -171,30 +196,6 @@ namespace sfg_trajectory_planner
         ImGui::EndChild();
     }
 
-    void Viewport::render_line(glm::vec3 start, glm::vec3 end, ImU32 color, float thickness)
-    {
-        auto project = [&](glm::vec3 world_space) -> std::optional<ImVec2>
-        {
-            // We need to flip the y coordinate because glm::project assumes the origin is at the bottom-left while ImGui assumes the origin is at the top-left.
-            auto viewport = glm::vec4(m_camera.m_viewport.x, m_camera.m_viewport.y + m_camera.m_viewport.w, m_camera.m_viewport.z, -m_camera.m_viewport.w);
-            glm::vec3 screen_space = glm::project(world_space, m_camera.m_view_matrix, m_camera.m_projection_matrix, viewport);
-
-            if (screen_space.z < 0.0f)
-            {
-                return std::nullopt;
-            }
-            return ImVec2(screen_space.x, screen_space.y);
-        };
-
-        auto start_screen_space = project(start);
-        auto end_screen_space = project(end);
-
-        if (start_screen_space && end_screen_space)
-        {
-            ImGui::GetWindowDrawList()->AddLine(*start_screen_space, *end_screen_space, color, thickness);
-        }
-    }
-
     void Viewport::update_camera_matrices()
     {
         auto viewport_size = ImGui::GetContentRegionAvail();
@@ -221,7 +222,7 @@ namespace sfg_trajectory_planner
         if (ImGuizmo::IsUsingViewManipulate())
         {
             glm::mat4 view_inverse = glm::inverse(m_camera.m_view_matrix);
-            glm::vec3 camera_forward = glm::normalize(view_inverse * gfx_math::s_forward);
+            glm::vec3 camera_forward = glm::normalize(view_inverse * gfx_utils::s_forward);
             m_camera.m_orientation.y = -glm::asin(glm::clamp(camera_forward.y, -1.0f, 1.0f));
 
             const auto epsilon = 0.001f;
@@ -232,7 +233,7 @@ namespace sfg_trajectory_planner
             }
         }
 
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.z, gfx_math::s_up.xyz()) * glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.y, gfx_math::s_right.xyz());
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.z, gfx_utils::s_up.xyz()) * glm::rotate(glm::mat4(1.0f), m_camera.m_orientation.y, gfx_utils::s_right.xyz());
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_camera.m_focus_point);
         // If we are in perspective mode, we need to translate the camera back by the zoom level to maintain the correct distance from the focus point.
         // Otherwise, in orthographic mode, we translate the camera back by half the far plane distance to ensure the entire scene is visible.

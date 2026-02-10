@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-namespace sfg_trajectory_planner::gfx_math
+namespace sfg_trajectory_planner::gfx_utils
 {
     struct Ray
     {

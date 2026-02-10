@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <imgui.h>
+#include <imgui/imgui.h>
 
 #include "sfg_imgui_vendor/gui_element.hpp"
 

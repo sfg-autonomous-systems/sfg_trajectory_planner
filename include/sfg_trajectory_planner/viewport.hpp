@@ -1,19 +1,19 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <imgui.h>
-#include <ImGuizmo.h>
+#include <imgui/imgui.h>
+#include <imgui/ImGuizmo.h>
 #include <rclcpp/rclcpp.hpp>
 
 #include "sfg_imgui_vendor/gui_element.hpp"
-#include "sfg_trajectory_planner/trajectory.hpp"
+#include "sfg_trajectory_planner/scene.hpp"
 
 namespace sfg_trajectory_planner
 {
     class Viewport : public sfg_imgui_vendor::GuiElement
     {
     public:
-        Viewport(rclcpp::Node *node, std::vector<Trajectory> &trajectories);
+        Viewport(rclcpp::Node *node, Scene &scene);
 
         void render_internal() override;
 
@@ -60,7 +60,6 @@ namespace sfg_trajectory_planner
 
         void process_input();
         void render_settings();
-        void render_line(glm::vec3 start, glm::vec3 end, ImU32 color, float thickness = 1.0f);
         void update_camera_matrices();
 
         Config m_config;
@@ -68,6 +67,6 @@ namespace sfg_trajectory_planner
         glm::mat4 m_grid_matrix;
         ImGuizmo::MODE m_gizmo_mode = ImGuizmo::LOCAL;
         ImGuizmo::OPERATION m_gizmo_operation = ImGuizmo::TRANSLATE;
-        std::vector<Trajectory> &m_trajectories;
+        Scene &m_scene;
     };
 }

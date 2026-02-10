@@ -2,12 +2,12 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <imgui.h>
-#include <ImGuizmo.h>
+#include <imgui/imgui.h>
+#include <imgui/ImGuizmo.h>
 #include <rclcpp/rclcpp.hpp>
 
-#include "sfg_trajectory_planner/trajectories_inspector.hpp"
-#include "sfg_trajectory_planner/transform_inspector.hpp"
+#include "sfg_trajectory_planner/inspector.hpp"
+#include "sfg_trajectory_planner/scene_hierarchy.hpp"
 #include "sfg_trajectory_planner/viewport.hpp"
 
 namespace sfg_trajectory_planner
@@ -27,9 +27,9 @@ namespace sfg_trajectory_planner
     private:
         void render_title(std::string_view title, const ImVec2 &position);
 
+        Scene m_scene;
+        SceneHierarchy m_scene_hierarchy;
         Viewport m_viewport;
-        TrajectoriesInspector m_trajectories_inspector;
-        TransformInspector m_transform_inspector;
-        std::vector<Trajectory> m_trajectories;
+        Inspector m_inspector;
     };
 }
