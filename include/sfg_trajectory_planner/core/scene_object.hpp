@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/core/transform.hpp"
 
 namespace sfg_trajectory_planner::core
@@ -25,8 +26,8 @@ namespace sfg_trajectory_planner::core
     public:
         SceneObject(SceneObjectKey key, Scene &scene);
         virtual ~SceneObject();
-        virtual void render_object(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, const glm::vec4 &viewport);
-        virtual void render_inspector();
+        virtual void render_object(gfx::Renderer &renderer);
+        void render_inspector();
 
         std::string get_name() const;
         std::string get_type() const;
@@ -42,8 +43,9 @@ namespace sfg_trajectory_planner::core
         void set_visible(bool visible);
 
     protected:
-        Scene &m_scene;
+        virtual void render_inspector_internal();
 
+        Scene &m_scene;
         std::string m_name;
         Transform m_local_transform;
         SceneObject *m_parent;

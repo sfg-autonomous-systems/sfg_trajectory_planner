@@ -6,12 +6,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include "sfg_trajectory_planner/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
 
-#ifdef __GNUG__ // GCC/Clang
+#ifdef __GNUG__
 #include <cxxabi.h>
 #include <memory>
+
 std::string demangle(const char *name)
 {
     int status = -4;
@@ -20,7 +20,7 @@ std::string demangle(const char *name)
         std::free};
     return (status == 0) ? res.get() : name;
 }
-#else // MSVC
+#else
 std::string demangle(const char *name) { return name; }
 #endif
 
@@ -46,11 +46,10 @@ namespace sfg_trajectory_planner::core
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
     }
 
-    void SceneObject::render_object(const glm::mat4 &, const glm::mat4 &, const glm::vec4 &) {}
+    void SceneObject::render_object(gfx::Renderer &) {}
 
     void SceneObject::render_inspector()
     {
-
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Name:");
         ImGui::SameLine();
@@ -67,43 +66,45 @@ namespace sfg_trajectory_planner::core
         ImGui::InputText("##type", &type);
         ImGui::EndDisabled();
 
-        if (!ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            return;
+            glm::vec3 scale = m_local_transform.get_scale();
+            glm::quat rotation = m_local_transform.get_rotation();
+            glm::vec3 rotation_in_euler_angles = glm::degrees(glm::eulerAngles(rotation));
+            glm::vec3 translation = m_local_transform.get_translation();
+
+            ImGui::Text("Position:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+
+            if (ImGui::DragFloat3("##position", glm::value_ptr(translation), 0.1f))
+            {
+                m_local_transform.set_translation(translation);
+            }
+
+            ImGui::Text("Rotation:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+
+            if (ImGui::DragFloat3("##rotation_in_euler_angles", glm::value_ptr(rotation_in_euler_angles), 0.1f))
+            {
+                m_local_transform.set_rotation(glm::quat(glm::radians(rotation_in_euler_angles)));
+            }
+
+            ImGui::Text("Scale:   ");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+
+            if (ImGui::DragFloat3("##scale", glm::value_ptr(scale), 0.1f))
+            {
+                m_local_transform.set_scale(glm::max(scale, glm::vec3(0.001f)));
+            }
         }
 
-        glm::vec3 scale = m_local_transform.get_scale();
-        glm::quat rotation = m_local_transform.get_rotation();
-        glm::vec3 rotation_in_euler_angles = glm::degrees(glm::eulerAngles(rotation));
-        glm::vec3 translation = m_local_transform.get_translation();
-
-        ImGui::Text("Position:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-        if (ImGui::DragFloat3("##position", glm::value_ptr(translation), 0.1f))
+        if (ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            m_local_transform.set_translation(translation);
+            render_inspector_internal();
         }
-
-        ImGui::Text("Rotation:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        if (ImGui::DragFloat3("##rotation_in_euler_angles", glm::value_ptr(rotation_in_euler_angles), 0.1f))
-        {
-            m_local_transform.set_rotation(glm::quat(glm::radians(rotation_in_euler_angles)));
-        }
-
-        ImGui::Text("Scale:   ");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-        if (ImGui::DragFloat3("##scale", glm::value_ptr(scale), 0.1f))
-        {
-            m_local_transform.set_scale(glm::max(scale, glm::vec3(0.001f)));
-        }
-
-        ImGui::Spacing();
     }
 
     std::string SceneObject::get_name() const
@@ -192,4 +193,6 @@ namespace sfg_trajectory_planner::core
     {
         m_visible = visible;
     }
+
+    void SceneObject::render_inspector_internal() {}
 }

@@ -8,23 +8,15 @@
 
 namespace sfg_trajectory_planner::editor
 {
-    Viewport::Viewport(rclcpp::Node *node, core::Scene &scene, SelectionContext &selection_context) : GuiElement(), m_scene(scene), m_selection_context(selection_context)
+    Viewport::Viewport(rclcpp::Node *node, core::Scene &scene, SelectionContext &selection_context, core::gfx::Renderer &renderer)
+        : GuiElement(),
+          m_scene(scene),
+          m_selection_context(selection_context),
+          m_renderer(renderer)
     {
         // Declare and retrieve ROS parameters.
-        m_config.m_grid_origin = glm::vec3(
-            sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.grid.origin.x", m_config.m_grid_origin.x),
-            sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.grid.origin.y", m_config.m_grid_origin.y),
-            sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.grid.origin.z", m_config.m_grid_origin.z));
-        m_config.m_grid_scale = glm::vec3(
-            sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.grid.scale.x", m_config.m_grid_scale.x),
-            sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.grid.scale.y", m_config.m_grid_scale.y),
-            sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.grid.scale.z", m_config.m_grid_scale.z));
-        m_config.m_grid_size = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.grid.size", m_config.m_grid_size);
         m_camera.m_orbit_speed = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.camera.orbit_speed", m_camera.m_orbit_speed);
         m_camera.m_zoom_speed = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.camera.zoom_speed", m_camera.m_zoom_speed);
-
-        m_grid_matrix = glm::translate(glm::mat4(1.0f), m_config.m_grid_origin);
-        m_grid_matrix = glm::scale(m_grid_matrix, m_config.m_grid_scale);
     }
 
     void Viewport::render_internal()
@@ -35,13 +27,25 @@ namespace sfg_trajectory_planner::editor
         ImGuizmo::SetRect(m_camera.m_viewport.x, m_camera.m_viewport.y, m_camera.m_viewport.z, m_camera.m_viewport.w);
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         update_camera_matrices();
-        ImGuizmo::DrawGrid(glm::value_ptr(m_camera.m_view_matrix), glm::value_ptr(m_camera.m_projection_matrix), glm::value_ptr(m_grid_matrix), m_config.m_grid_size);
+
+        for (auto &object : m_scene.get_root()->get_children())
+        {
+            render_object(*object);
+        }
+
+        auto image = m_renderer.render(m_camera.m_view_matrix, m_camera.m_projection_matrix, (int)m_camera.m_viewport.z, (int)m_camera.m_viewport.w);
+        ImGui::GetWindowDrawList()->AddImage(
+            static_cast<ImTextureID>(image),
+            ImVec2(m_camera.m_viewport.x, m_camera.m_viewport.y),
+            ImVec2(m_camera.m_viewport.x + m_camera.m_viewport.z, m_camera.m_viewport.y + m_camera.m_viewport.w),
+            ImVec2(0.0f, 1.0f),
+            ImVec2(1.0f, 0.0f));
 
         // ImGuizmo::ViewManipulate enables rotating the view by holding down the left mouse button and then moving the mouse.
         // But in our application we use the right mouse button for orbiting the camera, so we temporarily disable the left mouse button input.
         ImGuiIO &io = ImGui::GetIO();
         auto old_mouse_delta = io.MouseDelta;
-        io.MouseDelta = ImVec2(0, 0);
+        io.MouseDelta = ImVec2(0.0f, 0.0f);
         ImGuizmo::ViewManipulate(
             glm::value_ptr(m_camera.m_view_matrix),
             Config::s_view_gizmo_distance,
@@ -49,11 +53,6 @@ namespace sfg_trajectory_planner::editor
             ImVec2(Config::s_view_gizmo_size, Config::s_view_gizmo_size),
             0);
         io.MouseDelta = old_mouse_delta;
-
-        for (auto &object : m_scene.get_root()->get_children())
-        {
-            render_object(*object);
-        }
 
         if (auto selected_object = m_selection_context.get_selected_object())
         {
@@ -132,7 +131,7 @@ namespace sfg_trajectory_planner::editor
 
     void Viewport::render_object(core::SceneObject &object)
     {
-        object.render_object(m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
+        object.render_object(m_renderer);
 
         for (auto &child : object.get_children())
         {

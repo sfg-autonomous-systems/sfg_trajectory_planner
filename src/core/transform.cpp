@@ -4,9 +4,7 @@
 
 namespace sfg_trajectory_planner::core
 {
-    Transform::Transform() : m_matrix(1.0f), m_translation(0.0f), m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_scale(1.0f), m_dirty(false)
-    {
-    }
+    Transform::Transform() : m_matrix(1.0f), m_translation(0.0f), m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_scale(1.0f), m_dirty(false) {}
 
     Transform::Transform(const glm::mat4 &matrix) : m_matrix(matrix), m_dirty(false)
     {

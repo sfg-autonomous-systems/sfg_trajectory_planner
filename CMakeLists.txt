@@ -32,6 +32,7 @@ FetchContent_MakeAvailable(glm)
 # ########################################################################################################
 sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanner"
   SOURCES
+  "src/core/gfx/renderer.cpp"
   "src/core/gfx/utils.cpp"
   "src/core/scene.cpp"
   "src/core/transform.cpp"
@@ -40,11 +41,11 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "src/editor/scene_hierarchy.cpp"
   "src/editor/selection_context.cpp"
   "src/editor/viewport.cpp"
+  "src/grid.cpp"
   "src/trajectory.cpp"
   "src/trajectory_planner_component.cpp"
   "src/trajectory_planner_gui.cpp"
   "src/trajectory_planner.cpp"
-
   AMENT_DEPENDENCIES
   rclcpp
   rclcpp_components

@@ -4,17 +4,17 @@
 
 namespace sfg_trajectory_planner
 {
-    class Trajectory : public core::SceneObject
+    class Grid : public core::SceneObject
     {
     public:
-        Trajectory(core::SceneObjectKey key, core::Scene &scene);
+        Grid(core::SceneObjectKey key, core::Scene &scene);
         void render_object(core::gfx::Renderer &renderer) override;
 
     protected:
         void render_inspector_internal() override;
 
     private:
-        float m_time_from_start;
-        std::vector<float> m_times_from_last;
+        glm::vec2 m_grid_size = {10.0f, 10.0f};
+        float m_grid_spacing = 1.0f;
     };
 }

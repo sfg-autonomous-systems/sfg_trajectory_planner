@@ -76,7 +76,14 @@ namespace sfg_trajectory_planner::editor
 
     void SceneHierarchy::add_create_object_action(const EditorAction &action)
     {
-        m_create_object_actions.push_back(action);
+        auto iterator = std::find_if(
+            m_create_object_actions.begin(),
+            m_create_object_actions.end(),
+            [&](const EditorAction &existing_action)
+            {
+                return action.m_name < existing_action.m_name;
+            });
+        m_create_object_actions.insert(iterator, action);
     }
 
     void SceneHierarchy::render_object(core::SceneObject &object)

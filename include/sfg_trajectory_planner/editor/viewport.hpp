@@ -14,8 +14,7 @@ namespace sfg_trajectory_planner::editor
     class Viewport : public sfg_imgui_vendor::GuiElement
     {
     public:
-        Viewport(rclcpp::Node *node, core::Scene &scene, SelectionContext &selection_context);
-
+        Viewport(rclcpp::Node *node, core::Scene &scene, SelectionContext &selection_context, core::gfx::Renderer &renderer);
         void render_internal() override;
 
     private:
@@ -23,11 +22,6 @@ namespace sfg_trajectory_planner::editor
         {
             static constexpr float s_view_gizmo_size = 128.0f;
             static constexpr float s_view_gizmo_distance = 10.0f;
-
-            // Ros parameters
-            glm::vec3 m_grid_origin = glm::vec3(0.0f, 0.0f, 0.0f);
-            glm::vec3 m_grid_scale = glm::vec3(1.0f, 1.0f, 1.0f);
-            float m_grid_size = 10.0f;
         };
 
         struct Camera
@@ -64,12 +58,13 @@ namespace sfg_trajectory_planner::editor
         void render_settings();
         void update_camera_matrices();
 
-        Config m_config;
-        Camera m_camera;
-        glm::mat4 m_grid_matrix;
-        ImGuizmo::MODE m_gizmo_mode = ImGuizmo::LOCAL;
-        ImGuizmo::OPERATION m_gizmo_operation = ImGuizmo::TRANSLATE;
         core::Scene &m_scene;
         SelectionContext &m_selection_context;
+        core::gfx::Renderer &m_renderer;
+
+        Config m_config;
+        Camera m_camera;
+        ImGuizmo::MODE m_gizmo_mode = ImGuizmo::LOCAL;
+        ImGuizmo::OPERATION m_gizmo_operation = ImGuizmo::TRANSLATE;
     };
 }

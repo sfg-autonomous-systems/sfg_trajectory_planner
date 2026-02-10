@@ -17,10 +17,6 @@ namespace sfg_trajectory_planner
     {
     public:
         TrajectoryPlannerGui(rclcpp::Node *node);
-        TrajectoryPlannerGui(const TrajectoryPlannerGui &) = delete;
-        TrajectoryPlannerGui &operator=(const TrajectoryPlannerGui &) = delete;
-        TrajectoryPlannerGui(TrajectoryPlannerGui &&) = delete;
-        TrajectoryPlannerGui &operator=(TrajectoryPlannerGui &&) = delete;
 
     protected:
         void render_internal() override;
@@ -29,6 +25,7 @@ namespace sfg_trajectory_planner
         void render_title(std::string_view title, const ImVec2 &position);
 
         core::Scene m_scene;
+        core::gfx::Renderer m_renderer;
         editor::SelectionContext m_selection_context;
         editor::SceneHierarchy m_scene_hierarchy;
         editor::Viewport m_viewport;
