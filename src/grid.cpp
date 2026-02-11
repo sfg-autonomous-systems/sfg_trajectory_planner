@@ -11,7 +11,7 @@ namespace sfg_trajectory_planner
     {
         const glm::vec3 color = {1.0f, 1.0f, 1.0f};
 
-        auto model_matrix = get_global_transform();
+        auto model_matrix = get_object_to_world_matrix();
         // Ignore scale.
         model_matrix[0][0] = model_matrix[1][1] = model_matrix[2][2] = 1.0f;
 

@@ -23,6 +23,11 @@ namespace sfg_trajectory_planner::core
         void set_rotation(glm::quat rotation);
         void set_scale(glm::vec3 scale);
 
+        void transform_point(glm::vec3 &point) const;
+        void transform_direction(glm::vec3 &direction) const;
+
+        void render_inspector(bool render_translation = true, bool render_rotation = true, bool render_scale = true);
+
     private:
         void update_matrix() const;
         void update_components();

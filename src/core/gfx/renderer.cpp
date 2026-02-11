@@ -34,7 +34,7 @@ void main() {
 
 namespace sfg_trajectory_planner::core::gfx
 {
-    Renderer::Renderer()
+    Renderer::Renderer(glm::vec3 clear_color) : m_clear_color(clear_color)
     {
         m_line_vertices.reserve(s_max_line_vertices);
     }
@@ -84,6 +84,10 @@ namespace sfg_trajectory_planner::core::gfx
 
     void Renderer::set_matrices(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::ivec4 viewport)
     {
+        if (!m_initialized)
+        {
+            initialize_lazily();
+        }
         m_view_matrix = view_matrix;
         m_projection_matrix = projection_matrix;
 
@@ -118,6 +122,42 @@ namespace sfg_trajectory_planner::core::gfx
         return manipulated;
     }
 
+    void Renderer::add_text(const glm::vec3 &position, const std::string &text)
+    {
+        auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+        add_text(position, text, ImGui::GetFontSize(), glm::vec3(color.x, color.y, color.z));
+    }
+
+    void Renderer::add_text(const glm::vec3 &position, const std::string &text, float font_size)
+    {
+        auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+        add_text(position, text, font_size, glm::vec3(color.x, color.y, color.z));
+    }
+
+    void Renderer::add_text(const glm::vec3 &position, const std::string &text, float font_size, const glm::vec3 &color)
+    {
+        glm::vec3 projected = glm::project(position, m_view_matrix, m_projection_matrix, glm::vec4(0.0f, 0.0f, m_viewport.z, m_viewport.w));
+
+        if (projected.z < 0.0f || projected.z > 1.0f)
+        {
+            return;
+        }
+        auto text_size = ImGui::CalcTextSize(text.c_str());
+        text_size.x *= font_size / ImGui::GetFontSize();
+        text_size.y *= font_size / ImGui::GetFontSize();
+
+        ImGui::GetWindowDrawList()->AddRectFilled(
+            ImVec2(m_viewport.x + projected.x - 0.5f * text_size.x - 2.0f, m_viewport.y + m_viewport.w - projected.y - 0.5f * text_size.y - 2.0f),
+            ImVec2(m_viewport.x + projected.x + 0.5f * text_size.x + 2.0f, m_viewport.y + m_viewport.w - projected.y + 0.5f * text_size.y + 2.0f),
+            ImGui::ColorConvertFloat4ToU32(ImVec4(0.0f, 0.0f, 0.0f, 0.75f)));
+        ImGui::GetWindowDrawList()->AddText(
+            ImGui::GetFont(),
+            font_size,
+            ImVec2(m_viewport.x + projected.x - 0.5f * text_size.x, m_viewport.y + m_viewport.w - projected.y - 0.5f * text_size.y),
+            ImGui::ColorConvertFloat4ToU32(ImVec4(color.x, color.y, color.z, 1.0f)),
+            text.c_str());
+    }
+
     GLuint Renderer::render()
     {
         if (!m_initialized)
@@ -127,7 +167,7 @@ namespace sfg_trajectory_planner::core::gfx
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
         glViewport(0, 0, m_viewport.z, m_viewport.w);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(m_clear_color.r, m_clear_color.g, m_clear_color.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 

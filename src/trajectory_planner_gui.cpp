@@ -7,6 +7,7 @@ namespace sfg_trajectory_planner
 {
     TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
         : GuiElement(),
+          m_renderer({0.01f, 0.0f, 0.1f}),
           m_selection_context(m_scene),
           m_scene_hierarchy(m_scene, m_selection_context),
           m_viewport(node, m_scene, m_selection_context, m_renderer),
@@ -24,6 +25,8 @@ namespace sfg_trajectory_planner
              {
                  m_scene.create_object<Grid>("Grid");
              }});
+
+        m_scene.create_object<Grid>("Grid");
     }
 
     void TrajectoryPlannerGui::render_internal()

@@ -98,6 +98,11 @@ namespace sfg_trajectory_planner::editor
         if (ImGui::Checkbox("##visibility", &visible))
         {
             object.set_visible(visible);
+
+            if (!visible && m_selection_context.get_selected() == &object)
+            {
+                m_selection_context.set_selected(nullptr);
+            }
         }
 
         // Name column.

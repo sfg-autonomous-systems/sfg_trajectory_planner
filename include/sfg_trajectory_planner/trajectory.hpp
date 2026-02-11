@@ -21,8 +21,8 @@ namespace sfg_trajectory_planner
     private:
         struct Waypoint
         {
-            glm::mat4 m_transform = glm::mat4(1.0f);
-            float m_time_from_last = 0.0f;
+            core::Transform m_transform;
+            float m_time_from_last = 1.0f;
         };
 
         editor::SelectionContext &m_selection_context;

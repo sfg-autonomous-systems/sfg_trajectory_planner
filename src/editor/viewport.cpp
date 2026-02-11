@@ -57,15 +57,11 @@ namespace sfg_trajectory_planner::editor
 
         if (auto selected_object = m_selection_context.get_selected())
         {
-            auto transform = selected_object->get_global_transform();
+            auto object_to_world_matrix = selected_object->get_object_to_world_matrix();
 
-            if (m_renderer.add_gizmo(transform, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode()))
+            if (m_renderer.add_gizmo(object_to_world_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode()))
             {
-                if (selected_object->get_parent())
-                {
-                    transform = glm::inverse(selected_object->get_parent()->get_global_transform()) * transform;
-                }
-                selected_object->set_local_transform(transform);
+                selected_object->get_transform().set_matrix(selected_object->get_parent()->get_world_to_object_matrix() * object_to_world_matrix);
             }
         }
         render_settings();
@@ -93,6 +89,14 @@ namespace sfg_trajectory_planner::editor
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_R))
         {
             m_selection_context.set_gizmo_operation(ImGuizmo::SCALE);
+        }
+
+        if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_F))
+        {
+            if (auto selected_object = m_selection_context.get_selected())
+            {
+                m_camera.m_focus_point = glm::vec3(selected_object->get_object_to_world_matrix()[3]);
+            }
         }
 
         // Implement orbiting. If the right mouse button is held, adjust the camera orientation based on mouse movement.
@@ -127,14 +131,15 @@ namespace sfg_trajectory_planner::editor
 
     void Viewport::render_object(core::SceneObject &object)
     {
+        if (!object.is_visible())
+        {
+            return;
+        }
+
         object.render_object(m_renderer);
 
         for (auto &child : object.get_children())
         {
-            if (!child->is_visible())
-            {
-                continue;
-            }
             render_object(*child);
         }
     }

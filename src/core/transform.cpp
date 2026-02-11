@@ -1,6 +1,8 @@
 #include "sfg_trajectory_planner/core/transform.hpp"
 
 #include <glm/gtx/matrix_decompose.hpp>
+#include <imgui/imgui.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace sfg_trajectory_planner::core
 {
@@ -78,5 +80,38 @@ namespace sfg_trajectory_planner::core
         glm::vec3 skew;
         glm::vec4 perspective;
         glm::decompose(m_matrix, m_scale, m_rotation, m_translation, skew, perspective);
+    }
+
+    void Transform::transform_point(glm::vec3 &point) const
+    {
+        point = glm::vec3(get_matrix() * glm::vec4(point, 1.0f));
+    }
+
+    void Transform::transform_direction(glm::vec3 &direction) const
+    {
+        direction = glm::vec3(get_matrix() * glm::vec4(direction, 0.0f));
+    }
+
+    void Transform::render_inspector(bool render_translation, bool render_rotation, bool render_scale)
+    {
+        glm::vec3 scale = get_scale();
+        glm::quat rotation = get_rotation();
+        glm::vec3 rotation_in_euler_angles = glm::degrees(glm::eulerAngles(rotation));
+        glm::vec3 translation = get_translation();
+
+        if (render_translation && ImGui::DragFloat3("Position [m]", glm::value_ptr(translation), 0.1f))
+        {
+            set_translation(translation);
+        }
+
+        if (render_rotation && ImGui::DragFloat3("Rotation [deg]", glm::value_ptr(rotation_in_euler_angles), 0.1f))
+        {
+            set_rotation(glm::quat(glm::radians(rotation_in_euler_angles)));
+        }
+
+        if (render_scale && ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.1f))
+        {
+            set_scale(glm::max(scale, glm::vec3(0.001f)));
+        }
     }
 }

@@ -34,14 +34,14 @@ namespace sfg_trajectory_planner::core
         std::string get_type() const;
         uuids::uuid get_uuid() const;
 
-        glm::mat4 get_local_transform() const;
-        glm::mat4 get_global_transform() const;
+        Transform &get_transform();
+        glm::mat4 get_object_to_world_matrix() const;
+        glm::mat4 get_world_to_object_matrix() const;
         SceneObject *get_parent() const;
         const std::vector<SceneObject *> &get_children() const;
         bool is_visible() const;
 
         void set_name(std::string name);
-        void set_local_transform(glm::mat4 transform);
         void set_parent(SceneObject *parent);
         void set_visible(bool visible);
 
@@ -51,7 +51,7 @@ namespace sfg_trajectory_planner::core
         Scene &m_scene;
         std::string m_name;
         uuids::uuid m_uuid;
-        Transform m_local_transform;
+        Transform m_transform;
         SceneObject *m_parent;
         std::vector<SceneObject *> m_children;
         bool m_visible;

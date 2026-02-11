@@ -31,7 +31,7 @@ namespace sfg_trajectory_planner::core
         : m_scene(scene),
           m_name("New Object"),
           m_uuid(std::move(uuid)),
-          m_local_transform(glm::mat4(1.0f)),
+          m_transform(glm::mat4(1.0f)),
           m_parent(nullptr),
           m_visible(true)
     {
@@ -53,40 +53,19 @@ namespace sfg_trajectory_planner::core
     void SceneObject::render_inspector()
     {
         sfg_imgui_vendor::PushIdGuard guard(this);
-
         ImGui::InputText("Name", &m_name);
 
         auto type = get_type();
         ImGui::BeginDisabled();
         ImGui::InputText("Type", &type);
-        ImGui::EndDisabled();
 
         auto uuid = uuids::to_string(get_uuid());
-        ImGui::BeginDisabled();
         ImGui::InputText("UUID", &uuid);
         ImGui::EndDisabled();
 
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            glm::vec3 scale = m_local_transform.get_scale();
-            glm::quat rotation = m_local_transform.get_rotation();
-            glm::vec3 rotation_in_euler_angles = glm::degrees(glm::eulerAngles(rotation));
-            glm::vec3 translation = m_local_transform.get_translation();
-
-            if (ImGui::DragFloat3("Position [m]", glm::value_ptr(translation), 0.1f))
-            {
-                m_local_transform.set_translation(translation);
-            }
-
-            if (ImGui::DragFloat3("Rotation [deg]", glm::value_ptr(rotation_in_euler_angles), 0.1f))
-            {
-                m_local_transform.set_rotation(glm::quat(glm::radians(rotation_in_euler_angles)));
-            }
-
-            if (ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.1f))
-            {
-                m_local_transform.set_scale(glm::max(scale, glm::vec3(0.001f)));
-            }
+            m_transform.render_inspector();
         }
 
         if (ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
@@ -110,18 +89,23 @@ namespace sfg_trajectory_planner::core
         return m_uuid;
     }
 
-    glm::mat4 SceneObject::get_local_transform() const
+    Transform &SceneObject::get_transform()
     {
-        return m_local_transform.get_matrix();
+        return m_transform;
     }
 
-    glm::mat4 SceneObject::get_global_transform() const
+    glm::mat4 SceneObject::get_object_to_world_matrix() const
     {
         if (m_parent)
         {
-            return m_parent->get_global_transform() * m_local_transform.get_matrix();
+            return m_parent->get_object_to_world_matrix() * m_transform.get_matrix();
         }
-        return m_local_transform.get_matrix();
+        return m_transform.get_matrix();
+    }
+
+    glm::mat4 SceneObject::get_world_to_object_matrix() const
+    {
+        return glm::inverse(get_object_to_world_matrix());
     }
 
     SceneObject *SceneObject::get_parent() const
@@ -148,11 +132,6 @@ namespace sfg_trajectory_planner::core
         m_name = std::move(name);
     }
 
-    void SceneObject::set_local_transform(glm::mat4 transform)
-    {
-        m_local_transform = std::move(transform);
-    }
-
     void SceneObject::set_parent(SceneObject *parent)
     {
         // If the new parent is the same as the current parent, do nothing.
@@ -162,7 +141,7 @@ namespace sfg_trajectory_planner::core
         }
 
         // We need to check if the new parent is a descendant of this object to avoid creating a cycle in the scene graph.
-        for (SceneObject *ancestor = parent; ancestor != nullptr; ancestor = ancestor->get_parent())
+        for (auto ancestor = parent; ancestor != nullptr; ancestor = ancestor->get_parent())
         {
             if (ancestor == this)
             {
