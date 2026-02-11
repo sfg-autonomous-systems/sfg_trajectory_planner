@@ -119,7 +119,7 @@ namespace sfg_trajectory_planner
                 }
 
                 ImGui::TableNextColumn();
-                waypoint.m_transform.render_inspector(true, true, false);
+                waypoint.m_transform.render_inspector(true, true, false, false);
 
                 ImGui::TableNextColumn();
 

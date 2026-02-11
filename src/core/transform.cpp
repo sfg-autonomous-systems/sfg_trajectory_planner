@@ -10,6 +10,7 @@ namespace sfg_trajectory_planner::core
         : m_matrix(1.0f),
           m_translation(0.0f),
           m_rotation(0.0f, 0.0f, 0.0f, 1.0f),
+          m_euler_angles(0.0f),
           m_scale(1.0f),
           m_dirty(false) {}
 
@@ -46,6 +47,11 @@ namespace sfg_trajectory_planner::core
         return m_rotation;
     }
 
+    glm::vec3 Transform::get_euler_angles() const
+    {
+        return m_euler_angles;
+    }
+
     glm::vec3 Transform::get_scale() const
     {
         return m_scale;
@@ -67,6 +73,14 @@ namespace sfg_trajectory_planner::core
     void Transform::set_rotation(glm::quat rotation)
     {
         m_rotation = rotation;
+        m_euler_angles = glm::degrees(glm::eulerAngles(rotation));
+        m_dirty = true;
+    }
+
+    void Transform::set_euler_angles(glm::vec3 euler_angles)
+    {
+        m_euler_angles = euler_angles;
+        m_rotation = glm::quat(glm::radians(euler_angles));
         m_dirty = true;
     }
 
@@ -78,26 +92,34 @@ namespace sfg_trajectory_planner::core
         m_dirty = true;
     }
 
-    void Transform::render_inspector(bool render_translation, bool render_rotation, bool render_scale)
+    void Transform::render_inspector(bool render_translation, bool render_rotation, bool render_scale, bool render_labels)
     {
-        glm::vec3 scale = get_scale();
-        glm::quat rotation = get_rotation();
-        glm::vec3 rotation_in_euler_angles = glm::degrees(glm::eulerAngles(rotation));
-        glm::vec3 translation = get_translation();
-
-        if (render_translation && ImGui::DragFloat3("Position [m]", glm::value_ptr(translation), 0.1f))
+        if (!render_labels)
         {
-            set_translation(translation);
+            ImGui::PushItemWidth(-1.0f);
         }
 
-        if (render_rotation && ImGui::DragFloat3("Rotation [deg]", glm::value_ptr(rotation_in_euler_angles), 0.1f))
+        if (render_translation && ImGui::DragFloat3(render_labels ? "Position [m]" : "##position", glm::value_ptr(m_translation), 0.1f))
         {
-            set_rotation(glm::quat(glm::radians(rotation_in_euler_angles)));
+            set_translation(m_translation);
         }
+        ImGui::SetItemTooltip("Position [m]");
 
-        if (render_scale && ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.1f))
+        if (render_rotation && ImGui::DragFloat3(render_labels ? "Rotation [deg]" : "##rotation", glm::value_ptr(m_euler_angles), 0.1f))
         {
-            set_scale(glm::max(scale, glm::vec3(0.001f)));
+            set_euler_angles(m_euler_angles);
+        }
+        ImGui::SetItemTooltip("Rotation [deg]");
+
+        if (render_scale && ImGui::DragFloat3(render_labels ? "Scale" : "##scale", glm::value_ptr(m_scale), 0.1f))
+        {
+            set_scale(m_scale);
+        }
+        ImGui::SetItemTooltip("Scale");
+
+        if (!render_labels)
+        {
+            ImGui::PopItemWidth();
         }
     }
 
@@ -112,6 +134,7 @@ namespace sfg_trajectory_planner::core
         glm::vec3 skew;
         glm::vec4 perspective;
         glm::decompose(m_matrix, m_scale, m_rotation, m_translation, skew, perspective);
+        m_euler_angles = glm::degrees(glm::eulerAngles(m_rotation));
     }
 
 }
