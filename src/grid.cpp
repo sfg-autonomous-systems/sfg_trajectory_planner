@@ -10,31 +10,27 @@ namespace sfg_trajectory_planner
     void Grid::render_object(core::gfx::Renderer &renderer)
     {
         const glm::vec3 color = {1.0f, 1.0f, 1.0f};
-
-        auto model_matrix = get_object_to_world_matrix();
-        // Ignore scale.
-        model_matrix[0][0] = model_matrix[1][1] = model_matrix[2][2] = 1.0f;
-
+        auto object_to_world_matrix = get_object_to_world_matrix();
         auto extents = 0.5f * glm::vec3(m_grid_size.x, 0.0f, m_grid_size.y);
 
         // Draw outer rectangle.
-        renderer.add_line(model_matrix, {-extents.x, 0.0f, -extents.z}, {extents.x, 0.0f, -extents.z}, color);
-        renderer.add_line(model_matrix, {extents.x, 0.0f, -extents.z}, {extents.x, 0.0f, extents.z}, color);
-        renderer.add_line(model_matrix, {extents.x, 0.0f, extents.z}, {-extents.x, 0.0f, extents.z}, color);
-        renderer.add_line(model_matrix, {-extents.x, 0.0f, extents.z}, {-extents.x, 0.0f, -extents.z}, color);
+        renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, -extents.z}, {extents.x, 0.0f, -extents.z}, color);
+        renderer.add_line(object_to_world_matrix, {extents.x, 0.0f, -extents.z}, {extents.x, 0.0f, extents.z}, color);
+        renderer.add_line(object_to_world_matrix, {extents.x, 0.0f, extents.z}, {-extents.x, 0.0f, extents.z}, color);
+        renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, extents.z}, {-extents.x, 0.0f, -extents.z}, color);
 
         // Draw horizontal lines.
         for (auto z = 0.0f; z < extents.z; z += m_grid_spacing)
         {
-            renderer.add_line(model_matrix, {-extents.x, 0.0f, -z}, {extents.x, 0.0f, -z}, 0.5f * color);
-            renderer.add_line(model_matrix, {-extents.x, 0.0f, z}, {extents.x, 0.0f, z}, 0.5f * color);
+            renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, -z}, {extents.x, 0.0f, -z}, 0.5f * color);
+            renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, z}, {extents.x, 0.0f, z}, 0.5f * color);
         }
 
         // Draw vertical lines.
         for (auto x = 0.0f; x < extents.x; x += m_grid_spacing)
         {
-            renderer.add_line(model_matrix, {-x, 0.0f, -extents.z}, {-x, 0.0f, extents.z}, 0.5f * color);
-            renderer.add_line(model_matrix, {x, 0.0f, -extents.z}, {x, 0.0f, extents.z}, 0.5f * color);
+            renderer.add_line(object_to_world_matrix, {-x, 0.0f, -extents.z}, {-x, 0.0f, extents.z}, 0.5f * color);
+            renderer.add_line(object_to_world_matrix, {x, 0.0f, -extents.z}, {x, 0.0f, extents.z}, 0.5f * color);
         }
     }
 

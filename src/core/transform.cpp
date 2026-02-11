@@ -6,14 +6,23 @@
 
 namespace sfg_trajectory_planner::core
 {
-    Transform::Transform() : m_matrix(1.0f), m_translation(0.0f), m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_scale(1.0f), m_dirty(false) {}
+    Transform::Transform()
+        : m_matrix(1.0f),
+          m_translation(0.0f),
+          m_rotation(0.0f, 0.0f, 0.0f, 1.0f),
+          m_scale(1.0f),
+          m_dirty(false) {}
 
     Transform::Transform(const glm::mat4 &matrix) : m_matrix(matrix), m_dirty(false)
     {
         update_components();
     }
 
-    Transform::Transform(const glm::vec3 &translation, const glm::quat &rotation, const glm::vec3 &scale) : m_translation(translation), m_rotation(rotation), m_scale(scale), m_dirty(false)
+    Transform::Transform(const glm::vec3 &translation, const glm::quat &rotation, const glm::vec3 &scale)
+        : m_translation(translation),
+          m_rotation(rotation),
+          m_scale(scale),
+          m_dirty(false)
     {
         update_matrix();
     }
@@ -69,29 +78,6 @@ namespace sfg_trajectory_planner::core
         m_dirty = true;
     }
 
-    void Transform::update_matrix() const
-    {
-        m_matrix = glm::scale(glm::translate(glm::mat4(1.0f), m_translation) * glm::toMat4(m_rotation), m_scale);
-        m_dirty = false;
-    }
-
-    void Transform::update_components()
-    {
-        glm::vec3 skew;
-        glm::vec4 perspective;
-        glm::decompose(m_matrix, m_scale, m_rotation, m_translation, skew, perspective);
-    }
-
-    void Transform::transform_point(glm::vec3 &point) const
-    {
-        point = glm::vec3(get_matrix() * glm::vec4(point, 1.0f));
-    }
-
-    void Transform::transform_direction(glm::vec3 &direction) const
-    {
-        direction = glm::vec3(get_matrix() * glm::vec4(direction, 0.0f));
-    }
-
     void Transform::render_inspector(bool render_translation, bool render_rotation, bool render_scale)
     {
         glm::vec3 scale = get_scale();
@@ -114,4 +100,18 @@ namespace sfg_trajectory_planner::core
             set_scale(glm::max(scale, glm::vec3(0.001f)));
         }
     }
+
+    void Transform::update_matrix() const
+    {
+        m_matrix = glm::scale(glm::translate(glm::mat4(1.0f), m_translation) * glm::toMat4(m_rotation), m_scale);
+        m_dirty = false;
+    }
+
+    void Transform::update_components()
+    {
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose(m_matrix, m_scale, m_rotation, m_translation, skew, perspective);
+    }
+
 }
