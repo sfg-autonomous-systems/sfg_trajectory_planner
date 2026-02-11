@@ -6,16 +6,20 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 cmake_policy(SET CMP0072 NEW)
+cmake_policy(SET CMP0079 NEW)
 
 # ########################################################################################################
 # Find dependencies.                                                                                     #
 # ########################################################################################################
 find_package(ament_cmake REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sfg_imgui_vendor REQUIRED)
 find_package(sfg_utils REQUIRED)
+
+pkg_check_modules(UUID REQUIRED uuid)
 
 include(FetchContent)
 
@@ -26,6 +30,16 @@ FetchContent_Declare(
   GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(glm)
+
+FetchContent_Declare(
+  stduuid
+  GIT_REPOSITORY "https://github.com/mariusbancila/stduuid.git"
+  GIT_TAG v1.2.3
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(stduuid)
+target_compile_definitions(stduuid INTERFACE UUID_SYSTEM_GENERATOR)
+target_link_libraries(stduuid INTERFACE ${UUID_LIBRARIES})
 
 # ########################################################################################################
 # Add nodes and libraries.                                                                               #
@@ -55,6 +69,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   PRIVATE
   glm::glm
   magic_enum::magic_enum
+  stduuid
 )
 
 # Add GLM_SWIZZLE to the compile definitions of the trajectory_planner library to enable swizzling for glm vector types.
