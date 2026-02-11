@@ -109,9 +109,9 @@ namespace sfg_trajectory_planner::core::gfx
         m_line_vertices.push_back({model_matrix * glm::vec4(end, 1.0f), color});
     }
 
-    bool Renderer::add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode)
+    bool Renderer::add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id)
     {
-        ImGuizmo::PushID(&model_matrix);
+        ImGuizmo::PushID(id);
         auto manipulated = ImGuizmo::Manipulate(glm::value_ptr(m_view_matrix), glm::value_ptr(m_projection_matrix), operation, mode, glm::value_ptr(model_matrix));
         ImGuizmo::PopID();
 

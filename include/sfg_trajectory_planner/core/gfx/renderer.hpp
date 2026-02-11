@@ -22,7 +22,7 @@ namespace sfg_trajectory_planner::core::gfx
         void set_matrices(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::ivec4 viewport);
         void add_line(const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
         void add_line(const glm::mat4 &model_matrix, const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
-        bool add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode);
+        bool add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id = nullptr);
         GLuint render();
 
     private:
