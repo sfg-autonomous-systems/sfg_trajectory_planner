@@ -32,8 +32,8 @@ namespace sfg_trajectory_planner::editor
             ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::GetFrameHeight());
             ImGui::TableSetupColumn("Objects", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_IndentEnable);
             ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(s_add_button_text).x + ImGui::GetStyle().ItemSpacing.x);
-            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
 
+            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
             ImGui::TableNextColumn();
             ImGui::TableHeader("##visibility");
 

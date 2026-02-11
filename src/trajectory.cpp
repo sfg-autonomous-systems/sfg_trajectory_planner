@@ -15,6 +15,9 @@ namespace sfg_trajectory_planner
                                                     ImGuiTableFlags_RowBg |
                                                     ImGuiTableFlags_SizingFixedFit;
 
+    static constexpr auto s_add_button_text = "+";
+    static constexpr auto s_remove_button_text = "-";
+
     Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid, editor::SelectionContext &selection_context)
         : SceneObject(key, scene, uuid),
           m_selection_context(selection_context)
@@ -41,7 +44,7 @@ namespace sfg_trajectory_planner
         {
             auto waypoint_transform = transform * waypoint.m_transform;
 
-            if (renderer.add_gizmo(waypoint_transform, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode()))
+            if (renderer.add_gizmo(waypoint_transform, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode(), &waypoint))
             {
                 waypoint.m_transform = glm::inverse(transform) * waypoint_transform;
             }
@@ -50,16 +53,6 @@ namespace sfg_trajectory_planner
 
     void Trajectory::render_inspector_internal()
     {
-        if (ImGui::Button("Add waypoint", ImVec2(-1.0f, 0.0f)))
-        {
-            auto waypoint = Waypoint();
-
-            // The new waypoint's location should be one unit forward from the last waypoint, or from the origin if there are no waypoints yet.
-            auto last_transform = m_waypoints.empty() ? glm::mat4(1.0f) : m_waypoints.back().m_transform;
-            waypoint.m_transform = last_transform * glm::translate(glm::mat4(1.0f), core::gfx::utils::s_forward.xyz());
-            m_waypoints.push_back(waypoint);
-        }
-
         ImGui::InputText("Topic Name", &m_topic_name);
         ImGui::InputText("Frame ID", &m_frame_id);
 
@@ -68,26 +61,53 @@ namespace sfg_trajectory_planner
             m_time_from_start = std::max(0.0f, m_time_from_start);
         }
 
-        ImGui::BeginTable("waypoints_table", 2, s_waypoints_table_flags);
-        ImGui::TableSetupColumn("Waypoint", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("Time from last [s]", ImGuiTableColumnFlags_WidthFixed, 150.0f);
-        ImGui::TableHeadersRow();
-
-        for (size_t index = 0; index < m_waypoints.size(); index++)
+        if (ImGui::BeginTable("waypoints_table", 3, s_waypoints_table_flags))
         {
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Waypoint %zu", index);
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::TableSetupColumn("Waypoint", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Time from last [s]", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_IndentDisable, ImGui::CalcTextSize(s_add_button_text).x + ImGui::GetStyle().ItemSpacing.x);
 
-            sfg_imgui_vendor::PushIdGuard id_guard(index);
+            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextColumn();
+            ImGui::TableHeader("Waypoint");
 
-            if (ImGui::InputFloat("##time_from_last", &m_waypoints[index].m_time_from_last))
+            ImGui::TableNextColumn();
+            ImGui::TableHeader("Time from last [s]");
+
+            ImGui::TableNextColumn();
+
+            if (ImGui::Button(s_add_button_text))
             {
-                m_waypoints[index].m_time_from_last = std::max(0.0f, m_waypoints[index].m_time_from_last);
+                auto waypoint = Waypoint();
+                // The new waypoint's location should be one unit forward from the last waypoint, or from the origin if there are no waypoints yet.
+                auto last_transform = m_waypoints.empty() ? get_local_transform() : m_waypoints.back().m_transform;
+                waypoint.m_transform = last_transform * glm::translate(glm::mat4(1.0f), core::gfx::utils::s_forward.xyz());
+                m_waypoints.push_back(waypoint);
             }
+
+            for (size_t index = 0; index < m_waypoints.size(); index++)
+            {
+                sfg_imgui_vendor::PushIdGuard id_guard(index);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Waypoint %zu", index);
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-1.0f);
+
+                if (ImGui::InputFloat("##time_from_last", &m_waypoints[index].m_time_from_last))
+                {
+                    m_waypoints[index].m_time_from_last = std::max(0.0f, m_waypoints[index].m_time_from_last);
+                }
+
+                ImGui::TableNextColumn();
+
+                if (ImGui::Button(s_remove_button_text))
+                {
+                    m_waypoints.erase(m_waypoints.begin() + index--);
+                }
+            }
+            ImGui::EndTable();
         }
-        ImGui::EndTable();
     }
 }
