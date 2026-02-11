@@ -6,7 +6,7 @@ namespace sfg_trajectory_planner::editor
 
     void Inspector::render_internal()
     {
-        auto selected_object = m_selection_context.get_selected_object();
+        auto selected_object = m_selection_context.get_selected();
 
         if (!selected_object)
         {

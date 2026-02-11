@@ -4,7 +4,7 @@ namespace sfg_trajectory_planner::core
 {
     Scene::Scene()
     {
-        m_root = std::make_unique<SceneObject>(SceneObjectKey{}, *this);
+        m_root = std::make_unique<SceneObject>(SceneObjectKey{}, *this, uuids::uuid_system_generator{}());
     }
 
     SceneObject *Scene::get_root()
@@ -19,7 +19,7 @@ namespace sfg_trajectory_planner::core
             return;
         }
 
-        auto iterator = m_objects.find(object);
+        auto iterator = m_objects.find(object->get_uuid());
 
         if (iterator == m_objects.end())
         {

@@ -27,9 +27,10 @@ std::string demangle(const char *name) { return name; }
 
 namespace sfg_trajectory_planner::core
 {
-    SceneObject::SceneObject(SceneObjectKey, Scene &scene)
+    SceneObject::SceneObject(SceneObjectKey, Scene &scene, uuids::uuid uuid)
         : m_scene(scene),
           m_name("New Object"),
+          m_uuid(std::move(uuid)),
           m_local_transform(glm::mat4(1.0f)),
           m_parent(nullptr),
           m_visible(true)
@@ -53,20 +54,16 @@ namespace sfg_trajectory_planner::core
     {
         sfg_imgui_vendor::PushIdGuard guard(this);
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Name:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText("##name", &m_name);
+        ImGui::InputText("Name", &m_name);
 
         auto type = get_type();
-
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Type:");
-        ImGui::SameLine();
         ImGui::BeginDisabled();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText("##type", &type);
+        ImGui::InputText("Type", &type);
+        ImGui::EndDisabled();
+
+        auto uuid = uuids::to_string(get_uuid());
+        ImGui::BeginDisabled();
+        ImGui::InputText("UUID", &uuid);
         ImGui::EndDisabled();
 
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
@@ -76,29 +73,17 @@ namespace sfg_trajectory_planner::core
             glm::vec3 rotation_in_euler_angles = glm::degrees(glm::eulerAngles(rotation));
             glm::vec3 translation = m_local_transform.get_translation();
 
-            ImGui::Text("Position:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-            if (ImGui::DragFloat3("##position", glm::value_ptr(translation), 0.1f))
+            if (ImGui::DragFloat3("Position [m]", glm::value_ptr(translation), 0.1f))
             {
                 m_local_transform.set_translation(translation);
             }
 
-            ImGui::Text("Rotation:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-            if (ImGui::DragFloat3("##rotation_in_euler_angles", glm::value_ptr(rotation_in_euler_angles), 0.1f))
+            if (ImGui::DragFloat3("Rotation [deg]", glm::value_ptr(rotation_in_euler_angles), 0.1f))
             {
                 m_local_transform.set_rotation(glm::quat(glm::radians(rotation_in_euler_angles)));
             }
 
-            ImGui::Text("Scale:   ");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-            if (ImGui::DragFloat3("##scale", glm::value_ptr(scale), 0.1f))
+            if (ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.1f))
             {
                 m_local_transform.set_scale(glm::max(scale, glm::vec3(0.001f)));
             }
@@ -118,6 +103,11 @@ namespace sfg_trajectory_planner::core
     std::string SceneObject::get_type() const
     {
         return demangle(typeid(*this).name());
+    }
+
+    uuids::uuid SceneObject::get_uuid() const
+    {
+        return m_uuid;
     }
 
     glm::mat4 SceneObject::get_local_transform() const

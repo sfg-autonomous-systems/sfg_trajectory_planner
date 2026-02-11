@@ -5,7 +5,7 @@
 
 namespace sfg_trajectory_planner
 {
-    Grid::Grid(core::SceneObjectKey key, core::Scene &scene) : SceneObject(key, scene) {}
+    Grid::Grid(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid) {}
 
     void Grid::render_object(core::gfx::Renderer &renderer)
     {
@@ -40,22 +40,12 @@ namespace sfg_trajectory_planner
 
     void Grid::render_inspector_internal()
     {
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Grid Size:   ");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-        if (ImGui::DragFloat2("##grid_size", glm::value_ptr(m_grid_size), 0.1f))
+        if (ImGui::DragFloat2("Grid Size [m]", glm::value_ptr(m_grid_size), 0.1f))
         {
             m_grid_size = glm::max(m_grid_size, 0.0f);
         }
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Grid Spacing:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-        if (ImGui::DragFloat("##grid_spacing", &m_grid_spacing, 0.1f))
+        if (ImGui::DragFloat("Grid Spacing [m]", &m_grid_spacing, 0.1f))
         {
             m_grid_spacing = glm::max(m_grid_spacing, 0.1f);
         }

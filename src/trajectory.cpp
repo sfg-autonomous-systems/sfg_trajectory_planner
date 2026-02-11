@@ -3,7 +3,10 @@
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
+#include "sfg_imgui_vendor/push_id_guard.hpp"
+#include "sfg_trajectory_planner/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
+#include "sfg_trajectory_planner/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner
 {
@@ -12,20 +15,36 @@ namespace sfg_trajectory_planner
                                                     ImGuiTableFlags_RowBg |
                                                     ImGuiTableFlags_SizingFixedFit;
 
-    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene)
-        : SceneObject(key, scene),
-          m_time_from_start(0.0f)
+    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid, editor::SelectionContext &selection_context)
+        : SceneObject(key, scene, uuid),
+          m_selection_context(selection_context)
     {
     }
 
     void Trajectory::render_object(core::gfx::Renderer &renderer)
     {
-        for (size_t child_index = 1; child_index < m_children.size(); child_index++)
+        auto transform = get_global_transform();
+
+        for (size_t index = 1; index < m_waypoints.size(); index++)
         {
-            renderer.add_line(
-                glm::vec3(m_children[child_index - 1]->get_global_transform()[3]),
-                glm::vec3(m_children[child_index]->get_global_transform()[3]),
-                glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+            glm::vec3 start = glm::vec3(transform * m_waypoints[index - 1].m_transform[3]);
+            glm::vec3 end = glm::vec3(transform * m_waypoints[index].m_transform[3]);
+            renderer.add_line(start, end, glm::vec3(1.0f, 1.0f, 0.0f));
+        }
+
+        if (m_selection_context.get_selected() != this)
+        {
+            return;
+        }
+
+        for (auto &waypoint : m_waypoints)
+        {
+            auto waypoint_transform = transform * waypoint.m_transform;
+
+            if (renderer.add_gizmo(waypoint_transform, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode()))
+            {
+                waypoint.m_transform = glm::inverse(transform) * waypoint_transform;
+            }
         }
     }
 
@@ -33,41 +52,20 @@ namespace sfg_trajectory_planner
     {
         if (ImGui::Button("Add waypoint", ImVec2(-1.0f, 0.0f)))
         {
-            m_scene.create_object<core::SceneObject>("Waypoint", this);
+            auto waypoint = Waypoint();
+
+            // The new waypoint's location should be one unit forward from the last waypoint, or from the origin if there are no waypoints yet.
+            auto last_transform = m_waypoints.empty() ? glm::mat4(1.0f) : m_waypoints.back().m_transform;
+            waypoint.m_transform = last_transform * glm::translate(glm::mat4(1.0f), core::gfx::utils::s_forward.xyz());
+            m_waypoints.push_back(waypoint);
         }
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Topic Name:         ");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText("##topic_name", &m_topic_name);
+        ImGui::InputText("Topic Name", &m_topic_name);
+        ImGui::InputText("Frame ID", &m_frame_id);
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Frame ID:           ");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText("##frame_id", &m_frame_id);
-
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Time from start [s]:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-
-        if (ImGui::InputFloat("##time_from_start", &m_time_from_start))
+        if (ImGui::InputFloat("Time from start [s]", &m_time_from_start))
         {
             m_time_from_start = std::max(0.0f, m_time_from_start);
-        }
-
-        auto child_count = m_children.size();
-
-        if (m_times_from_last.size() != child_count)
-        {
-            m_times_from_last.resize(child_count);
-        }
-
-        if (child_count == 0)
-        {
-            return;
         }
 
         ImGui::BeginTable("waypoints_table", 2, s_waypoints_table_flags);
@@ -75,17 +73,19 @@ namespace sfg_trajectory_planner
         ImGui::TableSetupColumn("Time from last [s]", ImGuiTableColumnFlags_WidthFixed, 150.0f);
         ImGui::TableHeadersRow();
 
-        for (size_t index = 0; index < child_count; index++)
+        for (size_t index = 0; index < m_waypoints.size(); index++)
         {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("%s", m_children[index]->get_name().c_str());
+            ImGui::Text("Waypoint %zu", index);
             ImGui::TableSetColumnIndex(1);
             ImGui::SetNextItemWidth(-1.0f);
 
-            if (ImGui::InputFloat(("##time_from_last" + std::to_string(index)).c_str(), &m_times_from_last[index]))
+            sfg_imgui_vendor::PushIdGuard id_guard(index);
+
+            if (ImGui::InputFloat("##time_from_last", &m_waypoints[index].m_time_from_last))
             {
-                m_times_from_last[index] = std::max(0.0f, m_times_from_last[index]);
+                m_waypoints[index].m_time_from_last = std::max(0.0f, m_waypoints[index].m_time_from_last);
             }
         }
         ImGui::EndTable();

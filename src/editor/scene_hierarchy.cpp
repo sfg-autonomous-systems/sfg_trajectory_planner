@@ -109,7 +109,7 @@ namespace sfg_trajectory_planner::editor
             flags = flags | ImGuiTreeNodeFlags_Leaf;
         }
 
-        if (&object == m_selection_context.get_selected_object())
+        if (&object == m_selection_context.get_selected())
         {
             flags = flags | ImGuiTreeNodeFlags_Selected;
         }
@@ -118,7 +118,7 @@ namespace sfg_trajectory_planner::editor
 
         if (ImGui::IsItemClicked())
         {
-            m_selection_context.select_object(&object);
+            m_selection_context.set_selected(&object);
         }
 
         if (ImGui::BeginDragDropSource())
@@ -144,9 +144,9 @@ namespace sfg_trajectory_planner::editor
 
         if (ImGui::Button(s_remove_button_text))
         {
-            if (m_selection_context.get_selected_object() == &object)
+            if (m_selection_context.get_selected() == &object)
             {
-                m_selection_context.select_object(nullptr);
+                m_selection_context.set_selected(nullptr);
             }
             m_scene.destroy_object(&object);
 

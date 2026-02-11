@@ -27,14 +27,15 @@ namespace sfg_trajectory_planner::editor
         ImGuizmo::SetRect(m_camera.m_viewport.x, m_camera.m_viewport.y, m_camera.m_viewport.z, m_camera.m_viewport.w);
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         update_camera_matrices();
+        m_renderer.set_matrices(m_camera.m_view_matrix, m_camera.m_projection_matrix, m_camera.m_viewport);
 
         for (auto &object : m_scene.get_root()->get_children())
         {
             render_object(*object);
         }
 
-        auto image = m_renderer.render(m_camera.m_view_matrix, m_camera.m_projection_matrix, (int)m_camera.m_viewport.z, (int)m_camera.m_viewport.w);
-        ImGui::GetWindowDrawList()->AddImage(
+        auto image = m_renderer.render();
+        ImGui::GetBackgroundDrawList()->AddImage(
             static_cast<ImTextureID>(image),
             ImVec2(m_camera.m_viewport.x, m_camera.m_viewport.y),
             ImVec2(m_camera.m_viewport.x + m_camera.m_viewport.z, m_camera.m_viewport.y + m_camera.m_viewport.w),
@@ -54,16 +55,11 @@ namespace sfg_trajectory_planner::editor
             0);
         io.MouseDelta = old_mouse_delta;
 
-        if (auto selected_object = m_selection_context.get_selected_object())
+        if (auto selected_object = m_selection_context.get_selected())
         {
             auto transform = selected_object->get_global_transform();
 
-            if (ImGuizmo::Manipulate(
-                    glm::value_ptr(m_camera.m_view_matrix),
-                    glm::value_ptr(m_camera.m_projection_matrix),
-                    m_gizmo_operation,
-                    m_gizmo_mode,
-                    glm::value_ptr(transform)))
+            if (m_renderer.add_gizmo(transform, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode()))
             {
                 if (selected_object->get_parent())
                 {
@@ -86,17 +82,17 @@ namespace sfg_trajectory_planner::editor
 
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_W))
         {
-            m_gizmo_operation = ImGuizmo::TRANSLATE;
+            m_selection_context.set_gizmo_operation(ImGuizmo::TRANSLATE);
         }
 
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_E))
         {
-            m_gizmo_operation = ImGuizmo::ROTATE;
+            m_selection_context.set_gizmo_operation(ImGuizmo::ROTATE);
         }
 
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_R))
         {
-            m_gizmo_operation = ImGuizmo::SCALE;
+            m_selection_context.set_gizmo_operation(ImGuizmo::SCALE);
         }
 
         // Implement orbiting. If the right mouse button is held, adjust the camera orientation based on mouse movement.
@@ -151,39 +147,32 @@ namespace sfg_trajectory_planner::editor
         {
             const ImGuizmo::OPERATION supported_gizmo_operations[] = {ImGuizmo::TRANSLATE, ImGuizmo::ROTATE, ImGuizmo::SCALE};
             const char *supported_gizmo_operation_displaynames = "Translate\0Rotate\0Scale\0";
-
-            ImGui::Text("Gizmo Operation:   ");
-            ImGui::SameLine();
             std::int32_t index;
 
             for (size_t i = 0; i < std::size(supported_gizmo_operations); ++i)
             {
-                if (m_gizmo_operation == supported_gizmo_operations[i])
+                if (m_selection_context.get_gizmo_operation() == supported_gizmo_operations[i])
                 {
                     index = i;
                     break;
                 }
             }
 
-            if (ImGui::Combo("##guizmo_operation", &index, supported_gizmo_operation_displaynames))
+            if (ImGui::Combo("Gizmo Operation", &index, supported_gizmo_operation_displaynames))
             {
-                m_gizmo_operation = supported_gizmo_operations[index];
+                m_selection_context.set_gizmo_operation(supported_gizmo_operations[index]);
             }
 
-            ImGui::Text("Gizmo Mode:        ");
-            ImGui::SameLine();
-            index = magic_enum::enum_index(m_gizmo_mode).value();
+            index = magic_enum::enum_index(m_selection_context.get_gizmo_mode()).value();
 
-            if (ImGui::Combo("##guizmo_mode", &index, "Local\0World\0"))
+            if (ImGui::Combo("Gizmo Mode", &index, "Local\0World\0"))
             {
-                m_gizmo_mode = magic_enum::enum_value<ImGuizmo::MODE>(index);
+                m_selection_context.set_gizmo_mode(magic_enum::enum_value<ImGuizmo::MODE>(index));
             }
 
-            ImGui::Text("Camera Projection: ");
-            ImGui::SameLine();
             index = magic_enum::enum_index(m_camera.m_projection).value();
 
-            if (ImGui::Combo("##camera_projection", &index, "Orthographic\0Perspective\0"))
+            if (ImGui::Combo("Camera Projection", &index, "Orthographic\0Perspective\0"))
             {
                 m_camera.m_projection = magic_enum::enum_value<Camera::Projection>(index);
 

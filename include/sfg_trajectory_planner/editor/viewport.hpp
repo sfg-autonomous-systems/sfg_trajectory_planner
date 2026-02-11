@@ -50,7 +50,7 @@ namespace sfg_trajectory_planner::editor
             glm::vec3 m_pan_start;
             glm::mat4 m_view_matrix;
             glm::mat4 m_projection_matrix;
-            glm::vec4 m_viewport;
+            glm::ivec4 m_viewport;
         };
 
         void process_input();
@@ -64,7 +64,5 @@ namespace sfg_trajectory_planner::editor
 
         Config m_config;
         Camera m_camera;
-        ImGuizmo::MODE m_gizmo_mode = ImGuizmo::LOCAL;
-        ImGuizmo::OPERATION m_gizmo_operation = ImGuizmo::TRANSLATE;
     };
 }

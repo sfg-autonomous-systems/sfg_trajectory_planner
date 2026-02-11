@@ -4,19 +4,31 @@
 
 namespace sfg_trajectory_planner
 {
+    namespace editor
+    {
+        class SelectionContext;
+    }
+
     class Trajectory : public core::SceneObject
     {
     public:
-        Trajectory(core::SceneObjectKey key, core::Scene &scene);
+        Trajectory(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid, editor::SelectionContext &selection_context);
         void render_object(core::gfx::Renderer &renderer) override;
 
     protected:
         void render_inspector_internal() override;
 
     private:
-        std::string m_topic_name;
-        std::string m_frame_id;
-        float m_time_from_start;
-        std::vector<float> m_times_from_last;
+        struct Waypoint
+        {
+            glm::mat4 m_transform = glm::mat4(1.0f);
+            float m_time_from_last = 0.0f;
+        };
+
+        editor::SelectionContext &m_selection_context;
+        std::string m_topic_name = "/trajectory";
+        std::string m_frame_id = "base_link";
+        float m_time_from_start = 0.0f;
+        std::vector<Waypoint> m_waypoints;
     };
 }

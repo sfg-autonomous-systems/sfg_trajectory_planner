@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <string>
+#include <uuid.h>
 #include <vector>
 
 #include "sfg_trajectory_planner/core/gfx/renderer.hpp"
@@ -24,13 +25,15 @@ namespace sfg_trajectory_planner::core
         friend class Scene;
 
     public:
-        SceneObject(SceneObjectKey key, Scene &scene);
+        SceneObject(SceneObjectKey key, Scene &scene, uuids::uuid uuid);
         virtual ~SceneObject();
         virtual void render_object(gfx::Renderer &renderer);
         void render_inspector();
 
         std::string get_name() const;
         std::string get_type() const;
+        uuids::uuid get_uuid() const;
+
         glm::mat4 get_local_transform() const;
         glm::mat4 get_global_transform() const;
         SceneObject *get_parent() const;
@@ -47,6 +50,7 @@ namespace sfg_trajectory_planner::core
 
         Scene &m_scene;
         std::string m_name;
+        uuids::uuid m_uuid;
         Transform m_local_transform;
         SceneObject *m_parent;
         std::vector<SceneObject *> m_children;

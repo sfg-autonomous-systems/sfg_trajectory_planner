@@ -1,5 +1,6 @@
 #include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <stdexcept>
 #include <string>
 #include <SDL.h>
@@ -81,6 +82,18 @@ namespace sfg_trajectory_planner::core::gfx
         }
     }
 
+    void Renderer::set_matrices(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::ivec4 viewport)
+    {
+        m_view_matrix = view_matrix;
+        m_projection_matrix = projection_matrix;
+
+        if ((viewport.z != m_viewport.z || viewport.w != m_viewport.w) && viewport.z > 0 && viewport.w > 0)
+        {
+            resize_fbo(viewport.z, viewport.w);
+            m_viewport = viewport;
+        }
+    }
+
     void Renderer::add_line(const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color)
     {
         add_line(glm::mat4(1.0f), start, end, color);
@@ -96,22 +109,24 @@ namespace sfg_trajectory_planner::core::gfx
         m_line_vertices.push_back({model_matrix * glm::vec4(end, 1.0f), color});
     }
 
-    GLuint Renderer::render(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, int viewport_width, int viewport_height)
+    bool Renderer::add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode)
+    {
+        ImGuizmo::PushID(&model_matrix);
+        auto manipulated = ImGuizmo::Manipulate(glm::value_ptr(m_view_matrix), glm::value_ptr(m_projection_matrix), operation, mode, glm::value_ptr(model_matrix));
+        ImGuizmo::PopID();
+
+        return manipulated;
+    }
+
+    GLuint Renderer::render()
     {
         if (!m_initialized)
         {
             initialize_lazily();
         }
 
-        if ((viewport_width != m_viewport_width || viewport_height != m_viewport_height) && viewport_width > 0 && viewport_height > 0)
-        {
-            resize_fbo(viewport_width, viewport_height);
-            m_viewport_width = viewport_width;
-            m_viewport_height = viewport_height;
-        }
-
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-        glViewport(0, 0, m_viewport_width, m_viewport_height);
+        glViewport(0, 0, m_viewport.z, m_viewport.w);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
@@ -126,8 +141,8 @@ namespace sfg_trajectory_planner::core::gfx
 
             // Issue draw call.
             glUseProgram(m_shader_program);
-            glm::mat4 viewProj = projection_matrix * view_matrix;
-            glUniformMatrix4fv(glGetUniformLocation(m_shader_program, "u_ViewProjection"), 1, GL_FALSE, &viewProj[0][0]);
+            glm::mat4 view_projection_matrix = m_projection_matrix * m_view_matrix;
+            glUniformMatrix4fv(glGetUniformLocation(m_shader_program, "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
 
             glBindVertexArray(m_vao);
             glLineWidth(1.0f);

@@ -7,7 +7,7 @@ namespace sfg_trajectory_planner
     class Grid : public core::SceneObject
     {
     public:
-        Grid(core::SceneObjectKey key, core::Scene &scene);
+        Grid(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid);
         void render_object(core::gfx::Renderer &renderer) override;
 
     protected:
