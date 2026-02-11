@@ -61,7 +61,11 @@ namespace sfg_trajectory_planner::editor
 
             if (m_renderer.add_gizmo(object_to_world_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode()))
             {
-                selected_object->get_transform().set_matrix(selected_object->get_parent()->get_world_to_object_matrix() * object_to_world_matrix);
+                if (selected_object->get_parent())
+                {
+                    object_to_world_matrix = selected_object->get_parent()->get_world_to_object_matrix() * object_to_world_matrix;
+                }
+                selected_object->get_transform().set_matrix(object_to_world_matrix);
             }
         }
         render_settings();
