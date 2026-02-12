@@ -4,16 +4,10 @@
 
 namespace sfg_trajectory_planner::core
 {
-    template <typename ObjectType, typename... Args>
-    ObjectType *Scene::create_object(const std::string &name, SceneObject *parent, Args &&...args)
+    template <typename ObjectType>
+    ObjectType *Scene::create_object(const std::string &name, SceneObject *parent)
     {
-        auto object = std::make_unique<ObjectType>(SceneObjectKey{}, *this, uuids::uuid_system_generator{}(), std::forward<Args>(args)...);
-        auto object_ptr = object.get();
-
-        m_objects[object->get_uuid()] = std::move(object);
-        object_ptr->set_name(name);
-        object_ptr->set_parent(parent ? parent : m_root.get());
-        return object_ptr;
+         return dynamic_cast<ObjectType *>(create_object(SceneObject::get_type<ObjectType>(), name, parent));
     }
 
     template <typename ObjectType>
@@ -33,5 +27,11 @@ namespace sfg_trajectory_planner::core
             return nullptr;
         }
         return object_ptr;
+    }
+
+    template <typename ObjectType>
+    std::vector<ObjectType *> Scene::find_objects_by_type()
+    {
+        return find_objects_by_type(SceneObject::get_type<ObjectType>());
     }
 }

@@ -1,5 +1,6 @@
 #include "sfg_trajectory_planner/trajectory.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
@@ -33,7 +34,7 @@ namespace sfg_trajectory_planner
         {
             glm::vec3 start = glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index - 1].m_transform.get_translation(), 1.0f));
             glm::vec3 end = glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index].m_transform.get_translation(), 1.0f));
-            renderer.add_line(start, end, glm::vec3(1.0f, 1.0f, 0.0f));
+            renderer.add_line(start, end, m_color);
         }
 
         if (m_selection_context.get_selected() != this)
@@ -44,13 +45,7 @@ namespace sfg_trajectory_planner
         auto world_to_object_matrix = get_world_to_object_matrix();
         auto gizmo_operation = m_selection_context.get_gizmo_operation();
 
-        // Scaling the trajectory doesn't make much sense, so we disable the scale gizmo.
-        if (gizmo_operation == ImGuizmo::SCALE)
-        {
-            return;
-        }
-
-        if (m_selected_waypoint_index >= 0 && m_selected_waypoint_index < static_cast<std::int32_t>(m_waypoints.size()))
+        if (m_selected_waypoint_index != -1 && gizmo_operation != ImGuizmo::SCALE)
         {
             auto &waypoint = m_waypoints[m_selected_waypoint_index];
             auto waypoint_object_to_world_matrix = object_to_world_matrix * waypoint.m_transform.get_matrix();
@@ -59,7 +54,20 @@ namespace sfg_trajectory_planner
             {
                 waypoint.m_transform = world_to_object_matrix * waypoint_object_to_world_matrix;
             }
-            renderer.add_text(waypoint.m_transform.get_translation(), std::to_string(m_selected_waypoint_index));
+        }
+
+        for (size_t index = 0; index < m_waypoints.size(); index++)
+        {
+            glm::vec3 waypoint_position = glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index].m_transform.get_translation(), 1.0f));
+            auto screen_position = m_camera.world_to_screen_point(waypoint_position);
+            auto can_select_waypoint = !ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny();
+            auto is_hovering_waypoint = glm::length(screen_position.xy() - glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y)) < 10.0f && ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && can_select_waypoint && is_hovering_waypoint)
+            {
+                m_selected_waypoint_index = static_cast<std::int32_t>(index);
+            }
+            renderer.add_text(waypoint_position, std::to_string(index));
         }
     }
 
@@ -72,6 +80,8 @@ namespace sfg_trajectory_planner
         {
             m_time_from_start = std::max(0.0f, m_time_from_start);
         }
+
+        ImGui::ColorEdit3("Color", glm::value_ptr(m_color));
 
         if (ImGui::BeginTable("waypoints_table", 4, s_waypoints_table_flags))
         {
@@ -132,6 +142,14 @@ namespace sfg_trajectory_planner
 
                 if (ImGui::Button(s_remove_button_text))
                 {
+                    if (m_selected_waypoint_index == static_cast<std::int32_t>(index))
+                    {
+                        m_selected_waypoint_index = -1;
+                    }
+                    else if (m_selected_waypoint_index > static_cast<std::int32_t>(index))
+                    {
+                        m_selected_waypoint_index--;
+                    }
                     m_waypoints.erase(m_waypoints.begin() + index--);
                 }
             }

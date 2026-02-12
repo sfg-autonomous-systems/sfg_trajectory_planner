@@ -52,6 +52,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "src/core/scene.cpp"
   "src/core/transform.cpp"
   "src/core/scene_object.cpp"
+  "src/core/scene_object_factory.cpp"
   "src/editor/inspector.cpp"
   "src/editor/scene_hierarchy.cpp"
   "src/editor/selection_context.cpp"

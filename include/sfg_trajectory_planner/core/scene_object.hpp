@@ -25,6 +25,9 @@ namespace sfg_trajectory_planner::core
         friend class Scene;
 
     public:
+        template <typename ObjectType>
+        static std::string get_type();
+
         SceneObject(SceneObjectKey key, Scene &scene, uuids::uuid uuid);
         virtual ~SceneObject();
         virtual void render_object(gfx::Renderer &renderer);
@@ -57,3 +60,5 @@ namespace sfg_trajectory_planner::core
         bool m_visible;
     };
 }
+
+#include "sfg_trajectory_planner/core/scene_object.tpp"

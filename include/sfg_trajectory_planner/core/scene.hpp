@@ -1,24 +1,30 @@
 #pragma once
 
-#include "sfg_trajectory_planner/core/scene_object.hpp"
+#include "sfg_trajectory_planner/core/scene_object_factory.hpp"
 
 namespace sfg_trajectory_planner::core
 {
     class Scene
     {
     public:
-        Scene();
+        Scene(const SceneObjectFactory &factory);
+
+        std::vector<SceneObjectFactory::RegisteredTypeInfo> get_possible_types() const;
         SceneObject *get_root();
 
-        template <typename ObjectType = SceneObject, typename... Args>
-        ObjectType *create_object(const std::string &name, SceneObject *parent = nullptr, Args &&...args);
-
+        template <typename ObjectType = SceneObject>
+        ObjectType *create_object(const std::string &name, SceneObject *parent = nullptr);
+        SceneObject *create_object(const std::string &type, const std::string &name, SceneObject *parent = nullptr);
         void destroy_object(SceneObject *object);
 
         template <typename ObjectType = SceneObject>
         ObjectType *find_object_by_uuid(const uuids::uuid &uuid);
+        template <typename ObjectType = SceneObject>
+        std::vector<ObjectType *> find_objects_by_type();
+        std::vector<SceneObject *> find_objects_by_type(const std::string &type);
 
     private:
+        const SceneObjectFactory &m_factory;
         std::unique_ptr<SceneObject> m_root;
         std::unordered_map<uuids::uuid, std::unique_ptr<SceneObject>> m_objects;
     };

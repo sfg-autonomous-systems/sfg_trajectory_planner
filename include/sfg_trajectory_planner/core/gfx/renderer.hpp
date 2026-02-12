@@ -30,19 +30,24 @@ namespace sfg_trajectory_planner::core::gfx
         GLuint render();
 
     private:
+        struct Mesh
+        {
+            std::vector<Vertex> vertices;
+            GLuint vao = 0;
+            GLuint vbo = 0;
+        };
+
         void initialize_lazily();
         void resize_fbo(int width, int height);
 
         bool m_initialized = false;
         glm::vec3 m_clear_color;
-        std::vector<Vertex> m_line_vertices;
+        Mesh m_line_mesh;
 
         glm::mat4 m_view_matrix;
         glm::mat4 m_projection_matrix;
         glm::vec4 m_viewport;
 
-        GLuint m_vao = 0;
-        GLuint m_vbo = 0;
         GLuint m_fbo = 0;
         GLuint m_color_texture = 0;
         GLuint m_depth_rbo = 0;

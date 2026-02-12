@@ -14,6 +14,12 @@ namespace sfg_trajectory_planner::core::gfx::utils
         return {origin, direction};
     }
 
+    glm::vec3 world_to_screen_point(const glm::vec3 &point, const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::vec4 viewport)
+    {
+        viewport = glm::vec4(viewport.x, viewport.y + viewport.w, viewport.z, -viewport.w);
+        return glm::project(point, view_matrix, projection_matrix, viewport);
+    }
+
     float intersect_ray_plane(const Ray &ray, glm::vec3 plane_point, glm::vec3 plane_normal)
     {
         auto denominator = glm::dot(ray.direction, plane_normal);

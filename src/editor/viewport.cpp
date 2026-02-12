@@ -78,7 +78,7 @@ namespace sfg_trajectory_planner::editor
         {
             auto object_to_world_matrix = selected_object->get_object_to_world_matrix();
 
-            if (m_renderer.add_gizmo(object_to_world_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode()))
+            if (m_renderer.add_gizmo(object_to_world_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode(), selected_object))
             {
                 if (selected_object->get_parent())
                 {
@@ -193,7 +193,7 @@ namespace sfg_trajectory_planner::editor
 
             index = magic_enum::enum_index(m_camera.get_projection()).value();
 
-            if (ImGui::Combo("Camera Projection", &index, "Orthographic\0Perspective\0"))
+            if (ImGui::Combo("Camera Projection", &index, "Perspective\0Orthographice\0"))
             {
                 m_camera.set_projection(magic_enum::enum_value<core::gfx::Camera::Projection>(index));
             }

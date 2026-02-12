@@ -6,6 +6,7 @@
 #include <SDL.h>
 
 static constexpr auto s_max_line_vertices = 100000;
+static constexpr auto s_line_width = 2.0f;
 
 static constexpr auto s_vertex_shader_source = R"(
 #version 330 core
@@ -21,7 +22,6 @@ void main() {
     gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
 }
 )";
-
 static constexpr auto s_fragment_shader_source = R"(
 #version 330 core
 in vec4 v_Color;
@@ -36,7 +36,7 @@ namespace sfg_trajectory_planner::core::gfx
 {
     Renderer::Renderer(glm::vec3 clear_color) : m_clear_color(clear_color)
     {
-        m_line_vertices.reserve(s_max_line_vertices);
+        m_line_mesh.vertices.reserve(s_max_line_vertices);
     }
 
     Renderer::~Renderer()
@@ -51,14 +51,14 @@ namespace sfg_trajectory_planner::core::gfx
             return;
         }
 
-        if (m_vao)
+        if (m_line_mesh.vao)
         {
-            glDeleteVertexArrays(1, &m_vao);
+            glDeleteVertexArrays(1, &m_line_mesh.vao);
         }
 
-        if (m_vbo)
+        if (m_line_mesh.vbo)
         {
-            glDeleteBuffers(1, &m_vbo);
+            glDeleteBuffers(1, &m_line_mesh.vbo);
         }
 
         if (m_fbo)
@@ -105,12 +105,12 @@ namespace sfg_trajectory_planner::core::gfx
 
     void Renderer::add_line(const glm::mat4 &model_matrix, const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color)
     {
-        if (m_line_vertices.size() + 2 > s_max_line_vertices)
+        if (m_line_mesh.vertices.size() + 2 > s_max_line_vertices)
         {
-            throw std::runtime_error("Exceeded maximum line vertex count");
+            throw std::runtime_error("Exceeded maximum line vertex count.");
         }
-        m_line_vertices.push_back({model_matrix * glm::vec4(start, 1.0f), color});
-        m_line_vertices.push_back({model_matrix * glm::vec4(end, 1.0f), color});
+        m_line_mesh.vertices.push_back({model_matrix * glm::vec4(start, 1.0f), color});
+        m_line_mesh.vertices.push_back({model_matrix * glm::vec4(end, 1.0f), color});
     }
 
     bool Renderer::add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id)
@@ -171,27 +171,27 @@ namespace sfg_trajectory_planner::core::gfx
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        if (!m_line_vertices.empty())
+        if (!m_line_mesh.vertices.empty())
         {
             // Upload data.
-            auto vertex_count = m_line_vertices.size();
+            auto vertex_count = m_line_mesh.vertices.size();
 
-            glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_count * sizeof(Vertex), m_line_vertices.data());
+            glBindBuffer(GL_ARRAY_BUFFER, m_line_mesh.vbo);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_count * sizeof(Vertex), m_line_mesh.vertices.data());
 
             // Issue draw call.
             glUseProgram(m_shader_program);
             glm::mat4 view_projection_matrix = m_projection_matrix * m_view_matrix;
             glUniformMatrix4fv(glGetUniformLocation(m_shader_program, "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
 
-            glBindVertexArray(m_vao);
-            glLineWidth(1.0f);
+            glBindVertexArray(m_line_mesh.vao);
+            glLineWidth(s_line_width);
             glDrawArrays(GL_LINES, 0, (GLsizei)vertex_count);
             glBindVertexArray(0);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        m_line_vertices.clear();
+        m_line_mesh.vertices.clear();
 
         return m_color_texture;
     }
@@ -205,10 +205,10 @@ namespace sfg_trajectory_planner::core::gfx
             return;
         }
 
-        glGenVertexArrays(1, &m_vao);
-        glGenBuffers(1, &m_vbo);
-        glBindVertexArray(m_vao);
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+        glGenVertexArrays(1, &m_line_mesh.vao);
+        glGenBuffers(1, &m_line_mesh.vbo);
+        glBindVertexArray(m_line_mesh.vao);
+        glBindBuffer(GL_ARRAY_BUFFER, m_line_mesh.vbo);
         glBufferData(GL_ARRAY_BUFFER, s_max_line_vertices * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, m_position)));
@@ -219,31 +219,31 @@ namespace sfg_trajectory_planner::core::gfx
         auto success = 0;
         char info_log[512];
 
-        auto m_vertex_shader_program = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(m_vertex_shader_program, 1, &s_vertex_shader_source, nullptr);
-        glCompileShader(m_vertex_shader_program);
-        glGetShaderiv(m_vertex_shader_program, GL_COMPILE_STATUS, &success);
+        auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex_shader, 1, &s_vertex_shader_source, nullptr);
+        glCompileShader(vertex_shader);
+        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 
         if (!success)
         {
-            glGetShaderInfoLog(m_vertex_shader_program, 512, nullptr, info_log);
+            glGetShaderInfoLog(vertex_shader, 512, nullptr, info_log);
             throw std::runtime_error(std::string("Vertex shader compilation failed: ") + info_log);
         }
 
-        auto m_fragment_shader_program = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(m_fragment_shader_program, 1, &s_fragment_shader_source, nullptr);
-        glCompileShader(m_fragment_shader_program);
-        glGetShaderiv(m_fragment_shader_program, GL_COMPILE_STATUS, &success);
+        auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment_shader, 1, &s_fragment_shader_source, nullptr);
+        glCompileShader(fragment_shader);
+        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 
         if (!success)
         {
-            glGetShaderInfoLog(m_fragment_shader_program, 512, nullptr, info_log);
+            glGetShaderInfoLog(fragment_shader, 512, nullptr, info_log);
             throw std::runtime_error(std::string("Fragment shader compilation failed: ") + info_log);
         }
 
         m_shader_program = glCreateProgram();
-        glAttachShader(m_shader_program, m_vertex_shader_program);
-        glAttachShader(m_shader_program, m_fragment_shader_program);
+        glAttachShader(m_shader_program, vertex_shader);
+        glAttachShader(m_shader_program, fragment_shader);
         glLinkProgram(m_shader_program);
         glGetProgramiv(m_shader_program, GL_LINK_STATUS, &success);
 
@@ -253,8 +253,8 @@ namespace sfg_trajectory_planner::core::gfx
             throw std::runtime_error(std::string("Shader program linking failed: ") + info_log);
         }
 
-        glDeleteShader(m_vertex_shader_program);
-        glDeleteShader(m_fragment_shader_program);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
         m_initialized = true;
     }
 

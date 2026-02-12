@@ -16,5 +16,6 @@ namespace sfg_trajectory_planner
     private:
         glm::vec2 m_grid_size = {10.0f, 10.0f};
         float m_grid_spacing = 1.0f;
+        glm::vec3 m_color = {1.0f, 1.0f, 1.0f};
     };
 }

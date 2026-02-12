@@ -8,22 +8,7 @@
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
-
-#ifdef __GNUG__
-#include <cxxabi.h>
-#include <memory>
-
-std::string demangle(const char *name)
-{
-    int status = -4;
-    std::unique_ptr<char, void (*)(void *)> res{
-        abi::__cxa_demangle(name, NULL, NULL, &status),
-        std::free};
-    return (status == 0) ? res.get() : name;
-}
-#else
-std::string demangle(const char *name) { return name; }
-#endif
+#include "sfg_utils/cpp_utils.hpp"
 
 namespace sfg_trajectory_planner::core
 {
@@ -81,7 +66,7 @@ namespace sfg_trajectory_planner::core
 
     std::string SceneObject::get_type() const
     {
-        return demangle(typeid(*this).name());
+        return sfg_utils::cpp_utils::get_type(this);
     }
 
     uuids::uuid SceneObject::get_uuid() const

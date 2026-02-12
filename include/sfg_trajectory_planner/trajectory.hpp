@@ -31,6 +31,7 @@ namespace sfg_trajectory_planner
         std::string m_topic_name = "/trajectory";
         std::string m_frame_id = "base_link";
         float m_time_from_start = 0.0f;
+        glm::vec3 m_color = {0.0f, 1.0f, 0.0f};
         std::vector<Waypoint> m_waypoints;
         std::int32_t m_selected_waypoint_index = -1;
     };

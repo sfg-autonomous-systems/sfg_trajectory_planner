@@ -38,6 +38,7 @@ namespace sfg_trajectory_planner::core::gfx
         void update();
         void synchronize_from_matrix(const glm::mat4 &view_matrix);
         Ray screen_point_to_ray(const glm::vec2 &point) const;
+        glm::vec3 world_to_screen_point(const glm::vec3 &point) const;
 
     private:
         Projection m_projection = Projection::Perspective;

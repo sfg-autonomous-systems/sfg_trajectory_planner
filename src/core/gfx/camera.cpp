@@ -133,4 +133,9 @@ namespace sfg_trajectory_planner::core::gfx
     {
         return core::gfx::utils::screen_space_to_ray(point, m_view_matrix, m_projection_matrix, m_viewport);
     }
+
+    glm::vec3 Camera::world_to_screen_point(const glm::vec3 &point) const
+    {
+        return core::gfx::utils::world_to_screen_point(point, m_view_matrix, m_projection_matrix, m_viewport);
+    }
 }

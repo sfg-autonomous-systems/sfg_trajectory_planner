@@ -24,6 +24,7 @@ namespace sfg_trajectory_planner
     private:
         void render_title(std::string_view title, const ImVec2 &position);
 
+        core::SceneObjectFactory m_factory;
         core::Scene m_scene;
         core::gfx::Camera m_camera;
         core::gfx::Renderer m_renderer;

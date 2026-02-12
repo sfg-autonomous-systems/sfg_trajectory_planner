@@ -16,13 +16,12 @@ namespace sfg_trajectory_planner::editor
     static constexpr auto s_remove_button_text = "-";
     static constexpr auto s_create_object_popup_id = "create_object_popup";
 
-    SceneHierarchy::SceneHierarchy(core::Scene &scene, SelectionContext &selection_context) : GuiElement(), m_scene(scene), m_selection_context(selection_context), m_reparent_request({nullptr, nullptr})
+    SceneHierarchy::SceneHierarchy(core::Scene &scene, SelectionContext &selection_context)
+        : GuiElement(),
+          m_scene(scene),
+          m_selection_context(selection_context),
+          m_reparent_request({nullptr, nullptr})
     {
-        add_create_object_action(
-            {"Scene Object", [&]
-             {
-                 m_scene.create_object<core::SceneObject>("Scene Object");
-             }});
     }
 
     void SceneHierarchy::render_internal()
@@ -49,11 +48,11 @@ namespace sfg_trajectory_planner::editor
 
             if (ImGui::BeginPopup(s_create_object_popup_id))
             {
-                for (const auto &action : m_create_object_actions)
+                for (const auto &type : m_scene.get_possible_types())
                 {
-                    if (ImGui::MenuItem(action.m_name.c_str()))
+                    if (ImGui::MenuItem(type.m_display_name.c_str()))
                     {
-                        action.m_action();
+                        m_scene.create_object(type.m_type, type.m_display_name);
                     }
                 }
                 ImGui::EndPopup();
@@ -72,18 +71,6 @@ namespace sfg_trajectory_planner::editor
             m_reparent_request.m_child->set_parent(m_reparent_request.m_parent);
             m_reparent_request = {nullptr, nullptr};
         }
-    }
-
-    void SceneHierarchy::add_create_object_action(const EditorAction &action)
-    {
-        auto iterator = std::find_if(
-            m_create_object_actions.begin(),
-            m_create_object_actions.end(),
-            [&](const EditorAction &existing_action)
-            {
-                return action.m_name < existing_action.m_name;
-            });
-        m_create_object_actions.insert(iterator, action);
     }
 
     void SceneHierarchy::render_object(core::SceneObject &object)
