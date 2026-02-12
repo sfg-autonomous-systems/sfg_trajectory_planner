@@ -18,8 +18,9 @@ namespace sfg_trajectory_planner
     static constexpr auto s_add_button_text = "+";
     static constexpr auto s_remove_button_text = "-";
 
-    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid, editor::SelectionContext &selection_context)
+    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid, const core::gfx::Camera &camera, editor::SelectionContext &selection_context)
         : SceneObject(key, scene, uuid),
+          m_camera(camera),
           m_selection_context(selection_context)
     {
     }
@@ -49,16 +50,16 @@ namespace sfg_trajectory_planner
             return;
         }
 
-        for (size_t index = 0; index < m_waypoints.size(); index++)
+        if (m_selected_waypoint_index >= 0 && m_selected_waypoint_index < static_cast<std::int32_t>(m_waypoints.size()))
         {
-            auto &waypoint = m_waypoints[index];
+            auto &waypoint = m_waypoints[m_selected_waypoint_index];
             auto waypoint_object_to_world_matrix = object_to_world_matrix * waypoint.m_transform.get_matrix();
 
             if (renderer.add_gizmo(waypoint_object_to_world_matrix, gizmo_operation, m_selection_context.get_gizmo_mode(), &waypoint))
             {
                 waypoint.m_transform = world_to_object_matrix * waypoint_object_to_world_matrix;
             }
-            renderer.add_text(waypoint.m_transform.get_translation(), std::to_string(index));
+            renderer.add_text(waypoint.m_transform.get_translation(), std::to_string(m_selected_waypoint_index));
         }
     }
 
@@ -107,6 +108,12 @@ namespace sfg_trajectory_planner
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
+
+                if (ImGui::Selectable("##waypoint_selectable", m_selected_waypoint_index == static_cast<std::int32_t>(index)))
+                {
+                    m_selected_waypoint_index = static_cast<std::int32_t>(index);
+                }
+
                 ImGui::SameLine();
                 ImGui::Text("Waypoint %zu", index);
 

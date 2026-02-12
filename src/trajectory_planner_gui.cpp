@@ -10,14 +10,14 @@ namespace sfg_trajectory_planner
           m_renderer({0.01f, 0.0f, 0.1f}),
           m_selection_context(m_scene),
           m_scene_hierarchy(m_scene, m_selection_context),
-          m_viewport(node, m_scene, m_selection_context, m_renderer),
+          m_viewport(node, m_scene, m_camera, m_renderer, m_selection_context),
           m_inspector(m_selection_context)
     {
         m_scene_hierarchy.add_create_object_action(
             {"Trajectory",
              [&]
              {
-                 m_scene.create_object<Trajectory>("Trajectory", nullptr, m_selection_context);
+                 m_scene.create_object<Trajectory>("Trajectory", nullptr, m_camera, m_selection_context);
              }});
         m_scene_hierarchy.add_create_object_action(
             {"Grid",

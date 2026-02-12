@@ -46,6 +46,7 @@ target_link_libraries(stduuid INTERFACE ${UUID_LIBRARIES})
 # ########################################################################################################
 sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanner"
   SOURCES
+  "src/core/gfx/camera.cpp"
   "src/core/gfx/renderer.cpp"
   "src/core/gfx/utils.cpp"
   "src/core/scene.cpp"

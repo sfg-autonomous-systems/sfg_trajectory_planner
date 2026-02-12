@@ -7,6 +7,7 @@
 
 #include "sfg_imgui_vendor/gui_element.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
+#include "sfg_trajectory_planner/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner::editor
@@ -14,7 +15,7 @@ namespace sfg_trajectory_planner::editor
     class Viewport : public sfg_imgui_vendor::GuiElement
     {
     public:
-        Viewport(rclcpp::Node *node, core::Scene &scene, SelectionContext &selection_context, core::gfx::Renderer &renderer);
+        Viewport(rclcpp::Node *node, core::Scene &scene, core::gfx::Camera &camera, core::gfx::Renderer &renderer, SelectionContext &selection_context);
         void render_internal() override;
 
     private:
@@ -22,47 +23,21 @@ namespace sfg_trajectory_planner::editor
         {
             static constexpr float s_view_gizmo_size = 128.0f;
             static constexpr float s_view_gizmo_distance = 10.0f;
-        };
-
-        struct Camera
-        {
-            enum class Projection
-            {
-                Perspective,
-                Orthographic
-            };
-
-            static constexpr float s_near_plane = 0.1f;
-            static constexpr float s_far_plane = 1000.0f;
-            static constexpr float s_vertical_fov = glm::radians(45.0f);
-            static constexpr float s_min_pitch = glm::radians(-90.0f);
-            static constexpr float s_max_pitch = glm::radians(90.0f);
 
             // Ros parameters
             float m_orbit_speed = 0.005f;
             float m_zoom_speed = 1.0f;
-
-            // Camera state
-            Projection m_projection = Projection::Perspective;
-            glm::vec3 m_orientation = {0.0f, glm::radians(-30.0f), glm::radians(45.0f)};
-            glm::vec3 m_focus_point = {0.0f, 0.0f, 0.0f};
-            float m_zoom_level = 10.0f;
-            glm::vec3 m_pan_start;
-            glm::mat4 m_view_matrix;
-            glm::mat4 m_projection_matrix;
-            glm::ivec4 m_viewport;
         };
 
         void process_input();
         void render_object(core::SceneObject &object);
         void render_settings();
-        void update_camera_matrices();
 
         core::Scene &m_scene;
-        SelectionContext &m_selection_context;
+        core::gfx::Camera &m_camera;
         core::gfx::Renderer &m_renderer;
+        SelectionContext &m_selection_context;
 
         Config m_config;
-        Camera m_camera;
     };
 }

@@ -27,28 +27,11 @@ namespace sfg_trajectory_planner::core::gfx::utils
         return glm::dot(plane_point - ray.origin, plane_normal) / denominator;
     }
 
-    void render_line(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::vec4 viewport, glm::vec3 start, glm::vec3 end, ImU32 color, float thickness)
+    float distance_ray_point(const Ray &ray, glm::vec3 point)
     {
-        // We need to flip the y coordinate because glm::project assumes the origin is at the bottom-left while ImGui assumes the origin is at the top-left.
-        viewport = glm::vec4(viewport.x, viewport.y + viewport.w, viewport.z, -viewport.w);
-
-        auto project = [&](glm::vec3 world_space) -> std::optional<ImVec2>
-        {
-            glm::vec3 screen_space = glm::project(world_space, view_matrix, projection_matrix, viewport);
-
-            if (screen_space.z < 0.0f)
-            {
-                return std::nullopt;
-            }
-            return ImVec2(screen_space.x, screen_space.y);
-        };
-
-        auto start_screen_space = project(start);
-        auto end_screen_space = project(end);
-
-        if (start_screen_space && end_screen_space)
-        {
-            ImGui::GetWindowDrawList()->AddLine(*start_screen_space, *end_screen_space, color, thickness);
-        }
+        glm::vec3 origin_to_point = point - ray.origin;
+        float t = glm::dot(origin_to_point, ray.direction);
+        glm::vec3 projection = ray.origin + t * ray.direction;
+        return glm::length(point - projection);
     }
 }

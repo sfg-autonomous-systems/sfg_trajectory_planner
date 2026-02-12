@@ -25,6 +25,7 @@ namespace sfg_trajectory_planner
         void render_title(std::string_view title, const ImVec2 &position);
 
         core::Scene m_scene;
+        core::gfx::Camera m_camera;
         core::gfx::Renderer m_renderer;
         editor::SelectionContext m_selection_context;
         editor::SceneHierarchy m_scene_hierarchy;
