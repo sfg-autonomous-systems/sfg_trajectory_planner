@@ -7,12 +7,13 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
+#include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
 #include "sfg_utils/cpp_utils.hpp"
 
 namespace sfg_trajectory_planner::core
 {
-    SceneObject::SceneObject(SceneObjectKey, Scene &scene, uuids::uuid uuid)
+    SceneObject::SceneObject(SceneObject::ConstructionKey, Scene &scene, uuids::uuid uuid)
         : m_scene(scene),
           m_name("New Object"),
           m_uuid(std::move(uuid)),

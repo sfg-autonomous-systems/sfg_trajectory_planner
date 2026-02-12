@@ -13,7 +13,7 @@ namespace sfg_trajectory_planner
     class Trajectory : public core::SceneObject
     {
     public:
-        Trajectory(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid, const core::gfx::Camera &camera, editor::SelectionContext &selection_context);
+        Trajectory(core::SceneObject::ConstructionKey key, core::Scene &scene, uuids::uuid uuid, const core::gfx::Camera &camera, editor::SelectionContext &selection_context);
         void render_object(core::gfx::Renderer &renderer) override;
 
     protected:

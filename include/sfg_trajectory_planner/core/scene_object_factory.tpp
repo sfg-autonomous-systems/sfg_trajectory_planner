@@ -3,7 +3,7 @@
 namespace sfg_trajectory_planner::core
 {
     template <typename ObjectType>
-    void SceneObjectFactory::register_object_type(std::function<std::unique_ptr<ObjectType>(SceneObjectKey, Scene &, uuids::uuid)> creator, const std::string &display_name)
+    void SceneObjectFactory::register_object_type(std::function<std::unique_ptr<ObjectType>(SceneObject::ConstructionKey, Scene &, uuids::uuid)> creator, const std::string &display_name)
     {
         auto type = SceneObject::get_type<ObjectType>();
         auto iterator = m_registered_types.find(type);
@@ -16,7 +16,7 @@ namespace sfg_trajectory_planner::core
     }
 
     template <typename ObjectType>
-    std::unique_ptr<ObjectType> SceneObjectFactory::create_object(SceneObjectKey key, Scene &scene, uuids::uuid uuid) const
+    std::unique_ptr<ObjectType> SceneObjectFactory::create_object(SceneObject::ConstructionKey key, Scene &scene, uuids::uuid uuid) const
     {
         return create_object(SceneObject::get_type<ObjectType>(), key, scene, uuid);
     }

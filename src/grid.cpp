@@ -3,9 +3,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
+#include "sfg_trajectory_planner/core/gfx/renderer.hpp"
+
 namespace sfg_trajectory_planner
 {
-    Grid::Grid(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid) {}
+    Grid::Grid(core::SceneObject::ConstructionKey key, core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid) {}
 
     void Grid::render_object(core::gfx::Renderer &renderer)
     {

@@ -5,7 +5,7 @@ namespace sfg_trajectory_planner::core
     SceneObjectFactory::SceneObjectFactory()
     {
         register_object_type<SceneObject>(
-            [&](SceneObjectKey key, Scene &scene, uuids::uuid uuid)
+            [&](SceneObject::ConstructionKey key, Scene &scene, uuids::uuid uuid)
             {
                 return std::make_unique<SceneObject>(key, scene, uuid);
             },
@@ -23,7 +23,7 @@ namespace sfg_trajectory_planner::core
         return types;
     }
 
-    std::unique_ptr<SceneObject> SceneObjectFactory::create_object(const std::string &type, SceneObjectKey key, Scene &scene, uuids::uuid uuid) const
+    std::unique_ptr<SceneObject> SceneObjectFactory::create_object(const std::string &type, SceneObject::ConstructionKey key, Scene &scene, uuids::uuid uuid) const
     {
         auto iterator = m_registered_types.find(type);
 

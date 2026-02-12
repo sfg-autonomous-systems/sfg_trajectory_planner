@@ -24,13 +24,13 @@ namespace sfg_trajectory_planner
     {
         // Add supported scene object types to the factory.
         m_factory.register_object_type<Trajectory>(
-            [&](core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid)
+            [&](core::SceneObject::ConstructionKey key, core::Scene &scene, uuids::uuid uuid)
             {
                 return std::make_unique<Trajectory>(key, scene, uuid, m_camera, m_selection_context);
             },
             "Trajectory");
         m_factory.register_object_type<Grid>(
-            [&](core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid)
+            [&](core::SceneObject::ConstructionKey key, core::Scene &scene, uuids::uuid uuid)
             {
                 return std::make_unique<Grid>(key, scene, uuid);
             },

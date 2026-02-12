@@ -4,7 +4,7 @@ namespace sfg_trajectory_planner::core
 {
     Scene::Scene(const SceneObjectFactory &factory)
         : m_factory(factory),
-          m_root(std::make_unique<SceneObject>(SceneObjectKey{}, *this, uuids::uuid_system_generator{}()))
+          m_root(std::make_unique<SceneObject>(SceneObject::ConstructionKey{}, *this, uuids::uuid_system_generator{}()))
     {
     }
 
@@ -20,7 +20,7 @@ namespace sfg_trajectory_planner::core
 
     SceneObject *Scene::create_object(const std::string &type, const std::string &name, SceneObject *parent)
     {
-        auto object = m_factory.create_object(type, SceneObjectKey{}, *this, uuids::uuid_system_generator{}());
+        auto object = m_factory.create_object(type, SceneObject::ConstructionKey{}, *this, uuids::uuid_system_generator{}());
         auto object_ptr = object.get();
 
         if (!object_ptr)
@@ -48,6 +48,8 @@ namespace sfg_trajectory_planner::core
             return;
         }
 
+        // Create a copy of the children vector since destroying a child will
+        //  modify the original vector when setting the parent to nullptr.
         auto children = object->get_children();
 
         for (auto child : children)

@@ -5,6 +5,7 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
+#include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
 #include "sfg_trajectory_planner/editor/selection_context.hpp"
@@ -19,7 +20,7 @@ namespace sfg_trajectory_planner
     static constexpr auto s_add_button_text = "+";
     static constexpr auto s_remove_button_text = "-";
 
-    Trajectory::Trajectory(core::SceneObjectKey key, core::Scene &scene, uuids::uuid uuid, const core::gfx::Camera &camera, editor::SelectionContext &selection_context)
+    Trajectory::Trajectory(core::SceneObject::ConstructionKey key, core::Scene &scene, uuids::uuid uuid, const core::gfx::Camera &camera, editor::SelectionContext &selection_context)
         : SceneObject(key, scene, uuid),
           m_camera(camera),
           m_selection_context(selection_context)

@@ -5,30 +5,34 @@
 #include <uuid.h>
 #include <vector>
 
-#include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/core/transform.hpp"
+
+namespace sfg_trajectory_planner::core::gfx
+{
+    class Renderer;
+}
 
 namespace sfg_trajectory_planner::core
 {
     class Scene;
-
-    class SceneObjectKey
-    {
-        friend class Scene;
-
-    private:
-        SceneObjectKey() = default;
-    };
 
     class SceneObject
     {
         friend class Scene;
 
     public:
+        class ConstructionKey
+        {
+            friend class Scene;
+
+        private:
+            ConstructionKey() = default;
+        };
+
         template <typename ObjectType>
         static std::string get_type();
 
-        SceneObject(SceneObjectKey key, Scene &scene, uuids::uuid uuid);
+        SceneObject(ConstructionKey key, Scene &scene, uuids::uuid uuid);
         virtual ~SceneObject();
         virtual void render_object(gfx::Renderer &renderer);
         void render_inspector();

@@ -6,6 +6,7 @@
 #include <imgui/ImGuizmo.h>
 #include <rclcpp/rclcpp.hpp>
 
+#include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/editor/inspector.hpp"
 #include "sfg_trajectory_planner/editor/scene_hierarchy.hpp"
 #include "sfg_trajectory_planner/editor/selection_context.hpp"

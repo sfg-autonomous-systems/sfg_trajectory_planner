@@ -1,5 +1,6 @@
 #include "sfg_trajectory_planner/editor/viewport.hpp"
 
+#include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/core/gfx/utils.hpp"
 #include "sfg_utils/ros_utils.hpp"
 
