@@ -34,6 +34,11 @@ namespace sfg_trajectory_planner::core
 
         SceneObject(ConstructionKey key, Scene &scene, uuids::uuid uuid);
         virtual ~SceneObject();
+        SceneObject(const SceneObject &) = delete;
+        SceneObject &operator=(const SceneObject &) = delete;
+        SceneObject(SceneObject &&) = delete;
+        SceneObject &operator=(SceneObject &&) = delete;
+
         virtual void render_object(gfx::Renderer &renderer);
         void render_inspector();
 
