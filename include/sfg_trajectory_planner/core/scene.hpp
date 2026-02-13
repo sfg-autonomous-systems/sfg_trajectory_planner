@@ -8,6 +8,8 @@ namespace sfg_trajectory_planner::core
     {
     public:
         Scene(const SceneObjectFactory &factory);
+        void serialize(core::serialization::AbstractSerializer *serializer) const;
+        void deserialize(core::serialization::AbstractSerializer *serializer);
 
         std::vector<SceneObjectFactory::RegisteredTypeInfo> get_possible_types() const;
         SceneObject *get_root();
@@ -24,6 +26,11 @@ namespace sfg_trajectory_planner::core
         std::vector<SceneObject *> find_objects_by_type(const std::string &type);
 
     private:
+        void serialize_object(core::SceneObject *object, core::serialization::AbstractSerializer *serializer) const;
+        void deserialize_object(core::SceneObject *parent, core::serialization::AbstractSerializer *serializer);
+
+        SceneObject *create_object(const std::string &type, const std::string &name, SceneObject *parent, uuids::uuid uuid);
+
         const SceneObjectFactory &m_factory;
         std::unique_ptr<SceneObject> m_root;
         std::unordered_map<uuids::uuid, std::unique_ptr<SceneObject>> m_objects;

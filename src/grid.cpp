@@ -4,10 +4,31 @@
 #include <imgui/imgui.h>
 
 #include "sfg_trajectory_planner/core/gfx/renderer.hpp"
+#include "sfg_trajectory_planner/core/serialization/abstract_serializer.hpp"
 
 namespace sfg_trajectory_planner
 {
     Grid::Grid(core::SceneObject::ConstructionKey key, core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid) {}
+
+    void Grid::serialize(core::serialization::AbstractSerializer *serializer) const
+    {
+        SceneObject::serialize(serializer);
+
+        serializer->serialize("grid_size", std::vector<float>{m_grid_size.x, m_grid_size.y});
+        serializer->serialize("grid_spacing", std::vector<float>{m_grid_spacing});
+        serializer->serialize("color", std::vector<float>{m_color.r, m_color.g, m_color.b});
+    }
+
+    void Grid::deserialize(core::serialization::AbstractSerializer *serializer)
+    {
+        SceneObject::deserialize(serializer);
+
+        auto grid_size = std::get<std::vector<float>>(serializer->deserialize("grid_size"));
+        m_grid_size = glm::vec3(grid_size[0], grid_size[1], grid_size[2]);
+        m_grid_spacing = std::get<float>(serializer->deserialize("grid_spacing"));
+        auto color = std::get<std::vector<float>>(serializer->deserialize("color"));
+        m_color = glm::vec3(color[0], color[1], color[2]);
+    }
 
     void Grid::render_object(core::gfx::Renderer &renderer)
     {

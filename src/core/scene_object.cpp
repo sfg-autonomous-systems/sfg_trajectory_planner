@@ -8,6 +8,7 @@
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/core/gfx/renderer.hpp"
+#include "sfg_trajectory_planner/core/serialization/abstract_serializer.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
 #include "sfg_utils/cpp_utils.hpp"
 
@@ -32,6 +33,29 @@ namespace sfg_trajectory_planner::core
 
         auto &siblings = m_parent->m_children;
         siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
+    }
+
+    void SceneObject::serialize(serialization::AbstractSerializer *serializer) const
+    {
+        serializer->serialize("name", m_name);
+        serializer->serialize("type", get_type());
+        serializer->serialize("uuid", uuids::to_string(m_uuid));
+
+        serializer->push_group("transform");
+        m_transform.serialize(serializer);
+        serializer->pop_group();
+    }
+
+    void SceneObject::deserialize(serialization::AbstractSerializer *serializer)
+    {
+        // We only need to deserialize the name because type and UUID are used
+        // by the scene class to instantiate the correct class with the appropriate
+        // UUID.
+        m_name = std::get<std::string>(serializer->deserialize("name"));
+
+        serializer->push_group("transform");
+        m_transform.deserialize(serializer);
+        serializer->pop_group();
     }
 
     void SceneObject::render_object(gfx::Renderer &) {}

@@ -7,6 +7,7 @@
 #include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/core/gfx/utils.hpp"
+#include "sfg_trajectory_planner/core/serialization/abstract_serializer.hpp"
 #include "sfg_trajectory_planner/core/scene.hpp"
 #include "sfg_trajectory_planner/editor/selection_context.hpp"
 
@@ -25,6 +26,54 @@ namespace sfg_trajectory_planner
           m_camera(camera),
           m_selection_context(selection_context)
     {
+    }
+
+    void Trajectory::serialize(core::serialization::AbstractSerializer *serializer) const
+    {
+        SceneObject::serialize(serializer);
+
+        serializer->serialize("topic_name", m_topic_name);
+        serializer->serialize("frame_id", m_frame_id);
+        serializer->serialize("time_from_start", m_time_from_start);
+        serializer->serialize("color", std::vector<float>{m_color.r, m_color.g, m_color.b});
+        serializer->serialize("waypoint_count", m_waypoints.size());
+
+        for (size_t index = 0; index < m_waypoints.size(); index++)
+        {
+            auto &waypoint = m_waypoints[index];
+
+            serializer->push_group("waypoint_" + std::to_string(index));
+            waypoint.m_transform.serialize(serializer);
+            serializer->serialize("time_from_last", waypoint.m_time_from_last);
+            serializer->pop_group();
+        }
+    }
+
+    void Trajectory::deserialize(core::serialization::AbstractSerializer *serializer)
+    {
+        SceneObject::deserialize(serializer);
+
+        m_topic_name = std::get<std::string>(serializer->deserialize("topic_name"));
+        m_frame_id = std::get<std::string>(serializer->deserialize("frame_id"));
+        m_time_from_start = std::get<float>(serializer->deserialize("time_from_start"));
+        auto color = std::get<std::vector<float>>(serializer->deserialize("color"));
+        m_color = glm::vec3(color[0], color[1], color[2]);
+        auto waypoint_count = std::get<size_t>(serializer->deserialize("waypoint_count"));
+
+        m_waypoints.clear();
+        m_waypoints.reserve(waypoint_count);
+
+        for (size_t index = 0; index < waypoint_count; index++)
+        {
+            Waypoint waypoint;
+
+            serializer->push_group("waypoint_" + std::to_string(index));
+            waypoint.m_transform.deserialize(serializer);
+            waypoint.m_time_from_last = std::get<float>(serializer->deserialize("time_from_last"));
+            serializer->pop_group();
+
+            m_waypoints.push_back(waypoint);
+        }
     }
 
     void Trajectory::render_object(core::gfx::Renderer &renderer)

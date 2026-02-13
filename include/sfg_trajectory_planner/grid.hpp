@@ -8,6 +8,8 @@ namespace sfg_trajectory_planner
     {
     public:
         Grid(core::SceneObject::ConstructionKey key, core::Scene &scene, uuids::uuid uuid);
+        void serialize(core::serialization::AbstractSerializer *serializer) const override;
+        void deserialize(core::serialization::AbstractSerializer *serializer) override;
         void render_object(core::gfx::Renderer &renderer) override;
 
     protected:

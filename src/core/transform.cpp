@@ -1,8 +1,10 @@
 #include "sfg_trajectory_planner/core/transform.hpp"
 
 #include <glm/gtx/matrix_decompose.hpp>
-#include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui/imgui.h>
+
+#include "sfg_trajectory_planner/core/serialization/abstract_serializer.hpp"
 
 namespace sfg_trajectory_planner::core
 {
@@ -25,6 +27,25 @@ namespace sfg_trajectory_planner::core
           m_scale(scale),
           m_dirty(false)
     {
+        update_matrix();
+    }
+
+    void Transform::serialize(serialization::AbstractSerializer *serializer) const
+    {
+        serializer->serialize("translation", std::vector<float>{m_translation.x, m_translation.y, m_translation.z});
+        serializer->serialize("rotation", std::vector<float>{m_rotation.x, m_rotation.y, m_rotation.z, m_rotation.w});
+        serializer->serialize("scale", std::vector<float>{m_scale.x, m_scale.y, m_scale.z});
+    }
+
+    void Transform::deserialize(serialization::AbstractSerializer *serializer)
+    {
+        auto translation = std::get<std::vector<float>>(serializer->deserialize("translation"));
+        m_translation = glm::vec3(translation[0], translation[1], translation[2]);
+        auto rotation = std::get<std::vector<float>>(serializer->deserialize("rotation"));
+        m_rotation = glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]);
+        auto scale = std::get<std::vector<float>>(serializer->deserialize("scale"));
+        m_scale = glm::vec3(scale[0], scale[1], scale[2]);
+
         update_matrix();
     }
 

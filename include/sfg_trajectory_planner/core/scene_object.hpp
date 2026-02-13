@@ -12,6 +12,11 @@ namespace sfg_trajectory_planner::core::gfx
     class Renderer;
 }
 
+namespace sfg_trajectory_planner::core::serialization
+{
+    class AbstractSerializer;
+}
+
 namespace sfg_trajectory_planner::core
 {
     class Scene;
@@ -39,6 +44,9 @@ namespace sfg_trajectory_planner::core
         SceneObject(SceneObject &&) = delete;
         SceneObject &operator=(SceneObject &&) = delete;
 
+        virtual void serialize(serialization::AbstractSerializer *serializer) const;
+        virtual void deserialize(serialization::AbstractSerializer *serializer);
+
         virtual void render_object(gfx::Renderer &renderer);
         void render_inspector();
 
@@ -62,7 +70,7 @@ namespace sfg_trajectory_planner::core
 
         Scene &m_scene;
         std::string m_name;
-        uuids::uuid m_uuid;
+        const uuids::uuid m_uuid;
         Transform m_transform;
         SceneObject *m_parent;
         std::vector<SceneObject *> m_children;
