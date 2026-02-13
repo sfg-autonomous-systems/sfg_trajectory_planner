@@ -10,31 +10,30 @@ namespace sfg_trajectory_planner::core
     {
     }
 
-    void Scene::serialize(core::serialization::AbstractSerializer *serializer) const
+    void Scene::serialize(serialization::AbstractSerializer *serializer) const
     {
-        serializer->serialize("object_count", m_root->get_children().size());
+        serializer->begin_sequence("objects", core::serialization::AbstractSerializer::Mode::Write);
 
-        for (size_t index = 0; index < m_root->get_children().size(); index++)
+        for (auto child : m_root->get_children())
         {
-            serializer->push_group("object_" + std::to_string(index));
-            serialize_object(m_root->get_children()[index], serializer);
-            serializer->pop_group();
+            serializer->next_item();
+            serialize_object(child, serializer);
         }
+        serializer->end_sequence();
     }
 
-    void Scene::deserialize(core::serialization::AbstractSerializer *serializer)
+    void Scene::deserialize(serialization::AbstractSerializer *serializer)
     {
-        // Clear existing objects (except root) before deserialization.
+        auto object_count = serializer->begin_sequence("objects", core::serialization::AbstractSerializer::Mode::Read);
         m_objects.clear();
-
-        auto object_count = std::get<size_t>(serializer->deserialize("object_count"));
+        m_objects.reserve(object_count);
 
         for (size_t index = 0; index < object_count; index++)
         {
-            serializer->push_group("object_" + std::to_string(index));
+            serializer->next_item();
             deserialize_object(m_root.get(), serializer);
-            serializer->pop_group();
         }
+        serializer->end_sequence();
     }
 
     std::vector<SceneObjectFactory::RegisteredTypeInfo> Scene::get_possible_types() const
@@ -91,34 +90,31 @@ namespace sfg_trajectory_planner::core
         return objects;
     }
 
-    void Scene::serialize_object(core::SceneObject *object, core::serialization::AbstractSerializer *serializer) const
+    void Scene::serialize_object(SceneObject *object, serialization::AbstractSerializer *serializer) const
     {
         object->serialize(serializer);
-        serializer->serialize("child_count", object->get_children().size());
+        serializer->begin_sequence("children", core::serialization::AbstractSerializer::Mode::Write);
 
-        for (size_t index = 0; index < object->get_children().size(); index++)
+        for (auto child : object->get_children())
         {
-            serializer->push_group("child_" + std::to_string(index));
-            serialize_object(object->get_children()[index], serializer);
-            serializer->pop_group();
+            serializer->next_item();
+            serialize_object(child, serializer);
         }
+        serializer->end_sequence();
     }
 
-    void Scene::deserialize_object(core::SceneObject *parent, core::serialization::AbstractSerializer *serializer)
+    void Scene::deserialize_object(SceneObject *parent, serialization::AbstractSerializer *serializer)
     {
-        auto type = std::get<std::string>(serializer->deserialize("type"));
-        auto uuid = uuids::uuid::from_string(std::get<std::string>(serializer->deserialize("uuid"))).value();
-        auto object = create_object(type, "", parent, uuid);
+        auto object = create_object(serializer->deserialize<std::string>("type"), "", parent, uuids::uuid::from_string(serializer->deserialize<std::string>("uuid")).value());
         object->deserialize(serializer);
-
-        auto child_count = std::get<size_t>(serializer->deserialize("child_count"));
+        auto child_count = serializer->begin_sequence("children", core::serialization::AbstractSerializer::Mode::Read);
 
         for (size_t index = 0; index < child_count; index++)
         {
-            serializer->push_group("child_" + std::to_string(index));
+            serializer->next_item();
             deserialize_object(object, serializer);
-            serializer->pop_group();
         }
+        serializer->end_sequence();
     }
 
     SceneObject *Scene::create_object(const std::string &type, const std::string &name, SceneObject *parent, uuids::uuid uuid)

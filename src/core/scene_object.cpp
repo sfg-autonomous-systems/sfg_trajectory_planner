@@ -41,9 +41,9 @@ namespace sfg_trajectory_planner::core
         serializer->serialize("type", get_type());
         serializer->serialize("uuid", uuids::to_string(m_uuid));
 
-        serializer->push_group("transform");
+        serializer->begin_group("transform");
         m_transform.serialize(serializer);
-        serializer->pop_group();
+        serializer->end_group();
     }
 
     void SceneObject::deserialize(serialization::AbstractSerializer *serializer)
@@ -51,11 +51,11 @@ namespace sfg_trajectory_planner::core
         // We only need to deserialize the name because type and UUID are used
         // by the scene class to instantiate the correct class with the appropriate
         // UUID.
-        m_name = std::get<std::string>(serializer->deserialize("name"));
+        m_name = serializer->deserialize<std::string>("name");
 
-        serializer->push_group("transform");
+        serializer->begin_group("transform");
         m_transform.deserialize(serializer);
-        serializer->pop_group();
+        serializer->end_group();
     }
 
     void SceneObject::render_object(gfx::Renderer &) {}

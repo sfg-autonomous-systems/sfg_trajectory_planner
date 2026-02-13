@@ -39,11 +39,11 @@ namespace sfg_trajectory_planner::core
 
     void Transform::deserialize(serialization::AbstractSerializer *serializer)
     {
-        auto translation = std::get<std::vector<float>>(serializer->deserialize("translation"));
+        auto translation = serializer->deserialize<std::vector<float>>("translation");
         m_translation = glm::vec3(translation[0], translation[1], translation[2]);
-        auto rotation = std::get<std::vector<float>>(serializer->deserialize("rotation"));
+        auto rotation = serializer->deserialize<std::vector<float>>("rotation");
         m_rotation = glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]);
-        auto scale = std::get<std::vector<float>>(serializer->deserialize("scale"));
+        auto scale = serializer->deserialize<std::vector<float>>("scale");
         m_scale = glm::vec3(scale[0], scale[1], scale[2]);
 
         update_matrix();

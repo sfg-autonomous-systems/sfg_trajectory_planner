@@ -18,6 +18,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sfg_imgui_vendor REQUIRED)
 find_package(sfg_utils REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 pkg_check_modules(UUID REQUIRED uuid)
 
@@ -49,6 +50,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "src/core/gfx/camera.cpp"
   "src/core/gfx/renderer.cpp"
   "src/core/gfx/utils.cpp"
+  "src/core/serialization/yaml_serializer.cpp"
   "src/core/scene.cpp"
   "src/core/transform.cpp"
   "src/core/scene_object.cpp"
@@ -72,6 +74,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   glm::glm
   magic_enum::magic_enum
   stduuid
+  yaml-cpp
 )
 
 # Add GLM_SWIZZLE to the compile definitions of the trajectory_planner library to enable swizzling for glm vector types.
