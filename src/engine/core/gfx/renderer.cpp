@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stdexcept>
 #include <string>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <vector>
 
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
