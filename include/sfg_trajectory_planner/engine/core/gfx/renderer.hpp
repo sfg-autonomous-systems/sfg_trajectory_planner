@@ -1,13 +1,17 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <glm/glm.hpp>
 #include <imgui/imgui.h>
 #include <imgui/ImGuizmo.h>
 #include <string>
 #include <vector>
 
-#include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/vertex.hpp"
+namespace sfg_trajectory_planner::engine::core::gfx
+{
+    class Camera;
+    class Vertex;
+}
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {

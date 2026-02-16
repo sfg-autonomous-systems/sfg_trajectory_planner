@@ -3,8 +3,12 @@
 #include <magic_enum.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
+#include "sfg_trajectory_planner/engine/core/scene.hpp"
+#include "sfg_trajectory_planner/engine/editor/scene_object_editor.hpp"
+#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 #include "sfg_utils/ros_utils.hpp"
 
 namespace sfg_trajectory_planner::engine::editor

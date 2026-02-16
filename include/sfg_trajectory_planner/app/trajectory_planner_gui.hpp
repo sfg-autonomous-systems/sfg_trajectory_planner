@@ -6,9 +6,15 @@
 #include <imgui/ImGuizmo.h>
 #include <rclcpp/rclcpp.hpp>
 
+#include "sfg_imgui_vendor/gui_element.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
+#include "sfg_trajectory_planner/engine/core/scene.hpp"
+#include "sfg_trajectory_planner/engine/core/scene_object_factory.hpp"
 #include "sfg_trajectory_planner/engine/editor/inspector.hpp"
+#include "sfg_trajectory_planner/engine/editor/scene_object_editor_factory.hpp"
 #include "sfg_trajectory_planner/engine/editor/scene_hierarchy.hpp"
+#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 #include "sfg_trajectory_planner/engine/editor/viewport.hpp"
 
 namespace sfg_trajectory_planner::app

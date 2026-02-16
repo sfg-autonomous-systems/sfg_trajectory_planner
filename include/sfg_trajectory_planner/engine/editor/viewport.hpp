@@ -6,9 +6,25 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "sfg_imgui_vendor/gui_element.hpp"
-#include "sfg_trajectory_planner/engine/core/scene.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
+
+namespace sfg_trajectory_planner::engine::core
+{
+    class Scene;
+    class SceneObject;
+
+}
+
+namespace sfg_trajectory_planner::engine::core::gfx
+{
+    class Camera;
+    class Renderer;
+
+}
+
+namespace sfg_trajectory_planner::engine::editor
+{
+    class SelectionContext;
+}
 
 namespace sfg_trajectory_planner::engine::editor
 {

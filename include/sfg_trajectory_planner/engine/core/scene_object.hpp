@@ -8,6 +8,11 @@
 #include "sfg_trajectory_planner/engine/core/serialization/serializable.hpp"
 #include "sfg_trajectory_planner/engine/core/transform.hpp"
 
+namespace sfg_trajectory_planner::engine::core
+{
+    class Scene;
+}
+
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     class Renderer;
@@ -15,7 +20,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
 namespace sfg_trajectory_planner::engine::core
 {
-    class Scene;
 
     class SceneObject : public serialization::ISerializable
     {

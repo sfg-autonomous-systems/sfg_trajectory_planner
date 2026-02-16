@@ -2,6 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "sfg_trajectory_planner/engine/core/gfx/ray.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx

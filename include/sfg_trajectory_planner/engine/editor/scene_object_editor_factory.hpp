@@ -6,6 +6,9 @@ namespace sfg_trajectory_planner::engine::editor
 {
     class SceneObjectEditor;
     class SelectionContext;
+}
 
+namespace sfg_trajectory_planner::engine::editor
+{
     using SceneObjectEditorFactory = core::GenericFactory<SceneObjectEditor, const SelectionContext &>;
 }

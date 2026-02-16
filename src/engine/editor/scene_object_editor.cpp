@@ -1,10 +1,12 @@
 #include "sfg_trajectory_planner/engine/editor/scene_object_editor.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {

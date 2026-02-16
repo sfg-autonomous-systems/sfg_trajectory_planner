@@ -1,8 +1,16 @@
 #pragma once
 
-#include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/transform.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
+
+namespace sfg_trajectory_planner::engine::core::gfx
+{
+    class Renderer;
+}
+
+namespace sfg_trajectory_planner::engine::editor
+{
+    class SelectionContext;
+}
 
 namespace sfg_trajectory_planner::engine::editor
 {

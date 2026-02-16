@@ -1,15 +1,9 @@
 #pragma once
 
 #include "sfg_trajectory_planner/engine/core/scene_object.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 
 namespace sfg_trajectory_planner::app::core
 {
-    namespace editor
-    {
-        class SelectionContext;
-    }
-
     class Trajectory : public engine::core::SceneObject
     {
     public:

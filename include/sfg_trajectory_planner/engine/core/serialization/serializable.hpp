@@ -1,6 +1,9 @@
 #pragma once
 
-#include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
+namespace sfg_trajectory_planner::engine::core::serialization
+{
+    class AbstractSerializer;
+}
 
 namespace sfg_trajectory_planner::engine::core::serialization
 {

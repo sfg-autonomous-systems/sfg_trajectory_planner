@@ -4,6 +4,10 @@
 #include <stdexcept>
 #include <string>
 #include <SDL.h>
+#include <vector>
+
+#include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/vertex.hpp"
 
 static constexpr auto s_max_line_vertices = 100000;
 static constexpr auto s_line_width = 2.0f;

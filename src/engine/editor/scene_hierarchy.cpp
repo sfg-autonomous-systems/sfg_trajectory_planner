@@ -1,6 +1,8 @@
 #include "sfg_trajectory_planner/engine/editor/scene_hierarchy.hpp"
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
+#include "sfg_trajectory_planner/engine/core/scene.hpp"
+#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {

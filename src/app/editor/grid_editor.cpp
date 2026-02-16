@@ -1,8 +1,11 @@
 #include "sfg_trajectory_planner/app/editor/grid_editor.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui/imgui.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_trajectory_planner/app/core/grid.hpp"
+#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner::app::editor
 {

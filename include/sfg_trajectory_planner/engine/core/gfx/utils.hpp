@@ -3,7 +3,10 @@
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
 
-#include "sfg_trajectory_planner/engine/core/gfx/ray.hpp"
+namespace sfg_trajectory_planner::engine::core::gfx
+{
+    struct Ray;
+}
 
 namespace sfg_trajectory_planner::engine::core::gfx::utils
 {

@@ -2,7 +2,10 @@
 
 #include <glm/glm.hpp>
 
-#include "sfg_trajectory_planner/engine/core/gfx/ray.hpp"
+namespace sfg_trajectory_planner::engine::core::gfx
+{
+    class Ray;
+}
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {

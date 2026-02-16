@@ -4,7 +4,6 @@
 #include <imgui/ImGuizmo.h>
 
 #include "sfg_trajectory_planner/engine/editor/scene_object_editor_factory.hpp"
-#include "sfg_trajectory_planner/engine/editor/scene_object_editor.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {
