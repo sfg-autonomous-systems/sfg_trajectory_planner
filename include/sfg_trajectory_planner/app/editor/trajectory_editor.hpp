@@ -7,7 +7,7 @@ namespace sfg_trajectory_planner::app::editor
     class TrajectoryEditor : public engine::editor::SceneObjectEditor
     {
     public:
-        TrajectoryEditor(engine::editor::SelectionContext &selection_context);
+        TrajectoryEditor(const engine::editor::SelectionContext &selection_context);
         bool render_editor(engine::core::gfx::Renderer &renderer) override;
         bool render_inspector() override;
 

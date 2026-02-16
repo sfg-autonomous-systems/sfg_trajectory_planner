@@ -7,8 +7,7 @@ namespace sfg_trajectory_planner::app::editor
     class GridEditor : public engine::editor::SceneObjectEditor
     {
     public:
-        GridEditor(engine::editor::SelectionContext &selection_context);
-        bool render_editor(engine::core::gfx::Renderer &renderer) override;
+        GridEditor(const engine::editor::SelectionContext &selection_context);
         bool render_inspector() override;
     };
 }

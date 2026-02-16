@@ -11,7 +11,7 @@ namespace sfg_trajectory_planner::engine::core
     }
 
     template <typename ObjectType>
-    ObjectType *Scene::find_object_by_uuid(const uuids::uuid &uuid)
+    ObjectType *Scene::find_object_by_uuid(const uuids::uuid &uuid) const
     {
         auto iterator = m_objects.find(uuid);
 
@@ -30,7 +30,7 @@ namespace sfg_trajectory_planner::engine::core
     }
 
     template <typename ObjectType>
-    std::vector<ObjectType *> Scene::find_objects_by_type()
+    std::vector<ObjectType *> Scene::find_objects_by_type() const
     {
         return find_objects_by_type(SceneObject::get_type<ObjectType>());
     }

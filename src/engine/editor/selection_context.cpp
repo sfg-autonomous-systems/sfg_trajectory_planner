@@ -4,31 +4,48 @@
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    SelectionContext::SelectionContext(engine::core::Scene &scene) : m_scene(scene) {}
+    SelectionContext::SelectionContext(const engine::core::Scene &scene, const SceneObjectEditorFactory &editor_factory) : m_scene(scene), m_editor_factory(editor_factory) {}
 
-    engine::core::SceneObject *SelectionContext::get_selected()
+    SelectionContext::~SelectionContext() = default;
+
+    engine::core::SceneObject *SelectionContext::get_selected() const
     {
         return m_selected_object_uuid.is_nil() ? nullptr : m_scene.find_object_by_uuid<engine::core::SceneObject>(m_selected_object_uuid);
     }
 
-    ImGuizmo::OPERATION SelectionContext::get_gizmo_operation()
+    ImGuizmo::OPERATION SelectionContext::get_gizmo_operation() const
     {
         return m_gizmo_operation;
     }
 
-    ImGuizmo::MODE SelectionContext::get_gizmo_mode()
+    ImGuizmo::MODE SelectionContext::get_gizmo_mode() const
     {
         return m_gizmo_mode;
     }
 
-    void SelectionContext::set_selected(engine::core::SceneObject *object)
+    SceneObjectEditor *SelectionContext::get_selected_editor() const
     {
-        m_selected_object_uuid = object ? object->get_uuid() : uuids::uuid{};
+        return m_selected_object_editor.get();
     }
 
-    void SelectionContext::set_selected(uuids::uuid uuid)
+    void SelectionContext::set_selected(engine::core::SceneObject *object)
     {
-        m_selected_object_uuid = std::move(uuid);
+        auto uuid = object ? object->get_uuid() : uuids::uuid{};
+
+        if (uuid == m_selected_object_uuid)
+        {
+            return;
+        }
+
+        if (uuid.is_nil())
+        {
+            m_selected_object_editor.reset();
+        }
+        else
+        {
+            m_selected_object_editor = m_editor_factory.create_object(object->get_type(), *this);
+        }
+        m_selected_object_uuid = uuid;
     }
 
     void SelectionContext::set_gizmo_operation(ImGuizmo::OPERATION operation)

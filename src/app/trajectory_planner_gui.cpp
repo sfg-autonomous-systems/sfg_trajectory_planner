@@ -2,6 +2,8 @@
 
 #include "sfg_trajectory_planner/app/core/grid.hpp"
 #include "sfg_trajectory_planner/app/core/trajectory.hpp"
+#include "sfg_trajectory_planner/app/editor/grid_editor.hpp"
+#include "sfg_trajectory_planner/app/editor/trajectory_editor.hpp"
 
 namespace sfg_trajectory_planner::app
 {
@@ -15,25 +17,22 @@ namespace sfg_trajectory_planner::app
 
     TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
         : GuiElement(),
-          m_scene(m_factory),
+          m_scene(m_scene_object_factory),
           m_renderer(m_camera, {0.0f, 0.0f, 0.0f}),
-          m_selection_context(m_scene),
+          m_selection_context(m_scene, m_scene_object_editor_factory),
           m_scene_hierarchy(m_scene, m_selection_context),
-          m_viewport(node, m_scene, m_camera, m_renderer, m_selection_context)
+          m_viewport(node, m_scene, m_camera, m_renderer, m_selection_context),
+          m_inspector(m_selection_context)
     {
         // Add supported scene object types to the factory.
-        m_factory.register_object_type<app::core::Trajectory>(
-            [&](engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid)
-            {
-                return std::make_unique<app::core::Trajectory>(key, scene, uuid);
-            },
-            "Trajectory");
-        m_factory.register_object_type<app::core::Grid>(
-            [&](engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid)
-            {
-                return std::make_unique<app::core::Grid>(key, scene, uuid);
-            },
-            "Grid");
+        m_scene_object_factory.register_type<engine::core::SceneObject, engine::core::SceneObject>("Scene Object");
+        m_scene_object_factory.register_type<app::core::Trajectory, app::core::Trajectory>("Trajectory");
+        m_scene_object_factory.register_type<app::core::Grid, app::core::Grid>("Grid");
+
+        // Do the same for scene object editors.
+        m_scene_object_editor_factory.register_type<engine::core::SceneObject, engine::editor::SceneObjectEditor>();
+        m_scene_object_editor_factory.register_type<app::core::Trajectory, app::editor::TrajectoryEditor>();
+        m_scene_object_editor_factory.register_type<app::core::Grid, app::editor::GridEditor>();
 
         m_scene.create_object<app::core::Grid>("Grid");
     }
@@ -89,7 +88,7 @@ namespace sfg_trajectory_planner::app
 
             ImGui::TableNextColumn();
             ImGui::BeginChild(inspector_displayname, ImVec2(0.0f, 0.0f), ImGuiChildFlags_Border);
-            // ToDo: Render inspector here.
+            m_inspector.render();
             ImGui::EndChild();
             auto inspector_rect_min = ImGui::GetItemRectMin();
             render_title(inspector_displayname, ImVec2(inspector_rect_min.x, inspector_rect_min.y));

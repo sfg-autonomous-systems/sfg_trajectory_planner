@@ -6,15 +6,13 @@
 
 namespace sfg_trajectory_planner::app::editor
 {
-    GridEditor::GridEditor(engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context) {}
-
-    bool GridEditor::render_editor(engine::core::gfx::Renderer &) { return false; }
+    GridEditor::GridEditor(const engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context) {}
 
     bool GridEditor::render_inspector()
     {
         auto changed = SceneObjectEditor::render_inspector();
 
-        if (ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
+        if (!ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
         {
             return changed;
         }
@@ -38,7 +36,7 @@ namespace sfg_trajectory_planner::app::editor
 
         auto color = grid->get_color();
 
-        if (ImGui::ColorEdit3("Grid Color", glm::value_ptr(color)))
+        if (ImGui::ColorEdit3("Color", glm::value_ptr(color)))
         {
             grid->set_color(color);
             changed = true;

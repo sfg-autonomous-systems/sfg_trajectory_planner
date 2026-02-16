@@ -12,7 +12,7 @@ namespace sfg_trajectory_planner::engine::core
         void deserialize(serialization::AbstractSerializer *serializer);
 
         std::vector<SceneObjectFactory::RegisteredTypeInfo> get_possible_types() const;
-        SceneObject *get_root();
+        SceneObject *get_root() const;
 
         template <typename ObjectType = SceneObject>
         ObjectType *create_object(const std::string &name, SceneObject *parent = nullptr);
@@ -20,10 +20,10 @@ namespace sfg_trajectory_planner::engine::core
         void destroy_object(SceneObject *object);
 
         template <typename ObjectType = SceneObject>
-        ObjectType *find_object_by_uuid(const uuids::uuid &uuid);
+        ObjectType *find_object_by_uuid(const uuids::uuid &uuid) const;
         template <typename ObjectType = SceneObject>
-        std::vector<ObjectType *> find_objects_by_type();
-        std::vector<SceneObject *> find_objects_by_type(const std::string &type);
+        std::vector<ObjectType *> find_objects_by_type() const;
+        std::vector<SceneObject *> find_objects_by_type(const std::string &type) const;
 
     private:
         void serialize_object(SceneObject *object, serialization::AbstractSerializer *serializer) const;

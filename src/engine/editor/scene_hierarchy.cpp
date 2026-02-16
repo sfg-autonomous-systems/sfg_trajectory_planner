@@ -101,7 +101,7 @@ namespace sfg_trajectory_planner::engine::editor
             flags = flags | ImGuiTreeNodeFlags_Leaf;
         }
 
-        if (&object == m_selection_context.get_selected())
+        if (m_selection_context.get_selected() == &object)
         {
             flags = flags | ImGuiTreeNodeFlags_Selected;
         }

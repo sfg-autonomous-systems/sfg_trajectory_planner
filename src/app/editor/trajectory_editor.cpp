@@ -17,13 +17,12 @@ namespace sfg_trajectory_planner::app::editor
     static constexpr auto s_add_button_text = "+";
     static constexpr auto s_remove_button_text = "-";
 
-    TrajectoryEditor::TrajectoryEditor(engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context) {}
+    TrajectoryEditor::TrajectoryEditor(const engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context) {}
 
     bool TrajectoryEditor::render_editor(engine::core::gfx::Renderer &renderer)
     {
-        auto changed = false;
+        auto changed = SceneObjectEditor::render_editor(renderer);
         auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
-        auto world_to_object_matrix = trajectory->get_world_to_object_matrix();
         auto object_to_world_matrix = trajectory->get_object_to_world_matrix();
         auto gizmo_operation = m_selection_context.get_gizmo_operation();
         auto &waypoints = trajectory->get_waypoints();
@@ -31,13 +30,7 @@ namespace sfg_trajectory_planner::app::editor
         if (m_selected_waypoint_index != -1 && gizmo_operation != ImGuizmo::SCALE)
         {
             auto &waypoint = waypoints[m_selected_waypoint_index];
-            auto waypoint_object_to_world_matrix = object_to_world_matrix * waypoint.m_transform.get_matrix();
-
-            if (renderer.add_gizmo(waypoint_object_to_world_matrix, gizmo_operation, m_selection_context.get_gizmo_mode(), &waypoint))
-            {
-                waypoint.m_transform = world_to_object_matrix * waypoint_object_to_world_matrix;
-                changed = true;
-            }
+            changed |= render_transform_editor(renderer, waypoint.m_transform, object_to_world_matrix);
         }
 
         for (size_t index = 0; index < waypoints.size(); index++)
@@ -60,7 +53,7 @@ namespace sfg_trajectory_planner::app::editor
     {
         auto changed = SceneObjectEditor::render_inspector();
 
-        if (ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
+        if (!ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
         {
             return changed;
         }

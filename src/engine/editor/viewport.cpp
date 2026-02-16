@@ -1,11 +1,11 @@
 #include "sfg_trajectory_planner/engine/editor/viewport.hpp"
 
+#include <magic_enum.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 #include "sfg_utils/ros_utils.hpp"
-
-#include <magic_enum.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace sfg_trajectory_planner::engine::editor
 {
@@ -42,7 +42,10 @@ namespace sfg_trajectory_planner::engine::editor
             render_object(*object);
         }
 
-        // ToDo: Render the selected object's editor.
+        if (auto editor = m_selection_context.get_selected_editor())
+        {
+            editor->render_editor(m_renderer);
+        }
 
         // Display the rendered image as an ImGui background.
         auto image = m_renderer.render();

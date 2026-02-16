@@ -41,7 +41,7 @@ namespace sfg_trajectory_planner::engine::core
         return m_factory.get_registered_types();
     }
 
-    SceneObject *Scene::get_root()
+    SceneObject *Scene::get_root() const
     {
         return m_root.get();
     }
@@ -76,7 +76,7 @@ namespace sfg_trajectory_planner::engine::core
         m_objects.erase(iterator);
     }
 
-    std::vector<SceneObject *> Scene::find_objects_by_type(const std::string &type)
+    std::vector<SceneObject *> Scene::find_objects_by_type(const std::string &type) const
     {
         std::vector<SceneObject *> objects;
 
