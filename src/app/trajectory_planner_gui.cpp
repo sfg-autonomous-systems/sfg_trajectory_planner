@@ -15,6 +15,11 @@ namespace sfg_trajectory_planner::app
                                                 ImGuiWindowFlags_NoCollapse |
                                                 ImGuiWindowFlags_MenuBar;
 
+    static constexpr SDL_DialogFileFilter s_file_dialog_filters[] = {"Scene Files", "yaml;yml"};
+
+    std::mutex TrajectoryPlannerGui::s_file_dialog_mutex;
+    TrajectoryPlannerGui::FileDialogResult TrajectoryPlannerGui::s_file_dialog_result;
+
     TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
         : GuiElement(),
           m_scene(m_scene_object_factory),
@@ -50,16 +55,48 @@ namespace sfg_trajectory_planner::app
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Open"))
+                std::lock_guard lock(s_file_dialog_mutex);
+                auto enabled = s_file_dialog_result.m_state == FileDialogResult::State::Idle;
+
+                if (ImGui::MenuItem("Open", nullptr, false, enabled))
                 {
+                    SDL_ShowOpenFileDialog(
+                        file_dialog_callback,
+                        reinterpret_cast<void *>(static_cast<std::uintptr_t>(FileDialogResult::Mode::Open)),
+                        SDL_GL_GetCurrentWindow(),
+                        s_file_dialog_filters, sizeof(s_file_dialog_filters) / sizeof(s_file_dialog_filters[0]),
+                        nullptr,
+                        false);
+                    s_file_dialog_result.m_state = FileDialogResult::State::WaitingForUserInput;
                 }
 
-                if (ImGui::MenuItem("Save"))
+                if (ImGui::MenuItem("Save", nullptr, false, enabled))
                 {
+                    SDL_ShowSaveFileDialog(
+                        file_dialog_callback,
+                        reinterpret_cast<void *>(static_cast<std::uintptr_t>(FileDialogResult::Mode::Save)),
+                        SDL_GL_GetCurrentWindow(),
+                        s_file_dialog_filters, sizeof(s_file_dialog_filters) / sizeof(s_file_dialog_filters[0]),
+                        nullptr);
+                    s_file_dialog_result.m_state = FileDialogResult::State::WaitingForUserInput;
                 }
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
+        }
+
+        {
+            std::lock_guard lock(s_file_dialog_mutex);
+
+            if (s_file_dialog_result.m_state == FileDialogResult::State::WaitingForGuiProcessing && s_file_dialog_result.m_path)
+            {
+                if (s_file_dialog_result.m_path)
+                {
+                    // ToDo: Process the file path (open or save the scene depending on the mode).
+                }
+                s_file_dialog_result.m_path = std::nullopt;
+                s_file_dialog_result.m_state = FileDialogResult::State::Idle;
+            }
         }
 
         if (ImGui::BeginTable("TopColumns", 3, ImGuiTableFlags_Resizable))
@@ -96,6 +133,18 @@ namespace sfg_trajectory_planner::app
             ImGui::EndTable();
         }
         ImGui::End();
+    }
+
+    void TrajectoryPlannerGui::file_dialog_callback(void *user_data, const char *const *file_list, int)
+    {
+        std::lock_guard lock(s_file_dialog_mutex);
+
+        if (file_list && file_list[0])
+        {
+            s_file_dialog_result.m_path = file_list[0];
+        }
+        s_file_dialog_result.m_mode = static_cast<FileDialogResult::Mode>(reinterpret_cast<std::uintptr_t>(user_data));
+        s_file_dialog_result.m_state = FileDialogResult::State::WaitingForGuiProcessing;
     }
 
     void TrajectoryPlannerGui::render_title(std::string_view title, const ImVec2 &position)
