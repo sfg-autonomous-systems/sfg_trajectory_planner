@@ -122,13 +122,13 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
         glm::mat4 view_inverse = glm::inverse(view_matrix);
         glm::vec3 camera_forward = glm::normalize(view_inverse * engine::core::gfx::utils::s_forward);
-        m_orientation.y = -glm::asin(glm::clamp(camera_forward.y, -1.0f, 1.0f));
+        m_orientation.x = -glm::asin(glm::clamp(camera_forward.y, -1.0f, 1.0f));
 
         const auto epsilon = 0.001f;
 
         if ((camera_forward.x * camera_forward.x + camera_forward.z * camera_forward.z) > epsilon)
         {
-            m_orientation.z = glm::atan(camera_forward.x, camera_forward.z);
+            m_orientation.y = glm::atan(camera_forward.x, camera_forward.z);
         }
     }
 
