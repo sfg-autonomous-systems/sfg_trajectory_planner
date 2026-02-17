@@ -21,7 +21,10 @@ namespace sfg_trajectory_planner::app::editor
     static constexpr auto s_add_button_text = "+";
     static constexpr auto s_remove_button_text = "-";
 
-    TrajectoryEditor::TrajectoryEditor(const engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context) {}
+    TrajectoryEditor::TrajectoryEditor(const engine::editor::SelectionContext &selection_context, rclcpp::Node *node) : SceneObjectEditor(selection_context), m_node(node)
+    {
+        create_trajectory_publisher(dynamic_cast<core::Trajectory *>(m_selection_context.get_selected())->get_topic_name());
+    }
 
     bool TrajectoryEditor::render_editor(engine::core::gfx::Renderer &renderer)
     {
@@ -62,6 +65,11 @@ namespace sfg_trajectory_planner::app::editor
             return changed;
         }
 
+        if (ImGui::Button("Publish Trajectory", ImVec2(-1.0f, 0.0f)))
+        {
+            publish_trajectory(m_node->now());
+        }
+
         auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
         auto topic_name = trajectory->get_topic_name();
 
@@ -69,6 +77,11 @@ namespace sfg_trajectory_planner::app::editor
         {
             trajectory->set_topic_name(topic_name);
             changed = true;
+        }
+
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            create_trajectory_publisher(trajectory->get_topic_name());
         }
 
         auto frame_id = trajectory->get_frame_id();
@@ -173,5 +186,52 @@ namespace sfg_trajectory_planner::app::editor
             ImGui::EndTable();
         }
         return changed;
+    }
+
+    void TrajectoryEditor::publish_trajectory(rclcpp::Time time)
+    {
+        if (!m_trajectory_publisher)
+        {
+            return;
+        }
+
+        auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
+        auto object_to_world_matrix = trajectory->get_object_to_world_matrix();
+
+        auto msg = std::make_unique<sfg_agent_msgs::msg::Trajectory>();
+        msg->header.stamp = time + rclcpp::Duration::from_seconds(trajectory->get_time_from_start());
+        msg->header.frame_id = trajectory->get_frame_id();
+
+        for (const auto &waypoint : trajectory->get_waypoints())
+        {
+            glm::mat4 waypoint_matrix = object_to_world_matrix * waypoint.m_transform.get_matrix();
+            glm::vec3 waypoint_position = glm::vec3(waypoint_matrix[3]);
+            glm::quat waypoint_rotation = glm::quat_cast(waypoint_matrix);
+
+            sfg_agent_msgs::msg::Waypoint waypoint_msg;
+            waypoint_msg.pose.position.x = waypoint_position.x;
+            waypoint_msg.pose.position.y = waypoint_position.y;
+            waypoint_msg.pose.position.z = waypoint_position.z;
+            waypoint_msg.pose.orientation.x = waypoint_rotation.x;
+            waypoint_msg.pose.orientation.y = waypoint_rotation.y;
+            waypoint_msg.pose.orientation.z = waypoint_rotation.z;
+            waypoint_msg.pose.orientation.w = waypoint_rotation.w;
+            waypoint_msg.time_from_last = rclcpp::Duration::from_seconds(waypoint.m_time_from_last);
+            msg->waypoints.push_back(waypoint_msg);
+        }
+        m_trajectory_publisher->publish(*msg);
+    }
+
+    void TrajectoryEditor::create_trajectory_publisher(const std::string &topic_name)
+    {
+        try
+        {
+            m_trajectory_publisher = m_node->template create_publisher<sfg_agent_msgs::msg::Trajectory>(topic_name, 10);
+        }
+        catch (const rclcpp::exceptions::InvalidTopicNameError &exception)
+        {
+            RCLCPP_ERROR(m_node->get_logger(), "Failed to create trajectory publisher: %s", exception.what());
+            m_trajectory_publisher = nullptr;
+        }
     }
 }

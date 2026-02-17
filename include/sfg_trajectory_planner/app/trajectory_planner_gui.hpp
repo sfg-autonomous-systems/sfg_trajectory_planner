@@ -54,6 +54,7 @@ namespace sfg_trajectory_planner::app
         static void SDLCALL file_dialog_callback(void *user_data, const char *const *file_list, int filter);
 
         void render_title(std::string_view title, const ImVec2 &position);
+        void handle_file_dialog_result();
 
         // File handling.
         static std::mutex s_file_dialog_mutex;

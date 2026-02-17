@@ -54,6 +54,9 @@ namespace sfg_trajectory_planner::engine::core::serialization
             bool m_pop_node_stack = false;
         };
 
+        template <typename ElementType>
+        void serialize_vector(const std::string &key, const std::vector<ElementType> &value);
+
         YAML::Node current_node();
         SequenceContext &current_sequence_context();
 
@@ -62,3 +65,5 @@ namespace sfg_trajectory_planner::engine::core::serialization
         std::vector<SequenceContext> m_sequence_context;
     };
 }
+
+#include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.tpp"

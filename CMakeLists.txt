@@ -16,6 +16,7 @@ find_package(magic_enum CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(sfg_agent_msgs REQUIRED)
 find_package(sfg_imgui_vendor REQUIRED)
 find_package(sfg_utils REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -71,6 +72,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   AMENT_DEPENDENCIES
   rclcpp
   rclcpp_components
+  sfg_agent_msgs
   sfg_imgui_vendor
   sfg_utils
   SYSTEM_DEPENDENCIES

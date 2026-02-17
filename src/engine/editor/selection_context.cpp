@@ -27,7 +27,7 @@ namespace sfg_trajectory_planner::engine::editor
 
     SceneObjectEditor *SelectionContext::get_selected_editor() const
     {
-        return m_selected_object_editor.get();
+        return get_selected() == nullptr ? nullptr : m_selected_object_editor.get();
     }
 
     void SelectionContext::set_selected(engine::core::SceneObject *object)
@@ -38,8 +38,9 @@ namespace sfg_trajectory_planner::engine::editor
         {
             return;
         }
+        m_selected_object_uuid = uuid;
 
-        if (uuid.is_nil())
+        if (m_selected_object_uuid.is_nil())
         {
             m_selected_object_editor.reset();
         }
@@ -47,7 +48,6 @@ namespace sfg_trajectory_planner::engine::editor
         {
             m_selected_object_editor = m_editor_factory.create_object(object->get_type(), *this);
         }
-        m_selected_object_uuid = uuid;
     }
 
     void SelectionContext::set_gizmo_operation(ImGuizmo::OPERATION operation)

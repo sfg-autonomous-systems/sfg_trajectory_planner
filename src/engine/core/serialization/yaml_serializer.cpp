@@ -4,7 +4,7 @@
 
 namespace sfg_trajectory_planner::engine::core::serialization
 {
-    YamlSerializer::YamlSerializer()
+    YamlSerializer::YamlSerializer() : AbstractSerializer(), m_root_node(YAML::Node(YAML::NodeType::Map))
     {
         m_node_stack.push_back(m_root_node);
     }
@@ -50,52 +50,27 @@ namespace sfg_trajectory_planner::engine::core::serialization
 
     void YamlSerializer::serialize(const std::string &key, const std::vector<bool> &value)
     {
-        YAML::Node node;
-        for (const auto &item : value)
-        {
-            node.push_back(item);
-        }
-        current_node()[key] = node;
+        serialize_vector(key, value);
     }
 
     void YamlSerializer::serialize(const std::string &key, const std::vector<size_t> &value)
     {
-        YAML::Node node;
-        for (const auto &item : value)
-        {
-            node.push_back(item);
-        }
-        current_node()[key] = node;
+        serialize_vector(key, value);
     }
 
     void YamlSerializer::serialize(const std::string &key, const std::vector<std::int32_t> &value)
     {
-        YAML::Node node;
-        for (const auto &item : value)
-        {
-            node.push_back(item);
-        }
-        current_node()[key] = node;
+        serialize_vector(key, value);
     }
 
     void YamlSerializer::serialize(const std::string &key, const std::vector<float> &value)
     {
-        YAML::Node node;
-        for (const auto &item : value)
-        {
-            node.push_back(item);
-        }
-        current_node()[key] = node;
+        serialize_vector(key, value);
     }
 
     void YamlSerializer::serialize(const std::string &key, const std::vector<std::string> &value)
     {
-        YAML::Node node;
-        for (const auto &item : value)
-        {
-            node.push_back(item);
-        }
-        current_node()[key] = node;
+        serialize_vector(key, value);
     }
 
     void YamlSerializer::deserialize(const std::string &key, bool &value)
@@ -192,7 +167,7 @@ namespace sfg_trajectory_planner::engine::core::serialization
         case Mode::Read:
         {
             m_node_stack.push_back({current_node()[name]});
-            return current_node()[name].size();
+            return current_node().size();
         }
         case Mode::Write:
         {

@@ -24,7 +24,7 @@ namespace sfg_trajectory_planner::app::core
         SceneObject::deserialize(serializer);
 
         auto grid_size = serializer->deserialize<std::vector<float>>("grid_size");
-        m_grid_size = glm::vec3(grid_size[0], 0.0f, grid_size[1]);
+        m_grid_size = glm::vec2(grid_size[0], grid_size[1]);
         m_grid_spacing = serializer->deserialize<float>("grid_spacing");
         auto color = serializer->deserialize<std::vector<float>>("color");
         m_color = glm::vec3(color[0], color[1], color[2]);
