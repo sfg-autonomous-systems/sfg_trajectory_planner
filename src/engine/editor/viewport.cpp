@@ -21,8 +21,8 @@ namespace sfg_trajectory_planner::engine::editor
           m_selection_context(selection_context)
     {
         // Declare and retrieve ROS parameters.
-        m_config.m_orbit_speed = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.camera.orbit_speed", m_config.m_orbit_speed);
-        m_config.m_zoom_speed = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.camera.zoom_speed", m_config.m_zoom_speed);
+        m_orbit_speed = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.camera.orbit_speed", m_orbit_speed);
+        m_zoom_speed = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.camera.zoom_speed", m_zoom_speed);
     }
 
     void Viewport::render_internal()
@@ -39,7 +39,6 @@ namespace sfg_trajectory_planner::engine::editor
         // Prepare rendering.
         ImGuizmo::SetOrthographic(m_camera.get_projection() == engine::core::gfx::Camera::Projection::Orthographic);
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
-        m_renderer.set_matrices(m_camera.get_view_matrix(), m_camera.get_projection_matrix(), m_camera.get_viewport());
 
         for (auto &object : m_scene.get_root()->get_children())
         {
@@ -66,22 +65,13 @@ namespace sfg_trajectory_planner::engine::editor
         ImGuiIO &io = ImGui::GetIO();
         auto old_mouse_delta = io.MouseDelta;
         io.MouseDelta = ImVec2(0.0f, 0.0f);
-
         auto view_matrix = m_camera.get_view_matrix();
-        ImGuizmo::ViewManipulate(
-            glm::value_ptr(view_matrix),
-            Config::s_view_gizmo_distance,
-            ImVec2(m_camera.get_viewport().x + m_camera.get_viewport().z - Config::s_view_gizmo_size, m_camera.get_viewport().y),
-            ImVec2(Config::s_view_gizmo_size, Config::s_view_gizmo_size),
-            0);
 
-        io.MouseDelta = old_mouse_delta;
-
-        // If the user is currently manipulating the view, synchronize the camera's orientation and focus point based on the modified view matrix.
-        if (ImGuizmo::IsUsingViewManipulate())
+        if (m_renderer.add_view_gizmo(view_matrix))
         {
             m_camera.synchronize_from_matrix(view_matrix);
         }
+        io.MouseDelta = old_mouse_delta;
 
         // Render viewport settings GUI.
         render_settings();
@@ -122,11 +112,11 @@ namespace sfg_trajectory_planner::engine::editor
         // Implement orbiting. If the right mouse button is held, adjust the camera orientation based on mouse movement.
         if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
         {
-            m_camera.orbit(io.MouseDelta.x * m_config.m_orbit_speed, io.MouseDelta.y * m_config.m_orbit_speed);
+            m_camera.orbit(io.MouseDelta.x * m_orbit_speed, io.MouseDelta.y * m_orbit_speed);
         }
 
         // Implement zooming. Use the mouse wheel to adjust the camera distance.
-        m_camera.zoom(ImGui::GetIO().MouseWheel * m_config.m_zoom_speed);
+        m_camera.zoom(ImGui::GetIO().MouseWheel * m_zoom_speed);
 
         // Implement panning. If the middle mouse button is clicked, record the starting point for panning.
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))

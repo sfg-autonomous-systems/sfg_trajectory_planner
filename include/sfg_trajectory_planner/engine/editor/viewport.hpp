@@ -35,25 +35,17 @@ namespace sfg_trajectory_planner::engine::editor
         void render_internal() override;
 
     private:
-        struct Config
-        {
-            static constexpr float s_view_gizmo_size = 128.0f;
-            static constexpr float s_view_gizmo_distance = 10.0f;
-
-            // Ros parameters
-            float m_orbit_speed = 0.005f;
-            float m_zoom_speed = 1.0f;
-        };
-
         void process_input();
         void render_object(engine::core::SceneObject &object);
         void render_settings();
+
+        // Ros parameters
+        float m_orbit_speed = 0.005f;
+        float m_zoom_speed = 1.0f;
 
         engine::core::Scene &m_scene;
         engine::core::gfx::Camera &m_camera;
         engine::core::gfx::Renderer &m_renderer;
         SelectionContext &m_selection_context;
-
-        Config m_config;
     };
 }

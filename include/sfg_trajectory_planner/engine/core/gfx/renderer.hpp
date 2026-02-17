@@ -27,10 +27,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         const Camera &get_camera() const;
 
-        void set_matrices(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::ivec4 viewport);
         void add_line(const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
         void add_line(const glm::mat4 &model_matrix, const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
         bool add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id = nullptr);
+        bool add_view_gizmo(glm::mat4 &view_matrix, void *id = nullptr);
         void add_text(const glm::vec3 &position, const std::string &text);
         void add_text(const glm::vec3 &position, const std::string &text, float font_size);
         void add_text(const glm::vec3 &position, const std::string &text, float font_size, const glm::vec3 &color);
@@ -51,10 +51,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
         const Camera &m_camera;
         glm::vec3 m_clear_color;
         Mesh m_line_mesh;
-
-        glm::mat4 m_view_matrix;
-        glm::mat4 m_projection_matrix;
-        glm::vec4 m_viewport;
 
         GLuint m_fbo = 0;
         GLuint m_color_texture = 0;

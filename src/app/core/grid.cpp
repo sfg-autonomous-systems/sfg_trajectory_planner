@@ -4,6 +4,7 @@
 #include <imgui/imgui.h>
 
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
 
 namespace sfg_trajectory_planner::app::core
@@ -32,27 +33,29 @@ namespace sfg_trajectory_planner::app::core
 
     void Grid::render_object(engine::core::gfx::Renderer &renderer)
     {
+        using namespace engine::core::gfx::utils;
+
         auto object_to_world_matrix = get_object_to_world_matrix();
-        auto extents = 0.5f * glm::vec3(m_grid_size.x, 0.0f, m_grid_size.y);
+        auto extents = 0.5f * m_grid_size;
 
         // Draw outer rectangle.
-        renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, -extents.z}, {extents.x, 0.0f, -extents.z}, m_color);
-        renderer.add_line(object_to_world_matrix, {extents.x, 0.0f, -extents.z}, {extents.x, 0.0f, extents.z}, m_color);
-        renderer.add_line(object_to_world_matrix, {extents.x, 0.0f, extents.z}, {-extents.x, 0.0f, extents.z}, m_color);
-        renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, extents.z}, {-extents.x, 0.0f, -extents.z}, m_color);
+        renderer.add_line(object_to_world_matrix, -extents.x * s_right - extents.y * s_forward, extents.x * s_right - extents.y * s_forward, m_color);
+        renderer.add_line(object_to_world_matrix, extents.x * s_right - extents.y * s_forward, extents.x * s_right + extents.y * s_forward, m_color);
+        renderer.add_line(object_to_world_matrix, extents.x * s_right + extents.y * s_forward, -extents.x * s_right + extents.y * s_forward, m_color);
+        renderer.add_line(object_to_world_matrix, -extents.x * s_right + extents.y * s_forward, -extents.x * s_right - extents.y * s_forward, m_color);
 
         // Draw horizontal lines.
-        for (auto z = 0.0f; z < extents.z; z += m_grid_spacing)
+        for (auto z = 0.0f; z < extents.y; z += m_grid_spacing)
         {
-            renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, -z}, {extents.x, 0.0f, -z}, 0.5f * m_color);
-            renderer.add_line(object_to_world_matrix, {-extents.x, 0.0f, z}, {extents.x, 0.0f, z}, 0.5f * m_color);
+            renderer.add_line(object_to_world_matrix, -extents.x * s_right - z * s_forward, extents.x * s_right - z * s_forward, 0.5f * m_color);
+            renderer.add_line(object_to_world_matrix, -extents.x * s_right + z * s_forward, extents.x * s_right + z * s_forward, 0.5f * m_color);
         }
 
         // Draw vertical lines.
         for (auto x = 0.0f; x < extents.x; x += m_grid_spacing)
         {
-            renderer.add_line(object_to_world_matrix, {-x, 0.0f, -extents.z}, {-x, 0.0f, extents.z}, 0.5f * m_color);
-            renderer.add_line(object_to_world_matrix, {x, 0.0f, -extents.z}, {x, 0.0f, extents.z}, 0.5f * m_color);
+            renderer.add_line(object_to_world_matrix, -x * s_right - extents.y * s_forward, -x * s_right + extents.y * s_forward, 0.5f * m_color);
+            renderer.add_line(object_to_world_matrix, x * s_right - extents.y * s_forward, x * s_right + extents.y * s_forward, 0.5f * m_color);
         }
     }
 

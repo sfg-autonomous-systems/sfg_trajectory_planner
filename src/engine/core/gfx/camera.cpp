@@ -56,8 +56,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     void Camera::orbit(float delta_x, float delta_y)
     {
-        m_orientation.y = glm::clamp(m_orientation.y - delta_y, s_min_pitch, s_max_pitch);
-        m_orientation.z += -delta_x;
+        m_orientation.y += -delta_x;
+        m_orientation.x = glm::clamp(m_orientation.x - delta_y, s_min_pitch, s_max_pitch);
     }
 
     void Camera::zoom(float delta)
@@ -108,7 +108,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
             break;
         }
 
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_orientation.z, engine::core::gfx::utils::s_up.xyz()) * glm::rotate(glm::mat4(1.0f), m_orientation.y, engine::core::gfx::utils::s_right.xyz());
+        glm::mat4 yaw = glm::rotate(glm::mat4(1.0f), m_orientation.y, engine::core::gfx::utils::s_up.xyz());
+        glm::mat4 pitch = glm::rotate(glm::mat4(1.0f), m_orientation.x, engine::core::gfx::utils::s_right.xyz());
+        glm::mat4 rotation = yaw * pitch;
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_focus_point);
         // If we are in perspective mode, we need to translate the camera back by the zoom level to maintain the correct distance from the focus point.
         // Otherwise, in orthographic mode, we translate the camera back by half the far plane distance to ensure the entire scene is visible.

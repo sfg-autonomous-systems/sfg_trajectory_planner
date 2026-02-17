@@ -91,22 +91,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
         return m_camera;
     }
 
-    void Renderer::set_matrices(const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::ivec4 viewport)
-    {
-        if (!m_initialized)
-        {
-            initialize_lazily();
-        }
-        m_view_matrix = view_matrix;
-        m_projection_matrix = projection_matrix;
-
-        if ((viewport.z != m_viewport.z || viewport.w != m_viewport.w) && viewport.z > 0 && viewport.w > 0)
-        {
-            resize_fbo(viewport.z, viewport.w);
-            m_viewport = viewport;
-        }
-    }
-
     void Renderer::add_line(const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color)
     {
         add_line(glm::mat4(1.0f), start, end, color);
@@ -125,10 +109,27 @@ namespace sfg_trajectory_planner::engine::core::gfx
     bool Renderer::add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id)
     {
         ImGuizmo::PushID(id);
-        auto manipulated = ImGuizmo::Manipulate(glm::value_ptr(m_view_matrix), glm::value_ptr(m_projection_matrix), operation, mode, glm::value_ptr(model_matrix));
+        auto manipulated = ImGuizmo::Manipulate(glm::value_ptr(m_camera.get_view_matrix()), glm::value_ptr(m_camera.get_projection_matrix()), operation, mode, glm::value_ptr(model_matrix));
         ImGuizmo::PopID();
 
         return manipulated;
+    }
+
+    bool Renderer::add_view_gizmo(glm::mat4 &view_matrix, void *id)
+    {
+        const auto view_gizmo_size = 128.0f;
+        const auto view_gizmo_distance = 10.0f;
+
+        ImGuizmo::PushID(id);
+        ImGuizmo::ViewManipulate(
+            glm::value_ptr(view_matrix),
+            view_gizmo_distance,
+            ImVec2(m_camera.get_viewport().x + m_camera.get_viewport().z - view_gizmo_size, m_camera.get_viewport().y),
+            ImVec2(view_gizmo_size, view_gizmo_size),
+            0);
+        ImGuizmo::PopID();
+
+        return ImGuizmo::IsUsingViewManipulate();
     }
 
     void Renderer::add_text(const glm::vec3 &position, const std::string &text)
@@ -145,7 +146,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     void Renderer::add_text(const glm::vec3 &position, const std::string &text, float font_size, const glm::vec3 &color)
     {
-        glm::vec3 projected = glm::project(position, m_view_matrix, m_projection_matrix, glm::vec4(0.0f, 0.0f, m_viewport.z, m_viewport.w));
+        glm::vec3 projected = glm::project(position, m_camera.get_view_matrix(), m_camera.get_projection_matrix(), glm::vec4(0.0f, 0.0f, m_camera.get_viewport().z, m_camera.get_viewport().w));
 
         if (projected.z < 0.0f || projected.z > 1.0f)
         {
@@ -156,13 +157,13 @@ namespace sfg_trajectory_planner::engine::core::gfx
         text_size.y *= font_size / ImGui::GetFontSize();
 
         ImGui::GetWindowDrawList()->AddRectFilled(
-            ImVec2(m_viewport.x + projected.x - 0.5f * text_size.x - 2.0f, m_viewport.y + m_viewport.w - projected.y - 0.5f * text_size.y - 2.0f),
-            ImVec2(m_viewport.x + projected.x + 0.5f * text_size.x + 2.0f, m_viewport.y + m_viewport.w - projected.y + 0.5f * text_size.y + 2.0f),
+            ImVec2(m_camera.get_viewport().x + projected.x - 0.5f * text_size.x - 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y - 0.5f * text_size.y - 2.0f),
+            ImVec2(m_camera.get_viewport().x + projected.x + 0.5f * text_size.x + 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y + 0.5f * text_size.y + 2.0f),
             ImGui::ColorConvertFloat4ToU32(ImVec4(0.0f, 0.0f, 0.0f, 0.75f)));
         ImGui::GetWindowDrawList()->AddText(
             ImGui::GetFont(),
             font_size,
-            ImVec2(m_viewport.x + projected.x - 0.5f * text_size.x, m_viewport.y + m_viewport.w - projected.y - 0.5f * text_size.y),
+            ImVec2(m_camera.get_viewport().x + projected.x - 0.5f * text_size.x, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y - 0.5f * text_size.y),
             ImGui::ColorConvertFloat4ToU32(ImVec4(color.x, color.y, color.z, 1.0f)),
             text.c_str());
     }
@@ -174,8 +175,16 @@ namespace sfg_trajectory_planner::engine::core::gfx
             initialize_lazily();
         }
 
+        static glm::ivec4 viewport = glm::ivec4(0.0f);
+
+        if ((m_camera.get_viewport().z != viewport.z || m_camera.get_viewport().w != viewport.w) && m_camera.get_viewport().z > 0 && m_camera.get_viewport().w > 0)
+        {
+            resize_fbo(m_camera.get_viewport().z, m_camera.get_viewport().w);
+            viewport = m_camera.get_viewport();
+        }
+
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-        glViewport(0, 0, m_viewport.z, m_viewport.w);
+        glViewport(0, 0, m_camera.get_viewport().z, m_camera.get_viewport().w);
         glClearColor(m_clear_color.r, m_clear_color.g, m_clear_color.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
@@ -190,7 +199,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
             // Issue draw call.
             glUseProgram(m_shader_program);
-            glm::mat4 view_projection_matrix = m_projection_matrix * m_view_matrix;
+            glm::mat4 view_projection_matrix = m_camera.get_projection_matrix() * m_camera.get_view_matrix();
             glUniformMatrix4fv(glGetUniformLocation(m_shader_program, "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
 
             glBindVertexArray(m_line_mesh.vao);
