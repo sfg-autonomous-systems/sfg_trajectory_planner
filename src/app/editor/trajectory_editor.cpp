@@ -21,7 +21,7 @@ namespace sfg_trajectory_planner::app::editor
     static constexpr auto s_add_button_text = "+";
     static constexpr auto s_remove_button_text = "-";
     static constexpr auto s_modify_waypoint_constraints_popup_id = "modify_waypoint_constraints_popup";
-    static constexpr auto s_modify_waypoint_constraints_button_text = "F";
+    static constexpr auto s_modify_waypoint_constraints_button_text = "C";
 
     TrajectoryEditor::TrajectoryEditor(const engine::editor::SelectionContext &selection_context, rclcpp::Node *node) : SceneObjectEditor(selection_context), m_node(node)
     {
