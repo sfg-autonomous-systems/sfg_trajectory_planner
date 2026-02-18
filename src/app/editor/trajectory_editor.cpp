@@ -20,6 +20,8 @@ namespace sfg_trajectory_planner::app::editor
 
     static constexpr auto s_add_button_text = "+";
     static constexpr auto s_remove_button_text = "-";
+    static constexpr auto s_modify_waypoint_constraints_popup_id = "modify_waypoint_constraints_popup";
+    static constexpr auto s_modify_waypoint_constraints_button_text = "F";
 
     TrajectoryEditor::TrajectoryEditor(const engine::editor::SelectionContext &selection_context, rclcpp::Node *node) : SceneObjectEditor(selection_context), m_node(node)
     {
@@ -34,7 +36,9 @@ namespace sfg_trajectory_planner::app::editor
         auto gizmo_operation = m_selection_context.get_gizmo_operation();
         auto &waypoints = trajectory->get_waypoints();
 
-        if (m_selected_waypoint_index != -1 && gizmo_operation != ImGuizmo::SCALE)
+        if (m_selected_waypoint_index < waypoints.size() &&
+            ((gizmo_operation == ImGuizmo::TRANSLATE && can_translate_waypoint(m_selected_waypoint_index)) ||
+             (gizmo_operation == ImGuizmo::ROTATE && can_rotate_waypoint(m_selected_waypoint_index))))
         {
             auto &waypoint = waypoints[m_selected_waypoint_index];
             changed |= render_transform_editor(renderer, waypoint.m_transform, object_to_world_matrix);
@@ -49,7 +53,7 @@ namespace sfg_trajectory_planner::app::editor
 
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && can_select_waypoint && is_hovering_waypoint)
             {
-                m_selected_waypoint_index = static_cast<std::int32_t>(index);
+                m_selected_waypoint_index = index;
             }
             renderer.add_text(waypoint_position, std::to_string(index));
         }
@@ -131,13 +135,18 @@ namespace sfg_trajectory_planner::app::editor
 
             if (ImGui::Button(s_add_button_text))
             {
-                auto waypoint = core::Trajectory::Waypoint();
+                auto waypoint = core::Waypoint();
                 // The new waypoint's location should be one unit forward from the last waypoint or from the origin if there are no waypoints yet.
                 auto last_transform = waypoints.empty() ? glm::mat4(1.0f) : waypoints.back().m_transform.get_matrix();
+                // The new waypoint should inherit the constraints of the last waypoint or have no constraints if there are no waypoints yet.
+                auto last_constraints = waypoints.empty() ? core::Waypoint::Constraints::None : waypoints.back().m_constraints;
+
                 waypoint.m_transform = engine::core::Transform(last_transform * glm::translate(glm::mat4(1.0f), engine::core::gfx::utils::s_forward.xyz()));
+                waypoint.m_constraints = last_constraints;
                 waypoints.push_back(waypoint);
                 changed = true;
             }
+            ImGui::SetItemTooltip("Add Waypoint");
 
             for (size_t index = 0; index < waypoints.size(); index++)
             {
@@ -147,9 +156,9 @@ namespace sfg_trajectory_planner::app::editor
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                if (ImGui::Selectable("##waypoint_selectable", m_selected_waypoint_index == static_cast<std::int32_t>(index)))
+                if (ImGui::Selectable("##waypoint_selectable", m_selected_waypoint_index == index))
                 {
-                    m_selected_waypoint_index = static_cast<std::int32_t>(index);
+                    m_selected_waypoint_index = index;
                 }
 
                 ImGui::SameLine();
@@ -165,22 +174,52 @@ namespace sfg_trajectory_planner::app::editor
                 }
 
                 ImGui::TableNextColumn();
-                changed |= render_transform_inspector(waypoint.m_transform, true, true, false, false);
+                changed |= render_transform_inspector(waypoint.m_transform, can_translate_waypoint(index), can_rotate_waypoint(index), false, false);
 
                 ImGui::TableNextColumn();
 
                 if (ImGui::Button(s_remove_button_text))
                 {
-                    if (m_selected_waypoint_index == static_cast<std::int32_t>(index))
+                    if (m_selected_waypoint_index == index)
                     {
-                        m_selected_waypoint_index = -1;
+                        m_selected_waypoint_index = std::numeric_limits<size_t>::max();
                     }
-                    else if (m_selected_waypoint_index > static_cast<std::int32_t>(index))
+                    else if (m_selected_waypoint_index > index)
                     {
                         m_selected_waypoint_index--;
                     }
                     waypoints.erase(waypoints.begin() + index--);
                     changed = true;
+                }
+                ImGui::SetItemTooltip("Remove Waypoint");
+
+                if (ImGui::Button(s_modify_waypoint_constraints_button_text))
+                {
+                    ImGui::OpenPopup(s_modify_waypoint_constraints_popup_id);
+                }
+                ImGui::SetItemTooltip("Modify Waypoint Constraints");
+
+                if (ImGui::BeginPopup(s_modify_waypoint_constraints_popup_id))
+                {
+                    using namespace magic_enum::bitwise_operators;
+
+                    for (auto constraint : magic_enum::enum_values<core::Waypoint::Constraints>())
+                    {
+                        bool selected = (waypoint.m_constraints & constraint) != core::Waypoint::Constraints::None;
+
+                        if (ImGui::Selectable(magic_enum::enum_name(constraint).data(), selected, ImGuiSelectableFlags_DontClosePopups))
+                        {
+                            if (selected)
+                            {
+                                waypoint.m_constraints = waypoint.m_constraints & ~constraint;
+                            }
+                            else
+                            {
+                                waypoint.m_constraints = waypoint.m_constraints | constraint;
+                            }
+                        }
+                    }
+                    ImGui::EndPopup();
                 }
             }
             ImGui::EndTable();
@@ -232,6 +271,50 @@ namespace sfg_trajectory_planner::app::editor
         {
             RCLCPP_ERROR(m_node->get_logger(), "Failed to create trajectory publisher: %s", exception.what());
             m_trajectory_publisher = nullptr;
+        }
+    }
+
+    bool TrajectoryEditor::can_translate_waypoint(size_t)
+    {
+        return true;
+    }
+
+    bool TrajectoryEditor::can_rotate_waypoint(size_t index)
+    {
+        using namespace magic_enum::bitwise_operators;
+
+        const auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
+        const auto &waypoint = trajectory->get_waypoints()[index];
+
+        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithPrevious) != core::Waypoint::Constraints::None && index != 0)
+        {
+            return false;
+        }
+
+        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithNext) != core::Waypoint::Constraints::None && index != trajectory->get_waypoints().size() - 1)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    void TrajectoryEditor::apply_waypoint_constraints(size_t index)
+    {
+        using namespace magic_enum::bitwise_operators;
+
+        const auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
+        auto &waypoint = trajectory->get_waypoints()[index];
+
+        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithPrevious) != core::Waypoint::Constraints::None && index != 0)
+        {
+            auto &previous_waypoint = trajectory->get_waypoints()[index - 1];
+            // ToDo: Implement this.
+        }
+
+        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithNext) != core::Waypoint::Constraints::None && index != trajectory->get_waypoints().size() - 1)
+        {
+            auto &next_waypoint = trajectory->get_waypoints()[index + 1];
+            // ToDo: Implement this.
         }
     }
 }

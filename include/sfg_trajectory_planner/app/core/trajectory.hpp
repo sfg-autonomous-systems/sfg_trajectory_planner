@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sfg_trajectory_planner/app/core/waypoint.hpp"
 #include "sfg_trajectory_planner/engine/core/scene_object.hpp"
 
 namespace sfg_trajectory_planner::app::core
@@ -7,12 +8,6 @@ namespace sfg_trajectory_planner::app::core
     class Trajectory : public engine::core::SceneObject
     {
     public:
-        struct Waypoint
-        {
-            engine::core::Transform m_transform;
-            float m_time_from_last = 1.0f;
-        };
-
         Trajectory(engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid);
         void serialize(engine::core::serialization::AbstractSerializer *serializer) const override;
         void deserialize(engine::core::serialization::AbstractSerializer *serializer) override;

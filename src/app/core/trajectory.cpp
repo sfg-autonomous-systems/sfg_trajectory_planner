@@ -28,8 +28,7 @@ namespace sfg_trajectory_planner::app::core
         for (const auto &waypoint : m_waypoints)
         {
             serializer->next_item();
-            waypoint.m_transform.serialize(serializer);
-            serializer->serialize("time_from_last", waypoint.m_time_from_last);
+            waypoint.serialize(serializer);
         }
         serializer->end_sequence();
     }
@@ -52,8 +51,7 @@ namespace sfg_trajectory_planner::app::core
         {
             Waypoint waypoint;
             serializer->next_item();
-            waypoint.m_transform.deserialize(serializer);
-            waypoint.m_time_from_last = serializer->deserialize<float>("time_from_last");
+            waypoint.deserialize(serializer);
             m_waypoints.push_back(waypoint);
         }
         serializer->end_sequence();
@@ -91,7 +89,7 @@ namespace sfg_trajectory_planner::app::core
         return m_color;
     }
 
-    std::vector<Trajectory::Waypoint> &Trajectory::get_waypoints()
+    std::vector<Waypoint> &Trajectory::get_waypoints()
     {
         return m_waypoints;
     }

@@ -4,22 +4,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-namespace sfg_trajectory_planner::engine::core::serialization
-{
-    class AbstractSerializer;
-}
+#include "sfg_trajectory_planner/engine/core/serialization/serializable.hpp"
 
 namespace sfg_trajectory_planner::engine::core
 {
-    class Transform
+    class Transform : public serialization::ISerializable
     {
     public:
         Transform();
         Transform(const glm::mat4 &matrix);
         Transform(const glm::vec3 &translation, const glm::quat &rotation, const glm::vec3 &scale);
 
-        void serialize(serialization::AbstractSerializer *serializer) const;
-        void deserialize(serialization::AbstractSerializer *serializer);
+        void serialize(serialization::AbstractSerializer *serializer) const override;
+        void deserialize(serialization::AbstractSerializer *serializer) override;
 
         glm::mat4 get_matrix() const;
         glm::vec3 get_translation() const;

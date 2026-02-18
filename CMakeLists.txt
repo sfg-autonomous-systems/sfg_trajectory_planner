@@ -50,6 +50,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   SOURCES
   "src/app/core/grid.cpp"
   "src/app/core/trajectory.cpp"
+  "src/app/core/waypoint.cpp"
   "src/app/editor/grid_editor.cpp"
   "src/app/editor/trajectory_editor.cpp"
   "src/app/trajectory_planner_gui.cpp"
