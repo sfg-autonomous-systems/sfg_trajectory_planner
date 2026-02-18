@@ -107,13 +107,16 @@ namespace sfg_trajectory_planner::engine::core::gfx
             break;
         }
 
+        glm::mat4 base_rotation = glm::inverse(glm::lookAt(glm::vec3(0.0f), utils::s_forward.xyz(), utils::s_up.xyz()));
         glm::mat4 yaw = glm::rotate(glm::mat4(1.0f), m_yaw, utils::s_up.xyz());
         glm::mat4 pitch = glm::rotate(glm::mat4(1.0f), m_pitch, -glm::abs(utils::s_right.xyz()));
-        glm::mat4 rotation = yaw * pitch;
+        glm::mat4 rotation = yaw * pitch * base_rotation;
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_focus_point);
         // If we are in perspective mode, we need to translate the camera back by the zoom level to maintain the correct distance from the focus point.
         // Otherwise, in orthographic mode, we translate the camera back by half the far plane distance to ensure the entire scene is visible.
         auto distance = m_projection == Camera::Projection::Perspective ? m_zoom_level : Camera::s_far_plane / 2.0f;
-        m_view_matrix = glm::lookAt(m_focus_point - distance * (rotation * utils::s_forward).xyz(), m_focus_point, utils::s_up.xyz());
+        glm::mat4 center_offset = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, distance});
+        m_view_matrix = glm::inverse(translation * rotation * center_offset);
     }
 
     void Camera::synchronize_from_matrix(const glm::mat4 &view_matrix)
