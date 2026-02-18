@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+#include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
+
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     class Ray;
@@ -45,7 +47,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     private:
         Projection m_projection = Projection::Perspective;
-        glm::vec3 m_orientation = {glm::radians(-30.0f), glm::radians(45.0f), 0.0f};
+        float m_pitch = glm::radians(-30.0f);
+        float m_yaw = glm::radians(-135.0f);
         glm::vec3 m_focus_point = {0.0f, 0.0f, 0.0f};
         float m_zoom_level = 10.0f;
         glm::vec3 m_pan_start;

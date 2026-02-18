@@ -3,7 +3,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "sfg_trajectory_planner/engine/core/gfx/ray.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
@@ -56,8 +55,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     void Camera::orbit(float delta_x, float delta_y)
     {
-        m_orientation.y += -delta_x;
-        m_orientation.x = glm::clamp(m_orientation.x - delta_y, s_min_pitch, s_max_pitch);
+        m_pitch = glm::clamp(m_pitch - delta_y, s_min_pitch, s_max_pitch);
+        m_yaw -= delta_x;
     }
 
     void Camera::zoom(float delta)
@@ -68,7 +67,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     void Camera::pan(const glm::vec2 &position)
     {
         auto ray = screen_point_to_ray(position);
-        auto distance = engine::core::gfx::utils::intersect_ray_plane(ray, m_focus_point, glm::inverse(m_view_matrix) * engine::core::gfx::utils::s_forward);
+        auto distance = utils::intersect_ray_plane(ray, m_focus_point, glm::inverse(m_view_matrix)[2]);
         auto intersection = ray.origin + distance * ray.direction;
         m_focus_point -= intersection - m_pan_start;
     }
@@ -76,7 +75,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     void Camera::start_pan(const glm::vec2 &position)
     {
         auto ray = screen_point_to_ray(position);
-        auto distance = engine::core::gfx::utils::intersect_ray_plane(ray, m_focus_point, glm::inverse(m_view_matrix) * engine::core::gfx::utils::s_forward);
+        auto distance = utils::intersect_ray_plane(ray, m_focus_point, glm::inverse(m_view_matrix)[2]);
         auto intersection = ray.origin + distance * ray.direction;
         m_pan_start = intersection;
     }
@@ -108,37 +107,37 @@ namespace sfg_trajectory_planner::engine::core::gfx
             break;
         }
 
-        glm::mat4 yaw = glm::rotate(glm::mat4(1.0f), m_orientation.y, engine::core::gfx::utils::s_up.xyz());
-        glm::mat4 pitch = glm::rotate(glm::mat4(1.0f), m_orientation.x, engine::core::gfx::utils::s_right.xyz());
+        glm::mat4 yaw = glm::rotate(glm::mat4(1.0f), m_yaw, utils::s_up.xyz());
+        glm::mat4 pitch = glm::rotate(glm::mat4(1.0f), m_pitch, -glm::abs(utils::s_right.xyz()));
         glm::mat4 rotation = yaw * pitch;
-        glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_focus_point);
         // If we are in perspective mode, we need to translate the camera back by the zoom level to maintain the correct distance from the focus point.
         // Otherwise, in orthographic mode, we translate the camera back by half the far plane distance to ensure the entire scene is visible.
-        glm::mat4 center_offset = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, m_projection == engine::core::gfx::Camera::Projection::Perspective ? m_zoom_level : engine::core::gfx::Camera::s_far_plane / 2.0f));
-        m_view_matrix = glm::inverse(translation * rotation * center_offset);
+        auto distance = m_projection == Camera::Projection::Perspective ? m_zoom_level : Camera::s_far_plane / 2.0f;
+        m_view_matrix = glm::lookAt(m_focus_point - distance * (rotation * utils::s_forward).xyz(), m_focus_point, utils::s_up.xyz());
     }
 
     void Camera::synchronize_from_matrix(const glm::mat4 &view_matrix)
     {
         glm::mat4 view_inverse = glm::inverse(view_matrix);
-        glm::vec3 camera_forward = glm::normalize(view_inverse * engine::core::gfx::utils::s_forward);
-        m_orientation.x = -glm::asin(glm::clamp(camera_forward.y, -1.0f, 1.0f));
+        glm::vec3 camera_forward = glm::normalize(-view_inverse[2].xyz());
+        auto camera_height = glm::dot(camera_forward, utils::s_up.xyz());
+        m_pitch = glm::asin(glm::clamp(camera_height, -1.0f, 1.0f));
 
-        const auto epsilon = 0.001f;
+        const auto epsilon = 0.999f;
 
-        if ((camera_forward.x * camera_forward.x + camera_forward.z * camera_forward.z) > epsilon)
+        if (camera_height * camera_height < epsilon)
         {
-            m_orientation.y = glm::atan(camera_forward.x, camera_forward.z);
+            m_yaw = glm::atan(glm::dot(camera_forward, glm::abs(utils::s_right.xyz())), glm::dot(camera_forward, utils::s_forward.xyz()));
         }
     }
 
     Ray Camera::screen_point_to_ray(const glm::vec2 &point) const
     {
-        return engine::core::gfx::utils::screen_space_to_ray(point, m_view_matrix, m_projection_matrix, m_viewport);
+        return utils::screen_space_to_ray(point, m_view_matrix, m_projection_matrix, m_viewport);
     }
 
     glm::vec3 Camera::world_to_screen_point(const glm::vec3 &point) const
     {
-        return engine::core::gfx::utils::world_to_screen_point(point, m_view_matrix, m_projection_matrix, m_viewport);
+        return utils::world_to_screen_point(point, m_view_matrix, m_projection_matrix, m_viewport);
     }
 }

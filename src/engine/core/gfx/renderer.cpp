@@ -41,6 +41,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     Renderer::Renderer(const Camera &camera, glm::vec3 clear_color) : m_camera(camera), m_clear_color(clear_color)
     {
         m_line_mesh.vertices.reserve(s_max_line_vertices);
+        ImGuizmo::AllowAxisFlip(false);
     }
 
     Renderer::~Renderer()
@@ -119,17 +120,62 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
         const auto view_gizmo_size = 128.0f;
         const auto view_gizmo_distance = 10.0f;
+        const auto index_vector = glm::vec3(0.0f, 1.0f, 2.0f);
+
+        // ImGuizmo  internally expects that the
+        //     - x column represents the positive right axis, i.e. (1, 0, 0).
+        //     - y column represents the positive up axis, i.e. (0, 1, 0).
+        //     - z column represents the positive forward axis, i.e. (0, 0, 1).
+        // Based on this internal interpretation, ImGuizmo interpolates yaw and pitch angles when the user selects a face on the cube.
+        // But since we allow our axiss vectors to be flipped or reoriented, e.g. right could be (0, -1, 0) instead of (1, 0, 0), we need to pretransform
+        // our own view matrix into the format that ImGuizmo expects before passing it in, so that the correct yaw and pitch angles are interpolated.
+        glm::mat4 basis_alignment = glm::mat4(utils::s_right, utils::s_up, utils::s_forward, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        // Furthermore, since ImGuizmo expects all column vectors to point towards the positive direction, if our own representation points towards the
+        // negative direction.
+        glm::mat4 hatch_correction = glm::scale(
+            glm::mat4(1.0f),
+            {glm::sign(glm::dot(utils::s_right, glm::vec4(1.0f))),
+             glm::sign(glm::dot(utils::s_up, glm::vec4(1.0f))),
+             glm::sign(glm::dot(utils::s_forward, glm::vec4(1.0f)))});
+
+        // Perform the pretransformation to align with ImGuizmo's internal expectation.
+        glm::mat4 imguizmo_view_matrix = view_matrix * basis_alignment * hatch_correction;
+
+        auto &style = ImGuizmo::GetStyle();
+
+        ImVec4 old_colors[] = {
+            style.Colors[ImGuizmo::DIRECTION_X],
+            style.Colors[ImGuizmo::DIRECTION_Y],
+            style.Colors[ImGuizmo::DIRECTION_Z]};
+
+        // Since we applied the pretransformation to align with ImGuizmo's internal expectation, we also need to apply the same pretransformation
+        // to the gizmo's colors so that the correct colors are shown on the gizmo.
+        style.Colors[ImGuizmo::DIRECTION_X] = old_colors[static_cast<size_t>(glm::dot(glm::abs(utils::s_right.xyz()), index_vector))];
+        style.Colors[ImGuizmo::DIRECTION_Y] = old_colors[static_cast<size_t>(glm::dot(glm::abs(utils::s_up.xyz()), index_vector))];
+        style.Colors[ImGuizmo::DIRECTION_Z] = old_colors[static_cast<size_t>(glm::dot(glm::abs(utils::s_forward.xyz()), index_vector))];
 
         ImGuizmo::PushID(id);
         ImGuizmo::ViewManipulate(
-            glm::value_ptr(view_matrix),
+            glm::value_ptr(imguizmo_view_matrix),
             view_gizmo_distance,
             ImVec2(m_camera.get_viewport().x + m_camera.get_viewport().z - view_gizmo_size, m_camera.get_viewport().y),
             ImVec2(view_gizmo_size, view_gizmo_size),
             0);
         ImGuizmo::PopID();
 
-        return ImGuizmo::IsUsingViewManipulate();
+        style.Colors[ImGuizmo::DIRECTION_X] = old_colors[0];
+        style.Colors[ImGuizmo::DIRECTION_Y] = old_colors[1];
+        style.Colors[ImGuizmo::DIRECTION_Z] = old_colors[2];
+
+        auto changed = ImGuizmo::IsUsingViewManipulate();
+
+        if (changed)
+        {
+            // Undo the pretransformation and update the actual view matrix if something has interacted with the view manipulation cube.
+            view_matrix = imguizmo_view_matrix * hatch_correction * glm::inverse(basis_alignment);
+        }
+        return changed;
     }
 
     void Renderer::add_text(const glm::vec3 &position, const std::string &text)

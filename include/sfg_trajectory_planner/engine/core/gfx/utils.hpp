@@ -10,9 +10,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
 namespace sfg_trajectory_planner::engine::core::gfx::utils
 {
-    static constexpr glm::vec4 s_right = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-    static constexpr glm::vec4 s_up = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-    static constexpr glm::vec4 s_forward = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+    // Have to be orthonormal to each other, of unit lenght, and aligned with the world axes.
+    static constexpr glm::vec4 s_right = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
+    static constexpr glm::vec4 s_up = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+    static constexpr glm::vec4 s_forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
 
     Ray screen_space_to_ray(const glm::vec2 &position, const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::vec4 viewport);
     glm::vec3 world_to_screen_point(const glm::vec3 &point, const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::vec4 viewport);
