@@ -10,7 +10,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
 namespace sfg_trajectory_planner::engine::core::gfx::utils
 {
-    // Have to be orthonormal to each other, of unit lenght, and aligned with the world axes.
+    // Have to be orthonormal to each other, of unit length, and aligned with the world axes.
     static constexpr glm::vec4 s_right = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
     static constexpr glm::vec4 s_up = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
     static constexpr glm::vec4 s_forward = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
