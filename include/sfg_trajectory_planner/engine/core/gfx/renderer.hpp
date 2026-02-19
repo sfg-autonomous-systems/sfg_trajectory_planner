@@ -31,8 +31,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         void add_line(const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
         void add_line(const glm::mat4 &model_matrix, const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
-        void add_marker(const glm::vec3 &center, float size_screen_space, const glm::vec3 &color);
-        void add_marker(const glm::mat4 &model_matrix, const glm::vec3 &center, float size_screen_space, const glm::vec3 &color);
 
         bool add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id = nullptr);
         bool add_view_gizmo(glm::mat4 &view_matrix, void *id = nullptr);
