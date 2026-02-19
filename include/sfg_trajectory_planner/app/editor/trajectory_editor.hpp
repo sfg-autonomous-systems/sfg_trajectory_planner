@@ -17,9 +17,6 @@ namespace sfg_trajectory_planner::app::editor
 
     private:
         void create_trajectory_publisher(const std::string &topic_name);
-        bool can_translate_waypoint(size_t index);
-        bool can_rotate_waypoint(size_t index);
-        void apply_waypoint_constraints(size_t index);
 
         size_t m_selected_waypoint_index = std::numeric_limits<size_t>::max();
         rclcpp::Publisher<sfg_agent_msgs::msg::Trajectory>::SharedPtr m_trajectory_publisher;

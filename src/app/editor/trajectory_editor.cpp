@@ -36,9 +36,7 @@ namespace sfg_trajectory_planner::app::editor
         auto gizmo_operation = m_selection_context.get_gizmo_operation();
         auto &waypoints = trajectory->get_waypoints();
 
-        if (m_selected_waypoint_index < waypoints.size() &&
-            ((gizmo_operation == ImGuizmo::TRANSLATE && can_translate_waypoint(m_selected_waypoint_index)) ||
-             (gizmo_operation == ImGuizmo::ROTATE && can_rotate_waypoint(m_selected_waypoint_index))))
+        if (m_selected_waypoint_index < waypoints.size() && gizmo_operation != ImGuizmo::OPERATION::SCALE)
         {
             auto &waypoint = waypoints[m_selected_waypoint_index];
             changed |= render_transform_editor(renderer, waypoint.m_transform, object_to_world_matrix);
@@ -174,7 +172,7 @@ namespace sfg_trajectory_planner::app::editor
                 }
 
                 ImGui::TableNextColumn();
-                changed |= render_transform_inspector(waypoint.m_transform, can_translate_waypoint(index), can_rotate_waypoint(index), false, false);
+                changed |= render_transform_inspector(waypoint.m_transform, true, true, false, false);
 
                 ImGui::TableNextColumn();
 
@@ -271,50 +269,6 @@ namespace sfg_trajectory_planner::app::editor
         {
             RCLCPP_ERROR(m_node->get_logger(), "Failed to create trajectory publisher: %s", exception.what());
             m_trajectory_publisher = nullptr;
-        }
-    }
-
-    bool TrajectoryEditor::can_translate_waypoint(size_t)
-    {
-        return true;
-    }
-
-    bool TrajectoryEditor::can_rotate_waypoint(size_t index)
-    {
-        using namespace magic_enum::bitwise_operators;
-
-        const auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
-        const auto &waypoint = trajectory->get_waypoints()[index];
-
-        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithPrevious) != core::Waypoint::Constraints::None && index != 0)
-        {
-            return false;
-        }
-
-        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithNext) != core::Waypoint::Constraints::None && index != trajectory->get_waypoints().size() - 1)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    void TrajectoryEditor::apply_waypoint_constraints(size_t index)
-    {
-        using namespace magic_enum::bitwise_operators;
-
-        const auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
-        auto &waypoint = trajectory->get_waypoints()[index];
-
-        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithPrevious) != core::Waypoint::Constraints::None && index != 0)
-        {
-            auto &previous_waypoint = trajectory->get_waypoints()[index - 1];
-            // ToDo: Implement this.
-        }
-
-        if ((waypoint.m_constraints & core::Waypoint::Constraints::AlignWithNext) != core::Waypoint::Constraints::None && index != trajectory->get_waypoints().size() - 1)
-        {
-            auto &next_waypoint = trajectory->get_waypoints()[index + 1];
-            // ToDo: Implement this.
         }
     }
 }
