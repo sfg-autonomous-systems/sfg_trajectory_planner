@@ -91,17 +91,17 @@ namespace sfg_trajectory_planner::engine::core
         m_dirty = true;
     }
 
-    void Transform::set_rotation(glm::quat rotation)
-    {
-        m_rotation = rotation;
-        m_euler_angles = glm::degrees(glm::eulerAngles(rotation));
-        m_dirty = true;
-    }
-
     void Transform::set_euler_angles(glm::vec3 euler_angles)
     {
         m_euler_angles = euler_angles;
         m_rotation = glm::quat(glm::radians(euler_angles));
+        m_dirty = true;
+    }
+
+    void Transform::set_rotation(glm::quat rotation)
+    {
+        m_rotation = rotation;
+        m_euler_angles = glm::degrees(glm::eulerAngles(rotation));
         m_dirty = true;
     }
 
@@ -111,6 +111,60 @@ namespace sfg_trajectory_planner::engine::core
 
         m_scale = glm::max(scale, glm::vec3(min_scale));
         m_dirty = true;
+    }
+
+    Transform &Transform::translate(const glm::vec3 &translation, bool local)
+    {
+        if (local)
+        {
+            set_translation(m_translation + m_rotation * translation);
+        }
+        else
+        {
+            set_translation(m_translation + translation);
+        }
+        return *this;
+    }
+
+    Transform &Transform::rotate(const glm::vec3 &euler_angles, bool local)
+    {
+        return rotate(glm::quat(glm::radians(euler_angles)), local);
+    }
+
+    Transform &Transform::rotate(const glm::quat &rotation, bool local)
+    {
+        if (local)
+        {
+            set_rotation(rotation * m_rotation);
+        }
+        else
+        {
+            set_rotation(m_rotation * rotation);
+        }
+        return *this;
+    }
+
+    Transform &Transform::scale(const glm::vec3 &scale)
+    {
+        set_scale(m_scale * scale);
+        return *this;
+    }
+
+    Transform &Transform::look_in(const glm::vec3 &direction, const glm::vec3 &up)
+    {
+        const auto epsilon = 0.001f;
+
+        if (glm::length2(direction) < epsilon)
+        {
+            return *this;
+        }
+
+        glm::vec3 forward = glm::normalize(direction);
+        glm::vec3 left = glm::normalize(glm::cross(up, forward));
+        glm::vec3 orthonormal_up = glm::cross(forward, left);
+        glm::mat3 rotation_matrix = glm::mat3(forward, left, orthonormal_up);
+        set_rotation(glm::quat_cast(rotation_matrix));
+        return *this;
     }
 
     void Transform::update_matrix() const

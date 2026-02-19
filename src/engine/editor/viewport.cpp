@@ -13,7 +13,7 @@
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    Viewport::Viewport(rclcpp::Node *node, engine::core::Scene &scene, engine::core::gfx::Camera &camera, engine::core::gfx::Renderer &renderer, SelectionContext &selection_context)
+    Viewport::Viewport(rclcpp::Node *node, core::Scene &scene, core::gfx::Camera &camera, core::gfx::Renderer &renderer, SelectionContext &selection_context)
         : GuiElement(),
           m_scene(scene),
           m_camera(camera),
@@ -37,7 +37,7 @@ namespace sfg_trajectory_planner::engine::editor
         m_camera.update();
 
         // Prepare rendering.
-        ImGuizmo::SetOrthographic(m_camera.get_projection() == engine::core::gfx::Camera::Projection::Orthographic);
+        ImGuizmo::SetOrthographic(m_camera.get_projection() == core::gfx::Camera::Projection::Orthographic);
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
 
         for (auto &object : m_scene.get_root()->get_children())
@@ -130,7 +130,7 @@ namespace sfg_trajectory_planner::engine::editor
         }
     }
 
-    void Viewport::render_object(engine::core::SceneObject &object)
+    void Viewport::render_object(core::SceneObject &object)
     {
         if (!object.is_visible())
         {
@@ -180,8 +180,12 @@ namespace sfg_trajectory_planner::engine::editor
 
             if (ImGui::Combo("Camera Projection", &index, "Perspective\0Orthographice\0"))
             {
-                m_camera.set_projection(magic_enum::enum_value<engine::core::gfx::Camera::Projection>(index));
+                m_camera.set_projection(magic_enum::enum_value<core::gfx::Camera::Projection>(index));
             }
+
+            ImGui::BeginDisabled(true);
+            ImGui::InputFloat("Frames Per Second", &ImGui::GetIO().Framerate, 0.0f, 0.0f, "%.1f", ImGuiInputTextFlags_ReadOnly);
+            ImGui::EndDisabled();
         }
         ImGui::EndChild();
     }

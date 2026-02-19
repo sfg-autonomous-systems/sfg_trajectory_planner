@@ -178,21 +178,31 @@ namespace sfg_trajectory_planner::engine::core::gfx
         return changed;
     }
 
-    void Renderer::add_text(const glm::vec3 &position, const std::string &text)
+    void Renderer::add_text(
+        const glm::vec3 &position,
+        const std::string &text,
+        float font_size,
+        const glm::vec3 &color,
+        TextJustification justification,
+        const glm::vec2 &offset_screen_space)
     {
-        auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
-        add_text(position, text, ImGui::GetFontSize(), glm::vec3(color.x, color.y, color.z));
+        add_text(glm::mat4(1.0f), position, text, font_size, color, justification, offset_screen_space);
     }
 
-    void Renderer::add_text(const glm::vec3 &position, const std::string &text, float font_size)
+    void Renderer::add_text(
+        const glm::mat4 &model_matrix,
+        const glm::vec3 &position,
+        const std::string &text,
+        float font_size,
+        const glm::vec3 &color,
+        TextJustification justification,
+        const glm::vec2 &offset_screen_space)
     {
-        auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
-        add_text(position, text, font_size, glm::vec3(color.x, color.y, color.z));
-    }
-
-    void Renderer::add_text(const glm::vec3 &position, const std::string &text, float font_size, const glm::vec3 &color)
-    {
-        glm::vec3 projected = glm::project(position, m_camera.get_view_matrix(), m_camera.get_projection_matrix(), glm::vec4(0.0f, 0.0f, m_camera.get_viewport().z, m_camera.get_viewport().w));
+        glm::vec3 projected = glm::project(
+            (model_matrix * glm::vec4(position, 1.0f)).xyz(),
+            m_camera.get_view_matrix(),
+            m_camera.get_projection_matrix(),
+            glm::vec4(0.0f, 0.0f, m_camera.get_viewport().z, m_camera.get_viewport().w));
 
         if (projected.z < 0.0f || projected.z > 1.0f)
         {
@@ -202,14 +212,62 @@ namespace sfg_trajectory_planner::engine::core::gfx
         text_size.x *= font_size / ImGui::GetFontSize();
         text_size.y *= font_size / ImGui::GetFontSize();
 
+        projected.x += offset_screen_space.x;
+        projected.y += offset_screen_space.y;
+
+        switch (justification)
+        {
+        case TextJustification::TopLeft:
+            break;
+
+        case TextJustification::TopCenter:
+            projected.x -= 0.5f * text_size.x;
+            break;
+
+        case TextJustification::TopRight:
+            projected.x -= text_size.x;
+            break;
+
+        case TextJustification::CenterLeft:
+            projected.y += 0.5f * text_size.y;
+            break;
+
+        case TextJustification::Center:
+            projected.x -= 0.5f * text_size.x;
+            projected.y += 0.5f * text_size.y;
+            break;
+
+        case TextJustification::CenterRight:
+            projected.x -= text_size.x;
+            projected.y += 0.5f * text_size.y;
+            break;
+
+        case TextJustification::BottomLeft:
+            projected.y += text_size.y;
+            break;
+
+        case TextJustification::BottomCenter:
+            projected.x -= 0.5f * text_size.x;
+            projected.y += text_size.y;
+            break;
+
+        case TextJustification::BottomRight:
+            projected.x -= text_size.x;
+            projected.y += text_size.y;
+            break;
+
+        default:
+            break;
+        }
+
         ImGui::GetWindowDrawList()->AddRectFilled(
-            ImVec2(m_camera.get_viewport().x + projected.x - 0.5f * text_size.x - 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y - 0.5f * text_size.y - 2.0f),
-            ImVec2(m_camera.get_viewport().x + projected.x + 0.5f * text_size.x + 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y + 0.5f * text_size.y + 2.0f),
+            ImVec2(m_camera.get_viewport().x + projected.x - 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y - 2.0f),
+            ImVec2(m_camera.get_viewport().x + projected.x + text_size.x + 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y + text_size.y + 2.0f),
             ImGui::ColorConvertFloat4ToU32(ImVec4(0.0f, 0.0f, 0.0f, 0.75f)));
         ImGui::GetWindowDrawList()->AddText(
             ImGui::GetFont(),
             font_size,
-            ImVec2(m_camera.get_viewport().x + projected.x - 0.5f * text_size.x, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y - 0.5f * text_size.y),
+            ImVec2(m_camera.get_viewport().x + projected.x, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y),
             ImGui::ColorConvertFloat4ToU32(ImVec4(color.x, color.y, color.z, 1.0f)),
             text.c_str());
     }

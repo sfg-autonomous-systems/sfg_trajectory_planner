@@ -17,14 +17,36 @@ namespace sfg_trajectory_planner::app::core
         const std::string &get_frame_id() const;
         float get_time_from_start() const;
         glm::vec3 get_color() const;
-        std::vector<Waypoint> &get_waypoints();
+        size_t get_waypoint_count() const;
 
         void set_topic_name(const std::string &topic_name);
         void set_frame_id(const std::string &frame_id);
         void set_time_from_start(float time_from_start);
         void set_color(const glm::vec3 &color);
 
+        bool empty() const;
+
+        // Waypoint manipulation methods.
+        void add_waypoint();
+        template <typename... Args>
+        void add_waypoint(Args &&...args);
+        void remove_waypoint(size_t index);
+
+        const engine::core::Transform &get_waypoint_transform(size_t index) const;
+        float get_waypoint_time_from_last(size_t index) const;
+        Waypoint::Constraints get_waypoint_constraints(size_t index) const;
+
+        void set_waypoint_transform(size_t index, engine::core::Transform transform);
+        void set_waypoint_time_from_last(size_t index, float time_from_last);
+        void set_waypoint_constraints(size_t index, Waypoint::Constraints constraints);
+
+        bool can_translate_waypoint(size_t index) const;
+        bool can_rotate_waypoint(size_t index) const;
+        bool can_scale_waypoint(size_t index) const;
+
     private:
+        void enforce_waypoint_constraints(size_t index);
+
         std::string m_topic_name = "/trajectory";
         std::string m_frame_id = "base_link";
         float m_time_from_start = 0.0f;
@@ -32,3 +54,5 @@ namespace sfg_trajectory_planner::app::core
         std::vector<Waypoint> m_waypoints;
     };
 }
+
+#include "sfg_trajectory_planner/app/core/trajectory.tpp"

@@ -12,7 +12,7 @@ namespace sfg_trajectory_planner::engine::editor
 {
     SceneObjectEditor::SceneObjectEditor(const SelectionContext &selection_context) : m_selection_context(selection_context) {}
 
-    bool SceneObjectEditor::render_editor(engine::core::gfx::Renderer &renderer)
+    bool SceneObjectEditor::render_editor(core::gfx::Renderer &renderer)
     {
         auto *selected_object = m_selection_context.get_selected();
 
@@ -51,7 +51,29 @@ namespace sfg_trajectory_planner::engine::editor
         return changed;
     }
 
-    bool SceneObjectEditor::render_transform_editor(engine::core::gfx::Renderer &renderer, engine::core::Transform &transform, const glm::mat4 &parent_transform)
+    std::optional<core::Transform> SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, const core::Transform &transform, const glm::mat4 &parent_transform)
+    {
+        std::optional<core::Transform> modified_transform = transform;
+
+        if (render_transform_editor(renderer, modified_transform.value(), parent_transform))
+        {
+            return modified_transform;
+        }
+        return std::nullopt;
+    }
+
+    std::optional<core::Transform> SceneObjectEditor::render_transform_inspector(const core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
+    {
+        std::optional<core::Transform> modified_transform = transform;
+
+        if (render_transform_inspector(modified_transform.value(), can_translate, can_rotate, can_scale, render_labels))
+        {
+            return modified_transform;
+        }
+        return std::nullopt;
+    }
+
+    bool SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform, const glm::mat4 &parent_transform)
     {
         auto changed = false;
         auto object_to_world_matrix = parent_transform * transform.get_matrix();
@@ -64,7 +86,7 @@ namespace sfg_trajectory_planner::engine::editor
         return changed;
     }
 
-    bool SceneObjectEditor::render_transform_inspector(engine::core::Transform &transform, bool render_translation, bool render_rotation, bool render_scale, bool render_labels)
+    bool SceneObjectEditor::render_transform_inspector(core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
     {
         auto changed = false;
 
@@ -73,32 +95,38 @@ namespace sfg_trajectory_planner::engine::editor
             ImGui::PushItemWidth(-1.0f);
         }
 
+        ImGui::BeginDisabled(!can_translate);
         auto translation = transform.get_translation();
 
-        if (render_translation && ImGui::DragFloat3(render_labels ? "Position [m]" : "##position", glm::value_ptr(translation), 0.1f))
+        if (ImGui::DragFloat3(render_labels ? "Position [m]" : "##position", glm::value_ptr(translation), 0.01f))
         {
             transform.set_translation(translation);
             changed = true;
         }
         ImGui::SetItemTooltip("Position [m]");
+        ImGui::EndDisabled();
 
+        ImGui::BeginDisabled(!can_rotate);
         auto euler_angles = transform.get_euler_angles();
 
-        if (render_rotation && ImGui::DragFloat3(render_labels ? "Rotation [deg]" : "##rotation", glm::value_ptr(euler_angles), 0.1f))
+        if (ImGui::DragFloat3(render_labels ? "Rotation [deg]" : "##rotation", glm::value_ptr(euler_angles), 0.01f))
         {
             transform.set_euler_angles(euler_angles);
             changed = true;
         }
         ImGui::SetItemTooltip("Rotation [deg]");
+        ImGui::EndDisabled();
 
+        ImGui::BeginDisabled(!can_scale);
         auto scale = transform.get_scale();
 
-        if (render_scale && ImGui::DragFloat3(render_labels ? "Scale" : "##scale", glm::value_ptr(scale), 0.1f))
+        if (ImGui::DragFloat3(render_labels ? "Scale" : "##scale", glm::value_ptr(scale), 0.01f))
         {
             transform.set_scale(scale);
             changed = true;
         }
         ImGui::SetItemTooltip("Scale");
+        ImGui::EndDisabled();
 
         if (!render_labels)
         {

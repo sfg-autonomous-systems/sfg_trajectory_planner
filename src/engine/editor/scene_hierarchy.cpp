@@ -18,7 +18,7 @@ namespace sfg_trajectory_planner::engine::editor
     static constexpr auto s_remove_button_text = "-";
     static constexpr auto s_create_object_popup_id = "create_object_popup";
 
-    SceneHierarchy::SceneHierarchy(engine::core::Scene &scene, SelectionContext &selection_context)
+    SceneHierarchy::SceneHierarchy(core::Scene &scene, SelectionContext &selection_context)
         : GuiElement(),
           m_scene(scene),
           m_selection_context(selection_context),
@@ -75,7 +75,7 @@ namespace sfg_trajectory_planner::engine::editor
         }
     }
 
-    void SceneHierarchy::render_object(engine::core::SceneObject &object)
+    void SceneHierarchy::render_object(core::SceneObject &object)
     {
         sfg_imgui_vendor::PushIdGuard id_guard(&object);
         ImGui::TableNextRow();
@@ -126,7 +126,7 @@ namespace sfg_trajectory_planner::engine::editor
         {
             if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_DRAGGED_OBJECT"))
             {
-                auto dragged_object = *static_cast<engine::core::SceneObject **>(payload->Data);
+                auto dragged_object = *static_cast<core::SceneObject **>(payload->Data);
                 m_reparent_request.m_parent = &object;
                 m_reparent_request.m_child = dragged_object;
             }
@@ -161,7 +161,7 @@ namespace sfg_trajectory_planner::engine::editor
         }
     }
 
-    void SceneHierarchy::render_object_separator(engine::core::SceneObject *parent)
+    void SceneHierarchy::render_object_separator(core::SceneObject *parent)
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
@@ -173,7 +173,7 @@ namespace sfg_trajectory_planner::engine::editor
         {
             if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_DRAGGED_OBJECT"))
             {
-                auto dragged_object = *static_cast<engine::core::SceneObject **>(payload->Data);
+                auto dragged_object = *static_cast<core::SceneObject **>(payload->Data);
                 m_reparent_request.m_parent = parent;
                 m_reparent_request.m_child = dragged_object;
             }

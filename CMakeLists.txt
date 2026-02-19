@@ -12,6 +12,7 @@ cmake_policy(SET CMP0079 NEW)
 # Find dependencies.                                                                                     #
 # ########################################################################################################
 find_package(ament_cmake REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -78,6 +79,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   sfg_utils
   SYSTEM_DEPENDENCIES
   PRIVATE
+  fmt::fmt
   glm::glm
   magic_enum::magic_enum
   stduuid

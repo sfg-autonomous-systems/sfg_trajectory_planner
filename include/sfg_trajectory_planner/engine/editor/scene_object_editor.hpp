@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "sfg_trajectory_planner/engine/core/transform.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
@@ -24,12 +26,15 @@ namespace sfg_trajectory_planner::engine::editor
         SceneObjectEditor(SceneObjectEditor &&) = delete;
         SceneObjectEditor &operator=(SceneObjectEditor &&) = delete;
 
-        virtual bool render_editor(engine::core::gfx::Renderer &renderer);
+        virtual bool render_editor(core::gfx::Renderer &renderer);
         virtual bool render_inspector();
 
     protected:
-        bool render_transform_editor(engine::core::gfx::Renderer &renderer, engine::core::Transform &transform, const glm::mat4 &parent_transform = glm::mat4(1.0f));
-        bool render_transform_inspector(engine::core::Transform &transform, bool render_translation = true, bool render_rotation = true, bool render_scale = true, bool render_labels = true);
+        std::optional<core::Transform> render_transform_editor(core::gfx::Renderer &renderer, const core::Transform &transform, const glm::mat4 &parent_transform = glm::mat4(1.0f));
+        std::optional<core::Transform> render_transform_inspector(const core::Transform &transform, bool render_translation = true, bool render_rotation = true, bool render_scale = true, bool render_labels = true);
+
+        bool render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform, const glm::mat4 &parent_transform = glm::mat4(1.0f));
+        bool render_transform_inspector(core::Transform &transform, bool render_translation = true, bool render_rotation = true, bool render_scale = true, bool render_labels = true);
 
         const SelectionContext &m_selection_context;
     };

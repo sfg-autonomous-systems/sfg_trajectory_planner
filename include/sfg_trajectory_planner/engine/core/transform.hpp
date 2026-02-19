@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/serializable.hpp"
 
 namespace sfg_trajectory_planner::engine::core
@@ -26,9 +27,16 @@ namespace sfg_trajectory_planner::engine::core
 
         void set_matrix(const glm::mat4 &matrix);
         void set_translation(glm::vec3 translation);
-        void set_rotation(glm::quat rotation);
         void set_euler_angles(glm::vec3 euler_angles);
+        void set_rotation(glm::quat rotation);
         void set_scale(glm::vec3 scale);
+
+        Transform &translate(const glm::vec3 &translation, bool local = true);
+        Transform &rotate(const glm::vec3 &euler_angles, bool local = true);
+        Transform &rotate(const glm::quat &rotation, bool local = true);
+        Transform &scale(const glm::vec3 &scale);
+
+        Transform &look_in(const glm::vec3 &direction, const glm::vec3 &up = gfx::utils::s_up.xyz());
 
     private:
         void update_matrix() const;

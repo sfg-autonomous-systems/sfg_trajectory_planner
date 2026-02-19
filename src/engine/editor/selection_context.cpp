@@ -6,13 +6,13 @@
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    SelectionContext::SelectionContext(const engine::core::Scene &scene, const SceneObjectEditorFactory &editor_factory) : m_scene(scene), m_editor_factory(editor_factory) {}
+    SelectionContext::SelectionContext(const core::Scene &scene, const SceneObjectEditorFactory &editor_factory) : m_scene(scene), m_editor_factory(editor_factory) {}
 
     SelectionContext::~SelectionContext() = default;
 
-    engine::core::SceneObject *SelectionContext::get_selected() const
+    core::SceneObject *SelectionContext::get_selected() const
     {
-        return m_selected_object_uuid.is_nil() ? nullptr : m_scene.find_object_by_uuid<engine::core::SceneObject>(m_selected_object_uuid);
+        return m_selected_object_uuid.is_nil() ? nullptr : m_scene.find_object_by_uuid<core::SceneObject>(m_selected_object_uuid);
     }
 
     ImGuizmo::OPERATION SelectionContext::get_gizmo_operation() const
@@ -30,7 +30,7 @@ namespace sfg_trajectory_planner::engine::editor
         return get_selected() == nullptr ? nullptr : m_selected_object_editor.get();
     }
 
-    void SelectionContext::set_selected(engine::core::SceneObject *object)
+    void SelectionContext::set_selected(core::SceneObject *object)
     {
         auto uuid = object ? object->get_uuid() : uuids::uuid{};
 

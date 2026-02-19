@@ -1,10 +1,12 @@
 #include "sfg_trajectory_planner/app/core/trajectory.hpp"
 
+#include <fmt/format.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
@@ -49,10 +51,9 @@ namespace sfg_trajectory_planner::app::core
 
         for (size_t index = 0; index < waypoint_count; index++)
         {
-            Waypoint waypoint;
             serializer->next_item();
-            waypoint.deserialize(serializer);
-            m_waypoints.push_back(waypoint);
+            m_waypoints.emplace_back(Waypoint());
+            m_waypoints.back().deserialize(serializer);
         }
         serializer->end_sequence();
     }
@@ -63,9 +64,26 @@ namespace sfg_trajectory_planner::app::core
 
         for (size_t index = 1; index < m_waypoints.size(); index++)
         {
-            glm::vec3 start = glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index - 1].m_transform.get_translation(), 1.0f));
-            glm::vec3 end = glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index].m_transform.get_translation(), 1.0f));
-            renderer.add_line(start, end, m_color);
+            renderer.add_line(
+                glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index - 1].m_transform.get_translation(), 1.0f)),
+                glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index].m_transform.get_translation(), 1.0f)),
+                m_color);
+        }
+
+        auto time_from_start = m_time_from_start;
+
+        for (size_t index = 0; index < m_waypoints.size(); index++)
+        {
+            time_from_start += m_waypoints[index].m_time_from_last;
+            auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+            renderer.add_text(
+                object_to_world_matrix,
+                m_waypoints[index].m_transform.get_translation(),
+                "t+" + fmt::format("{:.1f}", time_from_start),
+                ImGui::GetFontSize(),
+                glm::vec3(color.x, color.y, color.z),
+                engine::core::gfx::TextJustification::Center);
         }
     }
 
@@ -89,9 +107,9 @@ namespace sfg_trajectory_planner::app::core
         return m_color;
     }
 
-    std::vector<Waypoint> &Trajectory::get_waypoints()
+    size_t Trajectory::get_waypoint_count() const
     {
-        return m_waypoints;
+        return m_waypoints.size();
     }
 
     void Trajectory::set_topic_name(const std::string &topic_name)
@@ -114,5 +132,154 @@ namespace sfg_trajectory_planner::app::core
     void Trajectory::set_color(const glm::vec3 &color)
     {
         m_color = color;
+    }
+
+    bool Trajectory::empty() const
+    {
+        return m_waypoints.empty();
+    }
+
+    void Trajectory::add_waypoint()
+    {
+        // We'll place new waypoint's one unit forward from the last waypoint.
+        auto last_transform = m_waypoints.size() == 0 ? glm::mat4(1.0f) : m_waypoints.back().m_transform;
+        // We'll also inherit the constraints of the last waypoint.
+        auto last_constraints = m_waypoints.size() == 0 ? core::Waypoint::Constraints::None : m_waypoints.back().m_constraints;
+
+        add_waypoint(last_transform.translate(engine::core::gfx::utils::s_forward.xyz()), 1.0f, last_constraints);
+    }
+
+    void Trajectory::remove_waypoint(size_t index)
+    {
+        if (index < m_waypoints.size())
+        {
+            m_waypoints.erase(m_waypoints.begin() + index);
+        }
+    }
+
+    const engine::core::Transform &Trajectory::get_waypoint_transform(size_t index) const
+    {
+        return m_waypoints[index].m_transform;
+    }
+
+    float Trajectory::get_waypoint_time_from_last(size_t index) const
+    {
+        return m_waypoints[index].m_time_from_last;
+    }
+
+    Waypoint::Constraints Trajectory::get_waypoint_constraints(size_t index) const
+    {
+        return m_waypoints[index].m_constraints;
+    }
+
+    void Trajectory::set_waypoint_transform(size_t index, engine::core::Transform transform)
+    {
+        if (!can_translate_waypoint(index))
+        {
+            transform.set_translation(m_waypoints[index].m_transform.get_translation());
+        }
+
+        if (!can_rotate_waypoint(index))
+        {
+            transform.set_rotation(m_waypoints[index].m_transform.get_rotation());
+        }
+
+        if (!can_scale_waypoint(index))
+        {
+            transform.set_scale(m_waypoints[index].m_transform.get_scale());
+        }
+        m_waypoints[index].m_transform = std::move(transform);
+
+        enforce_waypoint_constraints(index - 1);
+        enforce_waypoint_constraints(index);
+        enforce_waypoint_constraints(index + 1);
+    }
+
+    void Trajectory::set_waypoint_time_from_last(size_t index, float time_from_last)
+    {
+        m_waypoints[index].m_time_from_last = glm::max(time_from_last, 0.0f);
+    }
+
+    void Trajectory::set_waypoint_constraints(size_t index, Waypoint::Constraints constraints)
+    {
+        auto &old_constraints = m_waypoints[index].m_constraints;
+
+        if (constraints == old_constraints)
+        {
+            return;
+        }
+
+        using namespace magic_enum::bitwise_operators;
+
+        if (index == 0)
+        {
+            constraints &= ~Waypoint::Constraints::AlignWithPrevious;
+        }
+        else if (index == m_waypoints.size() - 1)
+        {
+            constraints &= ~Waypoint::Constraints::AlignWithNext;
+        }
+
+        if ((constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None && (constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None)
+        {
+            if ((old_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None)
+            {
+                constraints &= ~Waypoint::Constraints::AlignWithPrevious;
+            }
+            else
+            {
+                constraints &= ~Waypoint::Constraints::AlignWithNext;
+            }
+        }
+        old_constraints = constraints;
+        enforce_waypoint_constraints(index);
+    }
+
+    bool Trajectory::can_translate_waypoint(size_t) const
+    {
+        return true;
+    }
+
+    bool Trajectory::can_rotate_waypoint(size_t index) const
+    {
+        using namespace magic_enum::bitwise_operators;
+
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None)
+        {
+            return false;
+        }
+
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    bool Trajectory::can_scale_waypoint(size_t) const
+    {
+        return false;
+    }
+
+    void Trajectory::enforce_waypoint_constraints(size_t index)
+    {
+        if (index >= m_waypoints.size() || m_waypoints.size() < 2)
+        {
+            return;
+        }
+
+        using namespace magic_enum::bitwise_operators;
+
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None)
+        {
+            glm::vec3 direction = m_waypoints[index].m_transform.get_translation() - m_waypoints[index - 1].m_transform.get_translation();
+            m_waypoints[index].m_transform.look_in(direction);
+        }
+
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None)
+        {
+            glm::vec3 direction = m_waypoints[index + 1].m_transform.get_translation() - m_waypoints[index].m_transform.get_translation();
+            m_waypoints[index].m_transform.look_in(direction);
+        }
     }
 }
