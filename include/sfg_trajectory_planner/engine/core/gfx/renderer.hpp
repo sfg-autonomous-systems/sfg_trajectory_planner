@@ -11,7 +11,6 @@
 #include "sfg_trajectory_planner/engine/core/gfx/framebuffer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/mesh.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/text_anchor.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/text_font.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
@@ -39,14 +38,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
             const std::string &text,
             float font_size = 12.0f,
             const glm::vec3 &color = glm::vec3(1.0f, 1.0f, 1.0f),
-            TextAnchor justification = TextAnchor::TopLeft);
+            TextAnchor anchor = TextAnchor::TopLeft);
         void add_text(
             const glm::mat4 &model_matrix,
             glm::vec3 position,
             const std::string &text,
             float font_size = 12.0f,
             const glm::vec3 &color = glm::vec3(1.0f, 1.0f, 1.0f),
-            TextAnchor justification = TextAnchor::TopLeft);
+            TextAnchor anchor = TextAnchor::TopLeft);
 
         GLuint render();
 

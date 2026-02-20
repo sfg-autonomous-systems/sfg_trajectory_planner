@@ -90,7 +90,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         return m_font_atlas;
     }
 
-    void TextFont::get_character_quad(unsigned char character, float *x, float *y, stbtt_aligned_quad *quad)
+    void TextFont::get_character_quad(unsigned char character, float *x, float *y, stbtt_aligned_quad *quad) const
     {
         if (character >= 32 && character < 128)
         {
@@ -101,5 +101,67 @@ namespace sfg_trajectory_planner::engine::core::gfx
     float TextFont::get_baked_height() const
     {
         return m_baked_height;
+    }
+
+    glm::vec2 TextFont::calculate_text_size(std::string_view text) const
+    {
+        if (text.empty())
+        {
+            return {0.0f, 0.0f};
+        }
+
+        stbtt_aligned_quad quad;
+        auto x = 0.0f;
+        auto y = 0.0f;
+        auto min_x = std::numeric_limits<float>::max(), max_x = std::numeric_limits<float>::lowest();
+        auto min_y = std::numeric_limits<float>::max(), max_y = std::numeric_limits<float>::lowest();
+
+        for (char character : text)
+        {
+            get_character_quad(character, &x, &y, &quad);
+            min_x = std::min(min_x, quad.x0);
+            max_x = std::max(max_x, quad.x1);
+            min_y = std::min(min_y, quad.y0);
+            max_y = std::max(max_y, quad.y1);
+        }
+        return {max_x - min_x, max_y - min_y};
+    }
+
+    glm::vec2 TextFont::text_anchor_to_offset(std::string_view text, TextAnchor anchor) const
+    {
+        auto size = calculate_text_size(text);
+
+        switch (anchor)
+        {
+        case TextAnchor::TopLeft:
+            return {+0.0f * size.x, +1.0f * size.y};
+            break;
+        case TextAnchor::TopCenter:
+            return {-0.5f * size.x, +1.0f * size.y};
+            break;
+        case TextAnchor::TopRight:
+            return {-1.0f * size.x, +1.0f * size.y};
+            break;
+        case TextAnchor::CenterLeft:
+            return {+0.0f * size.x, +0.5f * size.y};
+            break;
+        case TextAnchor::Center:
+            return {-0.5f * size.x, +0.5f * size.y};
+            break;
+        case TextAnchor::CenterRight:
+            return {-1.0f * size.x, +0.5f * size.y};
+            break;
+        case TextAnchor::BottomLeft:
+            return {+0.0f * size.x, -0.0f * size.y};
+            break;
+        case TextAnchor::BottomCenter:
+            return {-0.5f * size.x, -0.0f * size.y};
+            break;
+        case TextAnchor::BottomRight:
+            return {-1.0f * size.x, -0.0f * size.y};
+            break;
+        default:
+            return {0.0f, 0.0f};
+        }
     }
 }

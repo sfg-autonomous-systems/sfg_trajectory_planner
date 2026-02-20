@@ -7,7 +7,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     FrameBuffer::FrameBuffer(const glm::vec3 &clear_color, glm::ivec2 size)
         : m_clear_color(clear_color)
     {
-        resize(size);
+        resize_if_needed(size);
     }
 
     FrameBuffer::~FrameBuffer()
@@ -80,7 +80,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    void FrameBuffer::resize(glm::ivec2 size)
+    void FrameBuffer::resize_if_needed(glm::ivec2 size)
     {
         if (size == m_size)
         {

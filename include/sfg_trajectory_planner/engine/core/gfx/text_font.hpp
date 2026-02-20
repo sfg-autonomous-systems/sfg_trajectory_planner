@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <stb_truetype.h>
 
+#include "sfg_trajectory_planner/engine/core/gfx/text_anchor.hpp"
+
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     class TextFont
@@ -20,8 +22,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
         ~TextFont();
 
         GLuint get_font_atlas() const;
-        void get_character_quad(unsigned char character, float *x, float *y, stbtt_aligned_quad *quad);
+        void get_character_quad(unsigned char character, float *x, float *y, stbtt_aligned_quad *quad) const;
         float get_baked_height() const;
+
+        glm::vec2 calculate_text_size(std::string_view text) const;
+        glm::vec2 text_anchor_to_offset(std::string_view text, TextAnchor anchor) const;
 
     private:
         static const std::uint32_t s_bitmap_width;

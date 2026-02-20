@@ -20,18 +20,19 @@ namespace sfg_trajectory_planner::engine::core::gfx
         ~Mesh();
 
         void render();
+        void clear();
 
         Topology get_topology() const;
         bool empty() const;
         size_t vertex_count() const;
 
-        void clear();
         void set_vertices(std::initializer_list<VertexType> vertices);
-        void set_vertices(const std::vector<VertexType> &vertices);
+        void set_vertices(std::vector<VertexType> vertices);
         void add_vertices(std::initializer_list<VertexType> vertices);
         void add_vertices(const std::vector<VertexType> &vertices);
+
         void set_indices(std::initializer_list<std::uint32_t> indices);
-        void set_indices(const std::vector<std::uint32_t> &indices);
+        void set_indices(std::vector<std::uint32_t> indices);
         void add_indices(std::initializer_list<std::uint32_t> indices);
         void add_indices(const std::vector<std::uint32_t> &indices);
 

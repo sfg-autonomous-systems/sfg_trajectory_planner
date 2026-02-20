@@ -20,11 +20,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void bind();
         void unbind();
         void clear();
-        void resize(glm::ivec2 size);
+        void resize_if_needed(glm::ivec2 size);
 
     private:
         glm::vec3 m_clear_color;
-        glm::ivec2 m_size;
+        glm::ivec2 m_size = {0, 0};
 
         GLuint m_fbo = 0;
         GLuint m_color_texture = 0;

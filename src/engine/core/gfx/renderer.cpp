@@ -9,8 +9,6 @@
 #include "sfg_trajectory_planner/engine/core/gfx/fonts/roboto_regular.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 
-static constexpr auto s_line_width = 2.0f;
-
 static constexpr auto s_line_vertex_shader_source = R"(
 #version 330 core
 layout (location = 0) in vec3 a_Position;
@@ -194,9 +192,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         const std::string &text,
         float font_size,
         const glm::vec3 &color,
-        TextAnchor justification)
+        TextAnchor anchor)
     {
-        add_text(glm::mat4(1.0f), position, text, font_size, color, justification);
+        add_text(glm::mat4(1.0f), position, text, font_size, color, anchor);
     }
 
     void Renderer::add_text(
@@ -205,14 +203,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
         const std::string &text,
         float font_size,
         const glm::vec3 &color,
-        TextAnchor justification)
+        TextAnchor anchor)
     {
         const glm::mat4 &view_matrix = m_camera.get_view_matrix();
         position = model_matrix * glm::vec4(position, 1.0f);
-        glm::vec4 position_view_space = view_matrix * glm::vec4(position, 1.0f);
+        glm::vec3 position_view_space = view_matrix * glm::vec4(position, 1.0f);
         auto depth = -position_view_space.z;
 
-        if (depth < 0.1f)
+        if (depth <= 0.0f)
         {
             return;
         }
@@ -225,73 +223,17 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         glm::vec3 camera_right = {view_matrix[0][0], view_matrix[1][0], view_matrix[2][0]};
         glm::vec3 camera_up = {view_matrix[0][1], view_matrix[1][1], view_matrix[2][1]};
-        auto text_width = 0.0f;
-        auto text_height = 0.0f;
+        glm::vec2 offset = m_text_font.text_anchor_to_offset(text, anchor);
 
-        auto x = 0.0f, y = 0.0f;
         stbtt_aligned_quad quad;
-        auto min_x = std::numeric_limits<float>::max(), max_x = std::numeric_limits<float>::lowest();
-        auto min_y = std::numeric_limits<float>::max(), max_y = std::numeric_limits<float>::lowest();
-
-        for (char character : text)
-        {
-            m_text_font.get_character_quad(character, &x, &y, &quad);
-            min_x = std::min(min_x, quad.x0);
-            max_x = std::max(max_x, quad.x1);
-            min_y = std::min(min_y, quad.y0);
-            max_y = std::max(max_y, quad.y1);
-        }
-
-        if (!text.empty())
-        {
-            text_width = max_x - min_x;
-            text_height = max_y - min_y;
-        }
-
-        glm::vec2 offset = {0.0f, 0.0f};
-
-        switch (justification)
-        {
-        case TextAnchor::TopLeft:
-            offset = {+0.0f * text_width, +1.0f * text_height};
-            break;
-        case TextAnchor::TopCenter:
-            offset = {-0.5f * text_width, +1.0f * text_height};
-            break;
-        case TextAnchor::TopRight:
-            offset = {-1.0f * text_width, +1.0f * text_height};
-            break;
-        case TextAnchor::CenterLeft:
-            offset = {+0.0f * text_width, +0.5f * text_height};
-            break;
-        case TextAnchor::Center:
-            offset = {-0.5f * text_width, +0.5f * text_height};
-            break;
-        case TextAnchor::CenterRight:
-            offset = {-1.0f * text_width, +0.5f * text_height};
-            break;
-        case TextAnchor::BottomLeft:
-            offset = {+0.0f * text_width, -0.0f * text_height};
-            break;
-        case TextAnchor::BottomCenter:
-            offset = {-0.5f * text_width, -0.0f * text_height};
-            break;
-        case TextAnchor::BottomRight:
-            offset = {-1.0f * text_width, -0.0f * text_height};
-            break;
-        default:
-            break;
-        }
-
         auto x_cursor = 0.0f;
         auto y_cursor = 0.0f;
-        std::vector<TextVertex> vertices;
-        std::vector<uint32_t> indices;
-
         auto current_index = m_text_mesh.vertex_count();
 
         // Reserve memory to avoid reallocations.
+        std::vector<TextVertex> vertices;
         vertices.reserve(text.size() * 4);
+        std::vector<uint32_t> indices;
         indices.reserve(text.size() * 6);
 
         for (char character : text)
@@ -332,21 +274,22 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
         if (m_camera.get_viewport().z > 0 && m_camera.get_viewport().w > 0)
         {
-            m_framebuffer.resize(m_camera.get_viewport().zw());
+            m_framebuffer.resize_if_needed(m_camera.get_viewport().zw());
         }
 
         m_framebuffer.bind();
         m_framebuffer.clear();
 
+        glm::mat4 view_projection_matrix = m_camera.get_projection_matrix() * m_camera.get_view_matrix();
+
         if (!m_line_mesh.empty())
         {
             m_line_shader.bind();
-            glm::mat4 view_projection_matrix = m_camera.get_projection_matrix() * m_camera.get_view_matrix();
             glUniformMatrix4fv(glGetUniformLocation(m_line_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
 
             if (m_line_mesh.get_topology() == Mesh<LineVertex>::Topology::Lines)
             {
-                glLineWidth(s_line_width);
+                glLineWidth(2.0f);
             }
             m_line_mesh.render();
             m_line_shader.unbind();
@@ -359,7 +302,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_text_font.get_font_atlas());
             glUniform1i(glGetUniformLocation(m_text_shader.get_id(), "u_Font"), 0);
-            glm::mat4 view_projection_matrix = m_camera.get_projection_matrix() * m_camera.get_view_matrix();
             glUniformMatrix4fv(glGetUniformLocation(m_text_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
 
             m_text_mesh.render();

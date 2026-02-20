@@ -116,6 +116,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
+    void Mesh<VertexType>::clear()
+    {
+        m_vertices.clear();
+        m_indices.clear();
+        m_dirty = true;
+    }
+
+    template <typename VertexType>
     typename Mesh<VertexType>::Topology Mesh<VertexType>::get_topology() const
     {
         return m_topology;
@@ -134,14 +142,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::clear()
-    {
-        m_vertices.clear();
-        m_indices.clear();
-        m_dirty = true;
-    }
-
-    template <typename VertexType>
     void Mesh<VertexType>::set_vertices(std::initializer_list<VertexType> vertices)
     {
         m_vertices = vertices;
@@ -149,9 +149,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::set_vertices(const std::vector<VertexType> &vertices)
+    void Mesh<VertexType>::set_vertices(std::vector<VertexType> vertices)
     {
-        m_vertices = vertices;
+        m_vertices = std::move(vertices);
         m_dirty = true;
     }
 
@@ -177,9 +177,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::set_indices(const std::vector<std::uint32_t> &indices)
+    void Mesh<VertexType>::set_indices(std::vector<std::uint32_t> indices)
     {
-        m_indices = indices;
+        m_indices = std::move(indices);
         m_dirty = true;
     }
 
