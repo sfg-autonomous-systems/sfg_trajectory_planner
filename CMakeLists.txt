@@ -27,6 +27,14 @@ pkg_check_modules(UUID REQUIRED uuid)
 include(FetchContent)
 
 FetchContent_Declare(
+  imguizmo
+  GIT_REPOSITORY "https://github.com/CedricGuillemet/ImGuizmo.git"
+  GIT_TAG "master"
+  GIT_SHALLOW TRUE
+)
+FetchContent_Populate(imguizmo)
+
+FetchContent_Declare(
   stb
   GIT_REPOSITORY "https://github.com/nothings/stb.git"
   GIT_TAG master
@@ -55,6 +63,11 @@ target_link_libraries(stduuid INTERFACE ${UUID_LIBRARIES})
 # ########################################################################################################
 # Add nodes and libraries.                                                                               #
 # ########################################################################################################
+set_source_files_properties(
+  "third_party/glad/src/glad.c"
+  PROPERTIES COMPILE_FLAGS "-Wno-pedantic"
+)
+
 sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanner"
   SOURCES
   "src/app/core/grid.cpp"
@@ -81,8 +94,11 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
 
   "src/trajectory_planner_component.cpp"
   "src/trajectory_planner.cpp"
+
+  "third_party/glad/src/glad.c"
   ADDITIONAL_INCLUDE_DIRS
   PRIVATE
+  "${PROJECT_SOURCE_DIR}/third_party/glad/include"
   "${stb_SOURCE_DIR}"
   AMENT_DEPENDENCIES
   rclcpp

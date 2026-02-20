@@ -1,6 +1,8 @@
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <SDL3/SDL.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -32,7 +34,7 @@ void main() {
 }
 )";
 
-static const char *s_text_vertex_shader_source = R"(
+static const auto s_text_vertex_shader_source = R"(
 #version 330 core
 layout(location=0) in vec3 a_Position; 
 layout(location=1) in vec2 a_UV; 
@@ -48,8 +50,7 @@ void main() {
     v_Color = a_Color; 
     gl_Position = u_ViewProjection * vec4(a_Position, 1.0); 
 })";
-
-static const char *s_text_fragment_shader_source = R"(
+static const auto s_text_fragment_shader_source = R"(
 #version 330 core
 in vec2 v_UV; 
 in vec4 v_Color; 

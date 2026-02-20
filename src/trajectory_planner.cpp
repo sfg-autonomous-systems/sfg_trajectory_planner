@@ -1,5 +1,7 @@
 #include "sfg_trajectory_planner/trajectory_planner.hpp"
 
+#include <SDL3/SDL.h>
+
 #include "sfg_trajectory_planner/app/trajectory_planner_gui.hpp"
 
 namespace sfg_trajectory_planner
@@ -10,6 +12,10 @@ namespace sfg_trajectory_planner
             get_name(),
             [this]()
             {
+                if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+                {
+                    throw std::runtime_error("Failed to initialize GLAD");
+                }
                 return std::make_unique<sfg_trajectory_planner::app::TrajectoryPlannerGui>(this);
             },
             ImVec2(800, 600),
