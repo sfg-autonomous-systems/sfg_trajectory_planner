@@ -4,15 +4,18 @@
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
 #include <imgui/ImGuizmo.h>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "sfg_trajectory_planner/engine/core/gfx/framebuffer.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/mesh.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/text_justification.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     class Camera;
-    class Vertex;
 }
 
 namespace sfg_trajectory_planner::engine::core::gfx
@@ -21,11 +24,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
     public:
         Renderer(const Camera &camera, glm::vec3 clear_color = glm::vec3(0.0f, 0.0f, 0.0f));
-        ~Renderer();
-        Renderer(const Renderer &) = delete;
-        Renderer &operator=(const Renderer &) = delete;
-        Renderer(Renderer &&) = delete;
-        Renderer &operator=(Renderer &&) = delete;
 
         const Camera &get_camera() const;
 
@@ -53,24 +51,20 @@ namespace sfg_trajectory_planner::engine::core::gfx
         GLuint render();
 
     private:
-        struct Mesh
+        struct LineVertex
         {
-            std::vector<Vertex> vertices;
-            GLuint vao = 0;
-            GLuint vbo = 0;
+        public:
+            static void set_vertex_attributes();
+
+            glm::vec3 m_position;
+            glm::vec3 m_color;
         };
 
-        void initialize_lazily();
-        void resize_fbo(int width, int height);
-
-        bool m_initialized = false;
         const Camera &m_camera;
-        glm::vec3 m_clear_color;
-        Mesh m_line_mesh;
+        FrameBuffer m_framebuffer;
 
-        GLuint m_fbo = 0;
-        GLuint m_color_texture = 0;
-        GLuint m_depth_rbo = 0;
-        GLuint m_shader_program = 0;
+        // Line rendering resources.
+        Mesh<LineVertex> m_line_mesh;
+        Shader m_line_shader;
     };
 }
