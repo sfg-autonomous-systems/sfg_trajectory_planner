@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <string>
+#include <filesystem>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <stb_truetype.h>
@@ -13,7 +13,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class TextFont
     {
     public:
-        TextFont(const std::string &filepath, float height = 64.0f);
+        TextFont(const std::filesystem::path &filepath, float height = 64.0f);
         TextFont(std::uint8_t *data, float height = 64.0f);
         TextFont(const TextFont &) = delete;
         TextFont &operator=(const TextFont &) = delete;
@@ -29,11 +29,13 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glm::vec2 text_anchor_to_offset(std::string_view text, TextAnchor anchor) const;
 
     private:
-        static const std::uint32_t s_bitmap_width;
-        static const std::uint32_t s_bitmap_height;
+        static constexpr size_t s_first_character = 32;
+        static constexpr size_t s_character_count = 96;
+        static constexpr std::uint32_t s_font_atlas_width = 512;
+        static constexpr std::uint32_t s_font_atlas_height = 512;
 
         GLuint m_font_atlas = 0;
-        stbtt_bakedchar m_character_data[96];
+        stbtt_bakedchar m_character_data[s_character_count];
         float m_baked_height;
     };
 }

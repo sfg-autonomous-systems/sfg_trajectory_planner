@@ -7,10 +7,7 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    const std::uint32_t TextFont::s_bitmap_width = 512;
-    const std::uint32_t TextFont::s_bitmap_height = 512;
-
-    TextFont::TextFont(const std::string &filepath, float height) : m_baked_height(height)
+    TextFont::TextFont(const std::filesystem::path &filepath, float height) : m_baked_height(height)
     {
         std::ifstream file(filepath, std::ios::binary | std::ios::ate);
 
@@ -23,7 +20,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         file.seekg(0, std::ios::beg);
         std::vector<unsigned char> data(size);
 
-        if (!file.read((char *)data.data(), size))
+        if (!file.read(reinterpret_cast<char *>(data.data()), size))
         {
             return;
         }
@@ -33,22 +30,22 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     TextFont::TextFont(std::uint8_t *data, float height) : m_baked_height(height)
     {
-        std::vector<unsigned char> temp_bitmap(s_bitmap_width * s_bitmap_height);
+        std::vector<unsigned char> font_atlas(s_font_atlas_width * s_font_atlas_height);
 
         stbtt_BakeFontBitmap(
             data,
             0,
             height,
-            temp_bitmap.data(),
-            s_bitmap_width,
-            s_bitmap_height,
-            32,
-            96,
+            font_atlas.data(),
+            s_font_atlas_width,
+            s_font_atlas_height,
+            s_first_character,
+            s_character_count,
             m_character_data);
 
         glGenTextures(1, &m_font_atlas);
         glBindTexture(GL_TEXTURE_2D, m_font_atlas);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, s_bitmap_width, s_bitmap_height, 0, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, s_font_atlas_width, s_font_atlas_height, 0, GL_RED, GL_UNSIGNED_BYTE, font_atlas.data());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -92,9 +89,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     void TextFont::get_character_quad(unsigned char character, float *x, float *y, stbtt_aligned_quad *quad) const
     {
-        if (character >= 32 && character < 128)
+        if (character >= s_first_character && character < s_first_character + s_character_count)
         {
-            stbtt_GetBakedQuad(m_character_data, s_bitmap_width, s_bitmap_height, character - 32, x, y, quad, 1);
+            stbtt_GetBakedQuad(m_character_data, s_font_atlas_width, s_font_atlas_height, character - s_first_character, x, y, quad, 1);
         }
     }
 
@@ -129,36 +126,36 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     glm::vec2 TextFont::text_anchor_to_offset(std::string_view text, TextAnchor anchor) const
     {
-        auto size = calculate_text_size(text);
+        auto text_size = calculate_text_size(text);
 
         switch (anchor)
         {
         case TextAnchor::TopLeft:
-            return {+0.0f * size.x, +1.0f * size.y};
+            return {+0.0f * text_size.x, +1.0f * text_size.y};
             break;
         case TextAnchor::TopCenter:
-            return {-0.5f * size.x, +1.0f * size.y};
+            return {-0.5f * text_size.x, +1.0f * text_size.y};
             break;
         case TextAnchor::TopRight:
-            return {-1.0f * size.x, +1.0f * size.y};
+            return {-1.0f * text_size.x, +1.0f * text_size.y};
             break;
         case TextAnchor::CenterLeft:
-            return {+0.0f * size.x, +0.5f * size.y};
+            return {+0.0f * text_size.x, +0.5f * text_size.y};
             break;
         case TextAnchor::Center:
-            return {-0.5f * size.x, +0.5f * size.y};
+            return {-0.5f * text_size.x, +0.5f * text_size.y};
             break;
         case TextAnchor::CenterRight:
-            return {-1.0f * size.x, +0.5f * size.y};
+            return {-1.0f * text_size.x, +0.5f * text_size.y};
             break;
         case TextAnchor::BottomLeft:
-            return {+0.0f * size.x, -0.0f * size.y};
+            return {+0.0f * text_size.x, -0.0f * text_size.y};
             break;
         case TextAnchor::BottomCenter:
-            return {-0.5f * size.x, -0.0f * size.y};
+            return {-0.5f * text_size.x, -0.0f * text_size.y};
             break;
         case TextAnchor::BottomRight:
-            return {-1.0f * size.x, -0.0f * size.y};
+            return {-1.0f * text_size.x, -0.0f * text_size.y};
             break;
         default:
             return {0.0f, 0.0f};

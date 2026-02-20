@@ -285,7 +285,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         if (!m_line_mesh.empty())
         {
             m_line_shader.bind();
-            glUniformMatrix4fv(glGetUniformLocation(m_line_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(m_line_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, glm::value_ptr(view_projection_matrix));
 
             if (m_line_mesh.get_topology() == Mesh<LineVertex>::Topology::Lines)
             {
@@ -302,7 +302,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_text_font.get_font_atlas());
             glUniform1i(glGetUniformLocation(m_text_shader.get_id(), "u_Font"), 0);
-            glUniformMatrix4fv(glGetUniformLocation(m_text_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(m_text_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, glm::value_ptr(view_projection_matrix));
 
             m_text_mesh.render();
             m_text_shader.unbind();
