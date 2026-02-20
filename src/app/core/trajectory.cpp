@@ -83,7 +83,7 @@ namespace sfg_trajectory_planner::app::core
                 "t+" + fmt::format("{:.1f}", time_from_start),
                 ImGui::GetFontSize(),
                 glm::vec3(color.x, color.y, color.z),
-                engine::core::gfx::TextJustification::Center);
+                engine::core::gfx::TextAnchor::Center);
         }
     }
 

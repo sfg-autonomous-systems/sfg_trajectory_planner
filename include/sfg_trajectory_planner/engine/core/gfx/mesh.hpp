@@ -13,11 +13,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
         };
 
         Mesh(Topology topology = Topology::Triangles);
-        ~Mesh();
         Mesh(const Mesh &) = delete;
         Mesh &operator=(const Mesh &) = delete;
         Mesh(Mesh &&) noexcept;
         Mesh &operator=(Mesh &&) noexcept;
+        ~Mesh();
 
         void render();
 

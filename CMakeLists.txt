@@ -81,6 +81,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "src/engine/core/gfx/framebuffer.cpp"
   "src/engine/core/gfx/renderer.cpp"
   "src/engine/core/gfx/shader.cpp"
+  "src/engine/core/gfx/text_font.cpp"
   "src/engine/core/gfx/utils.cpp"
   "src/engine/core/serialization/yaml_serializer.cpp"
   "src/engine/core/scene.cpp"

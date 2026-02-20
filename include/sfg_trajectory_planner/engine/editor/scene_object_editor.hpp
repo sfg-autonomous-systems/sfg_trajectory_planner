@@ -20,11 +20,11 @@ namespace sfg_trajectory_planner::engine::editor
     {
     public:
         SceneObjectEditor(const SelectionContext &selection_context);
-        virtual ~SceneObjectEditor() = default;
         SceneObjectEditor(const SceneObjectEditor &) = delete;
         SceneObjectEditor &operator=(const SceneObjectEditor &) = delete;
         SceneObjectEditor(SceneObjectEditor &&) = delete;
         SceneObjectEditor &operator=(SceneObjectEditor &&) = delete;
+        virtual ~SceneObjectEditor() = default;
 
         virtual bool render_editor(core::gfx::Renderer &renderer);
         virtual bool render_inspector();

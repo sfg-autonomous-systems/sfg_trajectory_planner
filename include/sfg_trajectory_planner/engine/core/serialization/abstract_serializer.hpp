@@ -16,11 +16,11 @@ namespace sfg_trajectory_planner::engine::core::serialization
         };
 
         AbstractSerializer() = default;
-        virtual ~AbstractSerializer() = default;
         AbstractSerializer(const AbstractSerializer &) = delete;
         AbstractSerializer &operator=(const AbstractSerializer &) = delete;
         AbstractSerializer(AbstractSerializer &&) = delete;
         AbstractSerializer &operator=(AbstractSerializer &&) = delete;
+        virtual ~AbstractSerializer() = default;
 
         virtual void save_to_file(const std::filesystem::path &path) = 0;
         virtual void load_from_file(const std::filesystem::path &path) = 0;

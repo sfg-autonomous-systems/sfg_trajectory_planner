@@ -38,11 +38,11 @@ namespace sfg_trajectory_planner::engine::core
         static std::string get_type();
 
         SceneObject(ConstructionKey key, Scene &scene, uuids::uuid uuid);
-        virtual ~SceneObject();
         SceneObject(const SceneObject &) = delete;
         SceneObject &operator=(const SceneObject &) = delete;
         SceneObject(SceneObject &&) = delete;
         SceneObject &operator=(SceneObject &&) = delete;
+        virtual ~SceneObject();
 
         void serialize(serialization::AbstractSerializer *serializer) const override;
         void deserialize(serialization::AbstractSerializer *serializer) override;

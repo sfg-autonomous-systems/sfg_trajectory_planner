@@ -9,11 +9,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
     public:
         FrameBuffer(const glm::vec3 &clear_color, glm::ivec2 size);
-        ~FrameBuffer();
         FrameBuffer(const FrameBuffer &) = delete;
         FrameBuffer &operator=(const FrameBuffer &) = delete;
         FrameBuffer(FrameBuffer &&) noexcept;
         FrameBuffer &operator=(FrameBuffer &&) noexcept;
+        ~FrameBuffer();
 
         GLuint get_color_texture() const;
 

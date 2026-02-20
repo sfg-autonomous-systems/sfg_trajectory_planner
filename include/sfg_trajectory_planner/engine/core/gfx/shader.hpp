@@ -8,11 +8,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
     public:
         Shader(const char *vertex_source, const char *fragment_source);
-        ~Shader();
         Shader(const Shader &) = delete;
         Shader &operator=(const Shader &) = delete;
         Shader(Shader &&) noexcept;
         Shader &operator=(Shader &&) noexcept;
+        ~Shader();
 
         void bind() const;
         void unbind() const;

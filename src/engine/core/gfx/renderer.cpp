@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "sfg_trajectory_planner/engine/core/gfx/fonts/roboto_regular.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 
 static constexpr auto s_line_width = 2.0f;
@@ -34,7 +35,7 @@ void main() {
 }
 )";
 
-static const auto s_text_vertex_shader_source = R"(
+static constexpr auto s_text_vertex_shader_source = R"(
 #version 330 core
 layout(location=0) in vec3 a_Position; 
 layout(location=1) in vec2 a_UV; 
@@ -50,7 +51,7 @@ void main() {
     v_Color = a_Color; 
     gl_Position = u_ViewProjection * vec4(a_Position, 1.0); 
 })";
-static const auto s_text_fragment_shader_source = R"(
+static constexpr auto s_text_fragment_shader_source = R"(
 #version 330 core
 in vec2 v_UV; 
 in vec4 v_Color; 
@@ -61,8 +62,8 @@ uniform sampler2D u_Font;
 
 void main() { 
     float alpha = texture(u_Font, v_UV).r;
-
-    if(alpha < 0.1) 
+    
+    if(alpha < 0.1)
     {
         discard;
     }
@@ -79,11 +80,24 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LineVertex), (void *)offsetof(LineVertex, m_color));
     }
 
+    void Renderer::TextVertex::set_vertex_attributes()
+    {
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TextVertex), (void *)offsetof(TextVertex, m_position));
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextVertex), (void *)offsetof(TextVertex, m_uv));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(TextVertex), (void *)offsetof(TextVertex, m_color));
+    }
+
     Renderer::Renderer(const Camera &camera, glm::vec3 clear_color)
         : m_camera(camera),
           m_framebuffer(clear_color, m_camera.get_viewport().zw()),
           m_line_mesh(Mesh<LineVertex>::Topology::Lines),
-          m_line_shader(s_line_vertex_shader_source, s_line_fragment_shader_source)
+          m_line_shader(s_line_vertex_shader_source, s_line_fragment_shader_source),
+          m_text_mesh(Mesh<TextVertex>::Topology::Triangles),
+          m_text_shader(s_text_vertex_shader_source, s_text_fragment_shader_source),
+          m_text_font(fonts::roboto_regular_ttf, 64.0f)
     {
         ImGuizmo::AllowAxisFlip(false);
     }
@@ -180,93 +194,138 @@ namespace sfg_trajectory_planner::engine::core::gfx
         const std::string &text,
         float font_size,
         const glm::vec3 &color,
-        TextJustification justification,
-        const glm::vec2 &offset_screen_space)
+        TextAnchor justification)
     {
-        add_text(glm::mat4(1.0f), position, text, font_size, color, justification, offset_screen_space);
+        add_text(glm::mat4(1.0f), position, text, font_size, color, justification);
     }
 
     void Renderer::add_text(
         const glm::mat4 &model_matrix,
-        const glm::vec3 &position,
+        glm::vec3 position,
         const std::string &text,
         float font_size,
         const glm::vec3 &color,
-        TextJustification justification,
-        const glm::vec2 &offset_screen_space)
+        TextAnchor justification)
     {
-        glm::vec3 projected = glm::project(
-            (model_matrix * glm::vec4(position, 1.0f)).xyz(),
-            m_camera.get_view_matrix(),
-            m_camera.get_projection_matrix(),
-            glm::vec4(0.0f, 0.0f, m_camera.get_viewport().z, m_camera.get_viewport().w));
+        const glm::mat4 &view_matrix = m_camera.get_view_matrix();
+        position = model_matrix * glm::vec4(position, 1.0f);
+        glm::vec4 position_view_space = view_matrix * glm::vec4(position, 1.0f);
+        auto depth = -position_view_space.z;
 
-        if (projected.z < 0.0f || projected.z > 1.0f)
+        if (depth < 0.1f)
         {
             return;
         }
-        auto text_size = ImGui::CalcTextSize(text.c_str());
-        text_size.x *= font_size / ImGui::GetFontSize();
-        text_size.y *= font_size / ImGui::GetFontSize();
 
-        projected.x += offset_screen_space.x;
-        projected.y += offset_screen_space.y;
+        auto projection_scaling = m_camera.get_projection_matrix()[1][1];
+        auto viewport_height = m_camera.get_viewport().w;
+        auto pixel_world_size = depth / (projection_scaling * viewport_height * 0.5f);
+        auto font_scale_factor = font_size / m_text_font.get_baked_height();
+        auto final_scale = pixel_world_size * font_scale_factor;
+
+        glm::vec3 camera_right = {view_matrix[0][0], view_matrix[1][0], view_matrix[2][0]};
+        glm::vec3 camera_up = {view_matrix[0][1], view_matrix[1][1], view_matrix[2][1]};
+        auto text_width = 0.0f;
+        auto text_height = 0.0f;
+
+        auto x = 0.0f, y = 0.0f;
+        stbtt_aligned_quad quad;
+        auto min_x = std::numeric_limits<float>::max(), max_x = std::numeric_limits<float>::lowest();
+        auto min_y = std::numeric_limits<float>::max(), max_y = std::numeric_limits<float>::lowest();
+
+        for (char character : text)
+        {
+            m_text_font.get_character_quad(character, &x, &y, &quad);
+            min_x = std::min(min_x, quad.x0);
+            max_x = std::max(max_x, quad.x1);
+            min_y = std::min(min_y, quad.y0);
+            max_y = std::max(max_y, quad.y1);
+        }
+
+        if (!text.empty())
+        {
+            text_width = max_x - min_x;
+            text_height = max_y - min_y;
+        }
+
+        glm::vec2 offset = {0.0f, 0.0f};
 
         switch (justification)
         {
-        case TextJustification::TopLeft:
+        case TextAnchor::TopLeft:
+            offset = {+0.0f * text_width, +1.0f * text_height};
             break;
-
-        case TextJustification::TopCenter:
-            projected.x -= 0.5f * text_size.x;
+        case TextAnchor::TopCenter:
+            offset = {-0.5f * text_width, +1.0f * text_height};
             break;
-
-        case TextJustification::TopRight:
-            projected.x -= text_size.x;
+        case TextAnchor::TopRight:
+            offset = {-1.0f * text_width, +1.0f * text_height};
             break;
-
-        case TextJustification::CenterLeft:
-            projected.y += 0.5f * text_size.y;
+        case TextAnchor::CenterLeft:
+            offset = {+0.0f * text_width, +0.5f * text_height};
             break;
-
-        case TextJustification::Center:
-            projected.x -= 0.5f * text_size.x;
-            projected.y += 0.5f * text_size.y;
+        case TextAnchor::Center:
+            offset = {-0.5f * text_width, +0.5f * text_height};
             break;
-
-        case TextJustification::CenterRight:
-            projected.x -= text_size.x;
-            projected.y += 0.5f * text_size.y;
+        case TextAnchor::CenterRight:
+            offset = {-1.0f * text_width, +0.5f * text_height};
             break;
-
-        case TextJustification::BottomLeft:
-            projected.y += text_size.y;
+        case TextAnchor::BottomLeft:
+            offset = {+0.0f * text_width, -0.0f * text_height};
             break;
-
-        case TextJustification::BottomCenter:
-            projected.x -= 0.5f * text_size.x;
-            projected.y += text_size.y;
+        case TextAnchor::BottomCenter:
+            offset = {-0.5f * text_width, -0.0f * text_height};
             break;
-
-        case TextJustification::BottomRight:
-            projected.x -= text_size.x;
-            projected.y += text_size.y;
+        case TextAnchor::BottomRight:
+            offset = {-1.0f * text_width, -0.0f * text_height};
             break;
-
         default:
             break;
         }
 
-        ImGui::GetWindowDrawList()->AddRectFilled(
-            ImVec2(m_camera.get_viewport().x + projected.x - 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y - 2.0f),
-            ImVec2(m_camera.get_viewport().x + projected.x + text_size.x + 2.0f, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y + text_size.y + 2.0f),
-            ImGui::ColorConvertFloat4ToU32(ImVec4(0.0f, 0.0f, 0.0f, 0.75f)));
-        ImGui::GetWindowDrawList()->AddText(
-            ImGui::GetFont(),
-            font_size,
-            ImVec2(m_camera.get_viewport().x + projected.x, m_camera.get_viewport().y + m_camera.get_viewport().w - projected.y),
-            ImGui::ColorConvertFloat4ToU32(ImVec4(color.x, color.y, color.z, 1.0f)),
-            text.c_str());
+        auto x_cursor = 0.0f;
+        auto y_cursor = 0.0f;
+        std::vector<TextVertex> vertices;
+        std::vector<uint32_t> indices;
+
+        auto current_index = m_text_mesh.vertex_count();
+
+        // Reserve memory to avoid reallocations.
+        vertices.reserve(text.size() * 4);
+        indices.reserve(text.size() * 6);
+
+        for (char character : text)
+        {
+            m_text_font.get_character_quad(character, &x_cursor, &y_cursor, &quad);
+
+            float s_min_x = (quad.x0 + offset.x) * final_scale;
+            float s_max_x = (quad.x1 + offset.x) * final_scale;
+            float s_min_y = -(quad.y1 + offset.y) * final_scale;
+            float s_max_y = -(quad.y0 + offset.y) * final_scale;
+
+            glm::vec3 bottom_left = position + (camera_right * s_min_x) + (camera_up * s_min_y);
+            glm::vec3 bottom_right = position + (camera_right * s_max_x) + (camera_up * s_min_y);
+            glm::vec3 top_right = position + (camera_right * s_max_x) + (camera_up * s_max_y);
+            glm::vec3 top_left = position + (camera_right * s_min_x) + (camera_up * s_max_y);
+
+            // Add vertices.
+            vertices.push_back({bottom_left, {quad.s0, quad.t1}, color});
+            vertices.push_back({bottom_right, {quad.s1, quad.t1}, color});
+            vertices.push_back({top_right, {quad.s1, quad.t0}, color});
+            vertices.push_back({top_left, {quad.s0, quad.t0}, color});
+
+            // Add Indices.
+            indices.push_back(current_index + 0);
+            indices.push_back(current_index + 1);
+            indices.push_back(current_index + 2);
+            indices.push_back(current_index + 2);
+            indices.push_back(current_index + 3);
+            indices.push_back(current_index + 0);
+
+            current_index += 4;
+        }
+        m_text_mesh.add_vertices(vertices);
+        m_text_mesh.add_indices(indices);
     }
 
     GLuint Renderer::render()
@@ -281,7 +340,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         if (!m_line_mesh.empty())
         {
-            // Issue draw call.
             m_line_shader.bind();
             glm::mat4 view_projection_matrix = m_camera.get_projection_matrix() * m_camera.get_view_matrix();
             glUniformMatrix4fv(glGetUniformLocation(m_line_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
@@ -292,10 +350,23 @@ namespace sfg_trajectory_planner::engine::core::gfx
             }
             m_line_mesh.render();
             m_line_shader.unbind();
+            m_line_mesh.clear();
         }
 
+        if (!m_text_mesh.empty())
+        {
+            m_text_shader.bind();
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, m_text_font.get_font_atlas());
+            glUniform1i(glGetUniformLocation(m_text_shader.get_id(), "u_Font"), 0);
+            glm::mat4 view_projection_matrix = m_camera.get_projection_matrix() * m_camera.get_view_matrix();
+            glUniformMatrix4fv(glGetUniformLocation(m_text_shader.get_id(), "u_ViewProjection"), 1, GL_FALSE, &view_projection_matrix[0][0]);
+
+            m_text_mesh.render();
+            m_text_shader.unbind();
+            m_text_mesh.clear();
+        }
         m_framebuffer.unbind();
-        m_line_mesh.clear();
 
         return m_framebuffer.get_color_texture();
     }

@@ -2,7 +2,7 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    enum class TextJustification
+    enum class TextAnchor
     {
         TopLeft,
         TopCenter,
