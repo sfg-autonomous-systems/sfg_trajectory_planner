@@ -260,18 +260,18 @@ namespace sfg_trajectory_planner::app::editor
 
         for (size_t index = 0; index < trajectory->get_waypoint_count(); index++)
         {
-            glm::mat4 waypoint_matrix = ls_to_ws_matrix * trajectory->get_waypoint_transform_ls(index).get_matrix();
-            glm::vec3 waypoint_position = glm::vec3(waypoint_matrix[3]);
-            glm::quat waypoint_rotation = glm::quat_cast(waypoint_matrix);
+            glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * trajectory->get_waypoint_transform_ls(index).get_matrix();
+            glm::vec3 waypoint_position_ws = glm::vec3(waypoint_ws_matrix[3]);
+            glm::quat waypoint_rotation_ws = glm::quat_cast(waypoint_ws_matrix);
 
             sfg_agent_msgs::msg::Waypoint waypoint_msg;
-            waypoint_msg.pose.position.x = waypoint_position.x;
-            waypoint_msg.pose.position.y = waypoint_position.y;
-            waypoint_msg.pose.position.z = waypoint_position.z;
-            waypoint_msg.pose.orientation.x = waypoint_rotation.x;
-            waypoint_msg.pose.orientation.y = waypoint_rotation.y;
-            waypoint_msg.pose.orientation.z = waypoint_rotation.z;
-            waypoint_msg.pose.orientation.w = waypoint_rotation.w;
+            waypoint_msg.pose.position.x = waypoint_position_ws.x;
+            waypoint_msg.pose.position.y = waypoint_position_ws.y;
+            waypoint_msg.pose.position.z = waypoint_position_ws.z;
+            waypoint_msg.pose.orientation.x = waypoint_rotation_ws.x;
+            waypoint_msg.pose.orientation.y = waypoint_rotation_ws.y;
+            waypoint_msg.pose.orientation.z = waypoint_rotation_ws.z;
+            waypoint_msg.pose.orientation.w = waypoint_rotation_ws.w;
             waypoint_msg.time_from_last = rclcpp::Duration::from_seconds(trajectory->get_waypoint_time_from_last(index));
             msg->waypoints.push_back(waypoint_msg);
         }

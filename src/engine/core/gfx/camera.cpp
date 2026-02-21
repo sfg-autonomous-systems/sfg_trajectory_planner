@@ -67,16 +67,16 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
         auto ray_ws = screen_point_to_ray(position_ss);
         auto distance_ws = utils::intersect_ray_plane(ray_ws, m_focus_point_ws, glm::inverse(m_ws_to_vs_matrix)[2]);
-        auto intersection = ray_ws.origin + distance_ws * ray_ws.direction;
-        m_pan_start_ws = intersection;
+        glm::vec3 intersection_ws = ray_ws.origin + distance_ws * ray_ws.direction;
+        m_pan_start_ws = intersection_ws;
     }
 
     void Camera::pan(const glm::vec2 &position_ss)
     {
         auto ray_ws = screen_point_to_ray(position_ss);
         auto distance_ws = utils::intersect_ray_plane(ray_ws, m_focus_point_ws, glm::inverse(m_ws_to_vs_matrix)[2]);
-        auto intersection = ray_ws.origin + distance_ws * ray_ws.direction;
-        m_focus_point_ws -= intersection - m_pan_start_ws;
+        glm::vec3 intersection_ws = ray_ws.origin + distance_ws * ray_ws.direction;
+        m_focus_point_ws -= intersection_ws - m_pan_start_ws;
     }
 
     void Camera::focus_on(const glm::vec3 &point_ws)
