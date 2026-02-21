@@ -20,8 +20,8 @@ namespace sfg_trajectory_planner::engine::editor
 
         return render_transform_editor(
             renderer,
-            selected_object->get_transform(),
-            selected_object->get_parent() ? selected_object->get_parent()->get_object_to_world_matrix() : glm::mat4(1.0f));
+            selected_object->get_transform_ls(),
+            selected_object->get_parent() ? selected_object->get_parent()->get_ls_to_ws_matrix() : glm::mat4(1.0f));
     }
 
     bool SceneObjectEditor::render_inspector()
@@ -48,20 +48,33 @@ namespace sfg_trajectory_planner::engine::editor
 
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            changed |= render_transform_inspector(selected_object->get_transform());
+            changed |= render_transform_inspector(selected_object->get_transform_ls());
         }
         return changed;
     }
 
-    std::optional<core::Transform> SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, const core::Transform &transform, const glm::mat4 &parent_transform)
+    std::optional<core::Transform> SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, const core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix)
     {
-        std::optional<core::Transform> modified_transform = transform;
+        std::optional<core::Transform> modified_transform_ls = transform_ls;
 
-        if (render_transform_editor(renderer, modified_transform.value(), parent_transform))
+        if (render_transform_editor(renderer, modified_transform_ls.value(), ls_to_ws_matrix))
         {
-            return modified_transform;
+            return modified_transform_ls;
         }
         return std::nullopt;
+    }
+
+    bool SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix)
+    {
+        auto changed = false;
+        auto ws_matrix = ls_to_ws_matrix * transform_ls.get_matrix();
+
+        if (renderer.add_gizmo(ws_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode(), &transform_ls))
+        {
+            transform_ls.set_matrix(glm::inverse(ls_to_ws_matrix) * ws_matrix);
+            changed = true;
+        }
+        return changed;
     }
 
     std::optional<core::Transform> SceneObjectEditor::render_transform_inspector(const core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
@@ -73,19 +86,6 @@ namespace sfg_trajectory_planner::engine::editor
             return modified_transform;
         }
         return std::nullopt;
-    }
-
-    bool SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform, const glm::mat4 &parent_transform)
-    {
-        auto changed = false;
-        auto object_to_world_matrix = parent_transform * transform.get_matrix();
-
-        if (renderer.add_gizmo(object_to_world_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode(), &transform))
-        {
-            transform.set_matrix(glm::inverse(parent_transform) * object_to_world_matrix);
-            changed = true;
-        }
-        return changed;
     }
 
     bool SceneObjectEditor::render_transform_inspector(core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)

@@ -28,23 +28,23 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         const Camera &get_camera() const;
 
-        void add_line(const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
-        void add_line(const glm::mat4 &model_matrix, const glm::vec3 &start, const glm::vec3 &end, const glm::vec3 &color);
+        void add_line(const glm::vec3 &start_ws, const glm::vec3 &end_ws, const glm::vec3 &color);
+        void add_line(const glm::mat4 &ls_to_ws_matrix, const glm::vec3 &start_ls, const glm::vec3 &end_ls, const glm::vec3 &color);
 
-        bool add_gizmo(glm::mat4 &model_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id = nullptr);
-        bool add_view_gizmo(glm::mat4 &view_matrix, void *id = nullptr);
+        bool add_gizmo(glm::mat4 &ls_to_ws_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id = nullptr);
+        bool add_view_gizmo(glm::mat4 &ws_to_vs_matrix, void *id = nullptr);
 
         void add_text(
-            const glm::vec3 &position,
+            const glm::vec3 &position_ws,
             const std::string &text,
-            float font_size = 12.0f,
+            float font_size_ss = 12.0f,
             const glm::vec3 &color = glm::vec3(1.0f, 1.0f, 1.0f),
             TextAnchor anchor = TextAnchor::TopLeft);
         void add_text(
-            const glm::mat4 &model_matrix,
-            glm::vec3 position,
+            const glm::mat4 &ls_to_ws_matrix,
+            const glm::vec3 &position_ls,
             const std::string &text,
-            float font_size = 12.0f,
+            float font_size_ss = 12.0f,
             const glm::vec3 &color = glm::vec3(1.0f, 1.0f, 1.0f),
             TextAnchor anchor = TextAnchor::TopLeft);
 

@@ -23,9 +23,9 @@ namespace sfg_trajectory_planner::app::core
 
     private:
         Waypoint() = default;
-        Waypoint(engine::core::Transform transform, float time_from_last, Constraints constraints);
+        Waypoint(engine::core::Transform transform_ls, float time_from_last, Constraints constraints);
 
-        engine::core::Transform m_transform;
+        engine::core::Transform m_transform_ls;
         float m_time_from_last = 1.0f;
         Constraints m_constraints = Constraints::None;
     };

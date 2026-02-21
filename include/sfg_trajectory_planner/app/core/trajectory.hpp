@@ -32,11 +32,11 @@ namespace sfg_trajectory_planner::app::core
         void add_waypoint(Args &&...args);
         void remove_waypoint(size_t index);
 
-        const engine::core::Transform &get_waypoint_transform(size_t index) const;
+        const engine::core::Transform &get_waypoint_transform_ls(size_t index) const;
         float get_waypoint_time_from_last(size_t index) const;
         Waypoint::Constraints get_waypoint_constraints(size_t index) const;
 
-        void set_waypoint_transform(size_t index, engine::core::Transform transform);
+        void set_waypoint_transform_ls(size_t index, engine::core::Transform transform_ls);
         void set_waypoint_time_from_last(size_t index, float time_from_last);
         void set_waypoint_constraints(size_t index, Waypoint::Constraints constraints);
 

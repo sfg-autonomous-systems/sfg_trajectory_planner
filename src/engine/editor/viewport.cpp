@@ -30,8 +30,8 @@ namespace sfg_trajectory_planner::engine::editor
         process_input();
 
         // Set viewport for camera and ImGuizmo.
-        m_camera.set_viewport({ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y, ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y});
-        ImGuizmo::SetRect(m_camera.get_viewport().x, m_camera.get_viewport().y, m_camera.get_viewport().z, m_camera.get_viewport().w);
+        m_camera.set_cs_to_ss_vector({ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y, ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y});
+        ImGuizmo::SetRect(m_camera.get_cs_to_ss_vector().x, m_camera.get_cs_to_ss_vector().y, m_camera.get_cs_to_ss_vector().z, m_camera.get_cs_to_ss_vector().w);
 
         // Finalize camera matrices after processing input and before rendering.
         m_camera.update();
@@ -54,8 +54,8 @@ namespace sfg_trajectory_planner::engine::editor
         auto image = m_renderer.render();
         ImGui::GetBackgroundDrawList()->AddImage(
             static_cast<ImTextureID>(image),
-            ImVec2(m_camera.get_viewport().x, m_camera.get_viewport().y),
-            ImVec2(m_camera.get_viewport().x + m_camera.get_viewport().z, m_camera.get_viewport().y + m_camera.get_viewport().w),
+            ImVec2(m_camera.get_cs_to_ss_vector().x, m_camera.get_cs_to_ss_vector().y),
+            ImVec2(m_camera.get_cs_to_ss_vector().x + m_camera.get_cs_to_ss_vector().z, m_camera.get_cs_to_ss_vector().y + m_camera.get_cs_to_ss_vector().w),
             ImVec2(0.0f, 1.0f),
             ImVec2(1.0f, 0.0f));
 
@@ -65,11 +65,11 @@ namespace sfg_trajectory_planner::engine::editor
         ImGuiIO &io = ImGui::GetIO();
         auto old_mouse_delta = io.MouseDelta;
         io.MouseDelta = ImVec2(0.0f, 0.0f);
-        auto view_matrix = m_camera.get_view_matrix();
+        auto ws_to_vs_matrix = m_camera.get_ws_to_vs_matrix();
 
-        if (m_renderer.add_view_gizmo(view_matrix))
+        if (m_renderer.add_view_gizmo(ws_to_vs_matrix))
         {
-            m_camera.synchronize_from_matrix(view_matrix);
+            m_camera.synchronize_from_matrix(ws_to_vs_matrix);
         }
         io.MouseDelta = old_mouse_delta;
 
@@ -105,7 +105,7 @@ namespace sfg_trajectory_planner::engine::editor
         {
             if (auto selected_object = m_selection_context.get_selected())
             {
-                m_camera.focus_on(glm::vec3(selected_object->get_object_to_world_matrix()[3]));
+                m_camera.focus_on(glm::vec3(selected_object->get_ls_to_ws_matrix()[3]));
             }
         }
 
@@ -147,7 +147,7 @@ namespace sfg_trajectory_planner::engine::editor
 
     void Viewport::render_settings()
     {
-        ImGui::SetNextWindowPos(ImVec2(m_camera.get_viewport().x, m_camera.get_viewport().y));
+        ImGui::SetNextWindowPos(ImVec2(m_camera.get_cs_to_ss_vector().x, m_camera.get_cs_to_ss_vector().y));
 
         if (ImGui::BeginChild("Controls", ImVec2(0.0f, 0.0f), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
         {

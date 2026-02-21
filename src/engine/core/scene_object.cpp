@@ -19,7 +19,7 @@ namespace sfg_trajectory_planner::engine::core
         : m_scene(scene),
           m_name("New Object"),
           m_uuid(std::move(uuid)),
-          m_transform(glm::mat4(1.0f)),
+          m_transform_ls(glm::mat4(1.0f)),
           m_parent(nullptr),
           m_visible(true)
     {
@@ -43,7 +43,7 @@ namespace sfg_trajectory_planner::engine::core
         serializer->serialize("uuid", uuids::to_string(m_uuid));
 
         serializer->begin_group("transform");
-        m_transform.serialize(serializer);
+        m_transform_ls.serialize(serializer);
         serializer->end_group();
     }
 
@@ -55,7 +55,7 @@ namespace sfg_trajectory_planner::engine::core
         m_name = serializer->deserialize<std::string>("name");
 
         serializer->begin_group("transform");
-        m_transform.deserialize(serializer);
+        m_transform_ls.deserialize(serializer);
         serializer->end_group();
     }
 
@@ -78,23 +78,23 @@ namespace sfg_trajectory_planner::engine::core
         return m_uuid;
     }
 
-    Transform &SceneObject::get_transform()
+    Transform &SceneObject::get_transform_ls()
     {
-        return m_transform;
+        return m_transform_ls;
     }
 
-    glm::mat4 SceneObject::get_object_to_world_matrix() const
+    glm::mat4 SceneObject::get_ls_to_ws_matrix() const
     {
         if (m_parent)
         {
-            return m_parent->get_object_to_world_matrix() * m_transform.get_matrix();
+            return m_parent->get_ls_to_ws_matrix() * m_transform_ls.get_matrix();
         }
-        return m_transform.get_matrix();
+        return m_transform_ls.get_matrix();
     }
 
-    glm::mat4 SceneObject::get_world_to_object_matrix() const
+    glm::mat4 SceneObject::get_ws_to_ls_matrix() const
     {
-        return glm::inverse(get_object_to_world_matrix());
+        return glm::inverse(get_ls_to_ws_matrix());
     }
 
     SceneObject *SceneObject::get_parent() const

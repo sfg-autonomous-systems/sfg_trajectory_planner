@@ -33,7 +33,7 @@ namespace sfg_trajectory_planner::app::editor
     {
         auto changed = SceneObjectEditor::render_editor(renderer);
         auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
-        auto object_to_world_matrix = trajectory->get_object_to_world_matrix();
+        auto ls_to_ws_matrix = trajectory->get_ls_to_ws_matrix();
         auto gizmo_operation = m_selection_context.get_gizmo_operation();
 
         if (m_selected_waypoint_index < trajectory->get_waypoint_count())
@@ -42,11 +42,11 @@ namespace sfg_trajectory_planner::app::editor
                 (gizmo_operation == ImGuizmo::OPERATION::ROTATE && trajectory->can_rotate_waypoint(m_selected_waypoint_index)) ||
                 (gizmo_operation == ImGuizmo::OPERATION::SCALE && trajectory->can_scale_waypoint(m_selected_waypoint_index)))
             {
-                const auto &transform = trajectory->get_waypoint_transform(m_selected_waypoint_index);
+                const auto &transform_ls = trajectory->get_waypoint_transform_ls(m_selected_waypoint_index);
 
-                if (auto modified_transform = render_transform_editor(renderer, transform, object_to_world_matrix))
+                if (auto modified_transform_ls = render_transform_editor(renderer, transform_ls, ls_to_ws_matrix))
                 {
-                    trajectory->set_waypoint_transform(m_selected_waypoint_index, modified_transform.value());
+                    trajectory->set_waypoint_transform_ls(m_selected_waypoint_index, modified_transform_ls.value());
                     changed = true;
                 }
             }
@@ -58,7 +58,7 @@ namespace sfg_trajectory_planner::app::editor
 
             for (size_t index = 0; index < trajectory->get_waypoint_count(); index++)
             {
-                glm::vec3 waypoint_position = glm::vec3(object_to_world_matrix * glm::vec4(trajectory->get_waypoint_transform(index).get_translation(), 1.0f));
+                glm::vec3 waypoint_position = glm::vec3(ls_to_ws_matrix * glm::vec4(trajectory->get_waypoint_transform_ls(index).get_translation(), 1.0f));
                 auto screen_position = renderer.get_camera().world_to_screen_point(waypoint_position);
                 auto can_select_waypoint = !ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny();
                 auto is_hovering_waypoint = glm::length(screen_position.xy() - glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y)) < 10.0f && ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
@@ -184,11 +184,11 @@ namespace sfg_trajectory_planner::app::editor
                 }
 
                 ImGui::TableNextColumn();
-                auto transform = trajectory->get_waypoint_transform(index);
+                auto transform_ls = trajectory->get_waypoint_transform_ls(index);
 
-                if (render_transform_inspector(transform, trajectory->can_translate_waypoint(index), trajectory->can_rotate_waypoint(index), trajectory->can_scale_waypoint(index), false))
+                if (render_transform_inspector(transform_ls, trajectory->can_translate_waypoint(index), trajectory->can_rotate_waypoint(index), trajectory->can_scale_waypoint(index), false))
                 {
-                    trajectory->set_waypoint_transform(index, transform);
+                    trajectory->set_waypoint_transform_ls(index, transform_ls);
                     changed = true;
                 }
 
@@ -252,7 +252,7 @@ namespace sfg_trajectory_planner::app::editor
         }
 
         auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
-        auto object_to_world_matrix = trajectory->get_object_to_world_matrix();
+        auto ls_to_ws_matrix = trajectory->get_ls_to_ws_matrix();
 
         auto msg = std::make_unique<sfg_agent_msgs::msg::Trajectory>();
         msg->header.stamp = time + rclcpp::Duration::from_seconds(trajectory->get_time_from_start());
@@ -260,7 +260,7 @@ namespace sfg_trajectory_planner::app::editor
 
         for (size_t index = 0; index < trajectory->get_waypoint_count(); index++)
         {
-            glm::mat4 waypoint_matrix = object_to_world_matrix * trajectory->get_waypoint_transform(index).get_matrix();
+            glm::mat4 waypoint_matrix = ls_to_ws_matrix * trajectory->get_waypoint_transform_ls(index).get_matrix();
             glm::vec3 waypoint_position = glm::vec3(waypoint_matrix[3]);
             glm::quat waypoint_rotation = glm::quat_cast(waypoint_matrix);
 
