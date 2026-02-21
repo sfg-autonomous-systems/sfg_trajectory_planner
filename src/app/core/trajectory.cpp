@@ -9,13 +9,15 @@
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
-#include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
+#include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
 #include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner::app::core
 {
-    Trajectory::Trajectory(engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid) {}
+    Trajectory::Trajectory(engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid)
+    {
+    }
 
     void Trajectory::serialize(engine::core::serialization::AbstractSerializer *serializer) const
     {

@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "sfg_trajectory_planner/engine/core/gfx/fonts/roboto_regular.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/fonts/roboto_regular.hpp"
 
 static constexpr auto s_line_vertex_shader_source = R"(
 #version 330 core

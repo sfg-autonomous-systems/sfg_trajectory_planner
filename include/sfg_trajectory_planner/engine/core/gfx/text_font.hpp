@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <filesystem>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <stb_truetype.h>
+#include <vector>
 
 #include "sfg_trajectory_planner/engine/core/gfx/text_anchor.hpp"
 

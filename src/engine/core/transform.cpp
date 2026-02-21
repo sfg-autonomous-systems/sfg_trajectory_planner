@@ -1,7 +1,7 @@
 #include "sfg_trajectory_planner/engine/core/transform.hpp"
 
-#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <imgui/imgui.h>
 
 #include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
@@ -14,7 +14,9 @@ namespace sfg_trajectory_planner::engine::core
           m_rotation(0.0f, 0.0f, 0.0f, 1.0f),
           m_euler_angles(0.0f),
           m_scale(1.0f),
-          m_dirty(false) {}
+          m_dirty(false)
+    {
+    }
 
     Transform::Transform(const glm::mat4 &matrix) : m_matrix(matrix), m_dirty(false)
     {

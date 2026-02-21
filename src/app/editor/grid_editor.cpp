@@ -9,7 +9,9 @@
 
 namespace sfg_trajectory_planner::app::editor
 {
-    GridEditor::GridEditor(const engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context) {}
+    GridEditor::GridEditor(const engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context)
+    {
+    }
 
     bool GridEditor::render_inspector()
     {

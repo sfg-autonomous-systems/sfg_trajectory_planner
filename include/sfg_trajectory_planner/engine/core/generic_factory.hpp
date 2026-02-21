@@ -3,8 +3,8 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace sfg_trajectory_planner::engine::core
 {

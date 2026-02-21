@@ -1,15 +1,16 @@
 #include "sfg_trajectory_planner/engine/core/scene_object.hpp"
 
-#include <imgui/imgui.h>
-#include <imgui/misc/cpp/imgui_stdlib.h>
-#include <imgui/ImGuizmo.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <imgui/imgui.h>
+// ImGuizmo needs to be included after imgui.
+#include <imgui/ImGuizmo.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
-#include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
+#include "sfg_trajectory_planner/engine/core/serialization/abstract_serializer.hpp"
 #include "sfg_utils/cpp_utils.hpp"
 
 namespace sfg_trajectory_planner::engine::core
@@ -58,7 +59,9 @@ namespace sfg_trajectory_planner::engine::core
         serializer->end_group();
     }
 
-    void SceneObject::render_object(gfx::Renderer &) {}
+    void SceneObject::render_object(gfx::Renderer &)
+    {
+    }
 
     std::string SceneObject::get_name() const
     {

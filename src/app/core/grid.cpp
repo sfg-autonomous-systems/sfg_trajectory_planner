@@ -9,7 +9,9 @@
 
 namespace sfg_trajectory_planner::app::core
 {
-    Grid::Grid(engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid) {}
+    Grid::Grid(engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid)
+    {
+    }
 
     void Grid::serialize(engine::core::serialization::AbstractSerializer *serializer) const
     {

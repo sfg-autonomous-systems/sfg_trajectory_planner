@@ -5,12 +5,14 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
+#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    SceneObjectEditor::SceneObjectEditor(const SelectionContext &selection_context) : m_selection_context(selection_context) {}
+    SceneObjectEditor::SceneObjectEditor(const SelectionContext &selection_context) : m_selection_context(selection_context)
+    {
+    }
 
     bool SceneObjectEditor::render_editor(core::gfx::Renderer &renderer)
     {

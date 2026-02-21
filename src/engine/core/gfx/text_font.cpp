@@ -130,35 +130,26 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         switch (anchor)
         {
-        case TextAnchor::TopLeft:
-            return {+0.0f * text_size.x, +1.0f * text_size.y};
-            break;
-        case TextAnchor::TopCenter:
-            return {-0.5f * text_size.x, +1.0f * text_size.y};
-            break;
-        case TextAnchor::TopRight:
-            return {-1.0f * text_size.x, +1.0f * text_size.y};
-            break;
-        case TextAnchor::CenterLeft:
-            return {+0.0f * text_size.x, +0.5f * text_size.y};
-            break;
-        case TextAnchor::Center:
-            return {-0.5f * text_size.x, +0.5f * text_size.y};
-            break;
-        case TextAnchor::CenterRight:
-            return {-1.0f * text_size.x, +0.5f * text_size.y};
-            break;
-        case TextAnchor::BottomLeft:
-            return {+0.0f * text_size.x, -0.0f * text_size.y};
-            break;
-        case TextAnchor::BottomCenter:
-            return {-0.5f * text_size.x, -0.0f * text_size.y};
-            break;
-        case TextAnchor::BottomRight:
-            return {-1.0f * text_size.x, -0.0f * text_size.y};
-            break;
-        default:
-            return {0.0f, 0.0f};
+            case TextAnchor::TopLeft:
+                return {+0.0f * text_size.x, +1.0f * text_size.y};
+            case TextAnchor::TopCenter:
+                return {-0.5f * text_size.x, +1.0f * text_size.y};
+            case TextAnchor::TopRight:
+                return {-1.0f * text_size.x, +1.0f * text_size.y};
+            case TextAnchor::CenterLeft:
+                return {+0.0f * text_size.x, +0.5f * text_size.y};
+            case TextAnchor::Center:
+                return {-0.5f * text_size.x, +0.5f * text_size.y};
+            case TextAnchor::CenterRight:
+                return {-1.0f * text_size.x, +0.5f * text_size.y};
+            case TextAnchor::BottomLeft:
+                return {+0.0f * text_size.x, -0.0f * text_size.y};
+            case TextAnchor::BottomCenter:
+                return {-0.5f * text_size.x, -0.0f * text_size.y};
+            case TextAnchor::BottomRight:
+                return {-1.0f * text_size.x, -0.0f * text_size.y};
+            default:
+                return {0.0f, 0.0f};
         }
     }
 }

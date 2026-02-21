@@ -1,10 +1,10 @@
 #include "sfg_trajectory_planner/app/trajectory_planner_gui.hpp"
 
-#include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
 #include "sfg_trajectory_planner/app/core/grid.hpp"
 #include "sfg_trajectory_planner/app/core/trajectory.hpp"
 #include "sfg_trajectory_planner/app/editor/grid_editor.hpp"
 #include "sfg_trajectory_planner/app/editor/trajectory_editor.hpp"
+#include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
 
 namespace sfg_trajectory_planner::app
 {
@@ -157,30 +157,30 @@ namespace sfg_trajectory_planner::app
 
                 switch (s_file_dialog_result.m_mode)
                 {
-                case FileDialogResult::Mode::Open:
-                    try
-                    {
-                        serializer.load_from_file(*s_file_dialog_result.m_path);
-                        m_scene.deserialize(&serializer);
-                    }
-                    catch (const std::exception &exception)
-                    {
-                        // ToDo: Log to RCLCPP_ERROR.
-                    }
-                    break;
-                case FileDialogResult::Mode::Save:
-                    try
-                    {
-                        m_scene.serialize(&serializer);
-                        serializer.save_to_file(*s_file_dialog_result.m_path);
-                    }
-                    catch (const std::exception &exception)
-                    {
-                        // ToDo: Log to RCLCPP_ERROR.
-                    }
-                    break;
-                default:
-                    break;
+                    case FileDialogResult::Mode::Open:
+                        try
+                        {
+                            serializer.load_from_file(*s_file_dialog_result.m_path);
+                            m_scene.deserialize(&serializer);
+                        }
+                        catch (const std::exception &exception)
+                        {
+                            // ToDo: Log to RCLCPP_ERROR.
+                        }
+                        break;
+                    case FileDialogResult::Mode::Save:
+                        try
+                        {
+                            m_scene.serialize(&serializer);
+                            serializer.save_to_file(*s_file_dialog_result.m_path);
+                        }
+                        catch (const std::exception &exception)
+                        {
+                            // ToDo: Log to RCLCPP_ERROR.
+                        }
+                        break;
+                    default:
+                        break;
                 }
             }
             s_file_dialog_result.m_path = std::nullopt;

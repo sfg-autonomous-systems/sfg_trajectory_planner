@@ -21,15 +21,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         switch (m_projection)
         {
-        case Projection::Orthographic:
-            m_zoom_level = glm::tan(s_vertical_fov / 2.0f) * m_zoom_level;
-
-            break;
-        case Projection::Perspective:
-            m_zoom_level = m_zoom_level / glm::tan(s_vertical_fov / 2.0f);
-            break;
-        default:
-            break;
+            case Projection::Orthographic:
+                m_zoom_level = glm::tan(s_vertical_fov / 2.0f) * m_zoom_level;
+                break;
+            case Projection::Perspective:
+                m_zoom_level = m_zoom_level / glm::tan(s_vertical_fov / 2.0f);
+                break;
+            default:
+                break;
         }
     }
 
@@ -91,20 +90,20 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         switch (m_projection)
         {
-        case Projection::Orthographic:
-            m_projection_matrix = glm::ortho(
-                -aspect_ratio * m_zoom_level,
-                aspect_ratio * m_zoom_level,
-                -m_zoom_level,
-                m_zoom_level,
-                s_near_plane,
-                s_far_plane);
-            break;
-        case Projection::Perspective:
-            m_projection_matrix = glm::perspective(s_vertical_fov, aspect_ratio, s_near_plane, s_far_plane);
-            break;
-        default:
-            break;
+            case Projection::Orthographic:
+                m_projection_matrix = glm::ortho(
+                    -aspect_ratio * m_zoom_level,
+                    aspect_ratio * m_zoom_level,
+                    -m_zoom_level,
+                    m_zoom_level,
+                    s_near_plane,
+                    s_far_plane);
+                break;
+            case Projection::Perspective:
+                m_projection_matrix = glm::perspective(s_vertical_fov, aspect_ratio, s_near_plane, s_far_plane);
+                break;
+            default:
+                break;
         }
 
         glm::mat4 base_rotation = glm::inverse(glm::lookAt(glm::vec3(0.0f), utils::s_forward.xyz(), utils::s_up.xyz()));

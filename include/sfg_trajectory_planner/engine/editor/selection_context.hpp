@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui/imgui.h>
+// ImGuizmo needs to be included after imgui.
 #include <imgui/ImGuizmo.h>
 
 #include "sfg_trajectory_planner/engine/editor/scene_object_editor_factory.hpp"

@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
+// ImGuizmo needs to be included after imgui.
 #include <imgui/ImGuizmo.h>
 #include <memory>
 #include <string>

@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <imgui/imgui.h>
+// ImGuizmo needs to be included after imgui.
 #include <imgui/ImGuizmo.h>
 #include <rclcpp/rclcpp.hpp>
 #include <SDL3/SDL.h>
@@ -13,8 +14,8 @@
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
 #include "sfg_trajectory_planner/engine/core/scene_object_factory.hpp"
 #include "sfg_trajectory_planner/engine/editor/inspector.hpp"
-#include "sfg_trajectory_planner/engine/editor/scene_object_editor_factory.hpp"
 #include "sfg_trajectory_planner/engine/editor/scene_hierarchy.hpp"
+#include "sfg_trajectory_planner/engine/editor/scene_object_editor_factory.hpp"
 #include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 #include "sfg_trajectory_planner/engine/editor/viewport.hpp"
 
@@ -43,7 +44,6 @@ namespace sfg_trajectory_planner::app
                 Idle,
                 WaitingForUserInput,
                 WaitingForGuiProcessing
-
             };
 
             std::optional<std::string> m_path;

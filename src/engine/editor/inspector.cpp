@@ -5,7 +5,9 @@
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    Inspector::Inspector(const SelectionContext &selection_context) : m_selection_context(selection_context) {}
+    Inspector::Inspector(const SelectionContext &selection_context) : m_selection_context(selection_context)
+    {
+    }
 
     void Inspector::render_internal()
     {
