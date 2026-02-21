@@ -33,7 +33,7 @@ namespace sfg_trajectory_planner::app::editor
     {
         auto changed = SceneObjectEditor::render_editor(renderer);
         auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
-        auto object_to_world_matrix = trajectory->get_object_to_world_matrix();
+        auto object_to_world_matrix = trajectory->get_ls_to_ws_matrix();
         auto gizmo_operation = m_selection_context.get_gizmo_operation();
 
         if (m_selected_waypoint_index < trajectory->get_waypoint_count())
@@ -252,7 +252,7 @@ namespace sfg_trajectory_planner::app::editor
         }
 
         auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
-        auto object_to_world_matrix = trajectory->get_object_to_world_matrix();
+        auto object_to_world_matrix = trajectory->get_ls_to_ws_matrix();
 
         auto msg = std::make_unique<sfg_agent_msgs::msg::Trajectory>();
         msg->header.stamp = time + rclcpp::Duration::from_seconds(trajectory->get_time_from_start());

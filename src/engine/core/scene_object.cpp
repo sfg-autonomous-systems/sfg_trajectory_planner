@@ -83,18 +83,18 @@ namespace sfg_trajectory_planner::engine::core
         return m_transform;
     }
 
-    glm::mat4 SceneObject::get_object_to_world_matrix() const
+    glm::mat4 SceneObject::get_ls_to_ws_matrix() const
     {
         if (m_parent)
         {
-            return m_parent->get_object_to_world_matrix() * m_transform.get_matrix();
+            return m_parent->get_ls_to_ws_matrix() * m_transform.get_matrix();
         }
         return m_transform.get_matrix();
     }
 
-    glm::mat4 SceneObject::get_world_to_object_matrix() const
+    glm::mat4 SceneObject::get_ws_to_ls_matrix() const
     {
-        return glm::inverse(get_object_to_world_matrix());
+        return glm::inverse(get_ls_to_ws_matrix());
     }
 
     SceneObject *SceneObject::get_parent() const

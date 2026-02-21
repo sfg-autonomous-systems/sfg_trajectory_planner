@@ -62,13 +62,13 @@ namespace sfg_trajectory_planner::app::core
 
     void Trajectory::render_object(engine::core::gfx::Renderer &renderer)
     {
-        auto object_to_world_matrix = get_object_to_world_matrix();
+        auto ls_to_ws_matrix = get_ls_to_ws_matrix();
 
         for (size_t index = 1; index < m_waypoints.size(); index++)
         {
             renderer.add_line(
-                glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index - 1].m_transform.get_translation(), 1.0f)),
-                glm::vec3(object_to_world_matrix * glm::vec4(m_waypoints[index].m_transform.get_translation(), 1.0f)),
+                glm::vec3(ls_to_ws_matrix * glm::vec4(m_waypoints[index - 1].m_transform.get_translation(), 1.0f)),
+                glm::vec3(ls_to_ws_matrix * glm::vec4(m_waypoints[index].m_transform.get_translation(), 1.0f)),
                 m_color);
         }
 
@@ -80,7 +80,7 @@ namespace sfg_trajectory_planner::app::core
             auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 
             renderer.add_text(
-                object_to_world_matrix,
+                ls_to_ws_matrix,
                 m_waypoints[index].m_transform.get_translation(),
                 "t+" + fmt::format("{:.1f}", time_from_start),
                 ImGui::GetFontSize(),

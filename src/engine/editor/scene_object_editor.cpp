@@ -21,7 +21,7 @@ namespace sfg_trajectory_planner::engine::editor
         return render_transform_editor(
             renderer,
             selected_object->get_transform(),
-            selected_object->get_parent() ? selected_object->get_parent()->get_object_to_world_matrix() : glm::mat4(1.0f));
+            selected_object->get_parent() ? selected_object->get_parent()->get_ls_to_ws_matrix() : glm::mat4(1.0f));
     }
 
     bool SceneObjectEditor::render_inspector()
@@ -78,11 +78,11 @@ namespace sfg_trajectory_planner::engine::editor
     bool SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform, const glm::mat4 &parent_transform)
     {
         auto changed = false;
-        auto object_to_world_matrix = parent_transform * transform.get_matrix();
+        auto ls_to_ws_matrix = parent_transform * transform.get_matrix();
 
-        if (renderer.add_gizmo(object_to_world_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode(), &transform))
+        if (renderer.add_gizmo(ls_to_ws_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode(), &transform))
         {
-            transform.set_matrix(glm::inverse(parent_transform) * object_to_world_matrix);
+            transform.set_matrix(glm::inverse(parent_transform) * ls_to_ws_matrix);
             changed = true;
         }
         return changed;

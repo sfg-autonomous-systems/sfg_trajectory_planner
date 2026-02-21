@@ -37,27 +37,27 @@ namespace sfg_trajectory_planner::app::core
     {
         using namespace engine::core::gfx::utils;
 
-        auto object_to_world_matrix = get_object_to_world_matrix();
+        auto ls_to_ws_matrix = get_ls_to_ws_matrix();
         auto extents = 0.5f * m_grid_size;
 
         // Draw outer rectangle.
-        renderer.add_line(object_to_world_matrix, -extents.x * s_right - extents.y * s_forward, extents.x * s_right - extents.y * s_forward, m_color);
-        renderer.add_line(object_to_world_matrix, extents.x * s_right - extents.y * s_forward, extents.x * s_right + extents.y * s_forward, m_color);
-        renderer.add_line(object_to_world_matrix, extents.x * s_right + extents.y * s_forward, -extents.x * s_right + extents.y * s_forward, m_color);
-        renderer.add_line(object_to_world_matrix, -extents.x * s_right + extents.y * s_forward, -extents.x * s_right - extents.y * s_forward, m_color);
+        renderer.add_line(ls_to_ws_matrix, -extents.x * s_right - extents.y * s_forward, extents.x * s_right - extents.y * s_forward, m_color);
+        renderer.add_line(ls_to_ws_matrix, extents.x * s_right - extents.y * s_forward, extents.x * s_right + extents.y * s_forward, m_color);
+        renderer.add_line(ls_to_ws_matrix, extents.x * s_right + extents.y * s_forward, -extents.x * s_right + extents.y * s_forward, m_color);
+        renderer.add_line(ls_to_ws_matrix, -extents.x * s_right + extents.y * s_forward, -extents.x * s_right - extents.y * s_forward, m_color);
 
         // Draw horizontal lines.
         for (auto z = 0.0f; z < extents.y; z += m_grid_spacing)
         {
-            renderer.add_line(object_to_world_matrix, -extents.x * s_right - z * s_forward, extents.x * s_right - z * s_forward, 0.5f * m_color);
-            renderer.add_line(object_to_world_matrix, -extents.x * s_right + z * s_forward, extents.x * s_right + z * s_forward, 0.5f * m_color);
+            renderer.add_line(ls_to_ws_matrix, -extents.x * s_right - z * s_forward, extents.x * s_right - z * s_forward, 0.5f * m_color);
+            renderer.add_line(ls_to_ws_matrix, -extents.x * s_right + z * s_forward, extents.x * s_right + z * s_forward, 0.5f * m_color);
         }
 
         // Draw vertical lines.
         for (auto x = 0.0f; x < extents.x; x += m_grid_spacing)
         {
-            renderer.add_line(object_to_world_matrix, -x * s_right - extents.y * s_forward, -x * s_right + extents.y * s_forward, 0.5f * m_color);
-            renderer.add_line(object_to_world_matrix, x * s_right - extents.y * s_forward, x * s_right + extents.y * s_forward, 0.5f * m_color);
+            renderer.add_line(ls_to_ws_matrix, -x * s_right - extents.y * s_forward, -x * s_right + extents.y * s_forward, 0.5f * m_color);
+            renderer.add_line(ls_to_ws_matrix, x * s_right - extents.y * s_forward, x * s_right + extents.y * s_forward, 0.5f * m_color);
         }
     }
 

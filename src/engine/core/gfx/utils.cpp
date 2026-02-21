@@ -7,19 +7,19 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx::utils
 {
-    Ray screen_space_to_ray(const glm::vec2 &position, const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::vec4 viewport)
+    Ray position_ss_to_ray_ws(const glm::vec2 &position_ss, const glm::mat4 &ws_to_vs_matrix, const glm::mat4 &vs_to_cs_matrix, glm::vec4 cs_to_ss_vector)
     {
         // We need to flip the y coordinate because glm::project assumes the origin is at the bottom-left while ImGui assumes the origin is at the top-left.
-        viewport = glm::vec4(viewport.x, viewport.y + viewport.w, viewport.z, -viewport.w);
-        glm::vec3 origin = glm::unProject(glm::vec3(position, 0.0f), view_matrix, projection_matrix, viewport);
-        glm::vec3 direction = glm::normalize(glm::unProject(glm::vec3(position, 1.0f), view_matrix, projection_matrix, viewport) - origin);
-        return {origin, direction};
+        cs_to_ss_vector = glm::vec4(cs_to_ss_vector.x, cs_to_ss_vector.y + cs_to_ss_vector.w, cs_to_ss_vector.z, -cs_to_ss_vector.w);
+        glm::vec3 origin_ws = glm::unProject(glm::vec3(position_ss, 0.0f), ws_to_vs_matrix, vs_to_cs_matrix, cs_to_ss_vector);
+        glm::vec3 direction_ws = glm::normalize(glm::unProject(glm::vec3(position_ss, 1.0f), ws_to_vs_matrix, vs_to_cs_matrix, cs_to_ss_vector) - origin_ws);
+        return {origin_ws, direction_ws};
     }
 
-    glm::vec3 world_to_screen_point(const glm::vec3 &point, const glm::mat4 &view_matrix, const glm::mat4 &projection_matrix, glm::vec4 viewport)
+    glm::vec3 position_ws_to_position_ss(const glm::vec3 &position_ws, const glm::mat4 &ws_to_vs_matrix, const glm::mat4 &vs_to_cs_matrix, glm::vec4 cs_to_ss_vector)
     {
-        viewport = glm::vec4(viewport.x, viewport.y + viewport.w, viewport.z, -viewport.w);
-        return glm::project(point, view_matrix, projection_matrix, viewport);
+        cs_to_ss_vector = glm::vec4(cs_to_ss_vector.x, cs_to_ss_vector.y + cs_to_ss_vector.w, cs_to_ss_vector.z, -cs_to_ss_vector.w);
+        return glm::project(position_ws, ws_to_vs_matrix, vs_to_cs_matrix, cs_to_ss_vector);
     }
 
     float intersect_ray_plane(const Ray &ray, glm::vec3 plane_point, glm::vec3 plane_normal)

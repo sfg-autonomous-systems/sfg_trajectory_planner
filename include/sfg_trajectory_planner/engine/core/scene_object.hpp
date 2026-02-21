@@ -54,8 +54,8 @@ namespace sfg_trajectory_planner::engine::core
         uuids::uuid get_uuid() const;
 
         Transform &get_transform();
-        glm::mat4 get_object_to_world_matrix() const;
-        glm::mat4 get_world_to_object_matrix() const;
+        glm::mat4 get_ls_to_ws_matrix() const;
+        glm::mat4 get_ws_to_ls_matrix() const;
         SceneObject *get_parent() const;
         const std::vector<SceneObject *> &get_children() const;
         bool is_visible() const;

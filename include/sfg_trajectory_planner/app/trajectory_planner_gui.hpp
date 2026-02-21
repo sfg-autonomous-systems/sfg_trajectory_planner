@@ -51,7 +51,7 @@ namespace sfg_trajectory_planner::app
             State m_state = State::Idle;
         };
 
-        static void SDLCALL file_dialog_callback(void *user_data, const char *const *file_list, int filter);
+        static void SDLCALL file_dialog_callback(void *user_data, const char *const *file_list, std::int32_t filter);
 
         void render_title(std::string_view title, const ImVec2 &position);
         void handle_file_dialog_result();
