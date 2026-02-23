@@ -13,8 +13,8 @@ namespace sfg_trajectory_planner::engine::core
     {
     public:
         Transform();
-        Transform(const glm::mat4 &matrix);
-        Transform(const glm::vec3 &translation, const glm::quat &rotation, const glm::vec3 &scale);
+        Transform(glm::mat4 matrix);
+        Transform(glm::vec3 translation, glm::quat rotation, glm::vec3 scale);
 
         void serialize(serialization::AbstractSerializer *serializer) const override;
         void deserialize(serialization::AbstractSerializer *serializer) override;
@@ -25,18 +25,18 @@ namespace sfg_trajectory_planner::engine::core
         glm::quat get_rotation() const;
         glm::vec3 get_scale() const;
 
-        void set_matrix(const glm::mat4 &matrix);
+        void set_matrix(glm::mat4 matrix);
         void set_translation(glm::vec3 translation);
         void set_euler_angles(glm::vec3 euler_angles);
         void set_rotation(glm::quat rotation);
         void set_scale(glm::vec3 scale);
 
-        Transform &translate(const glm::vec3 &translation, bool local = true);
-        Transform &rotate(const glm::vec3 &euler_angles, bool local = true);
-        Transform &rotate(const glm::quat &rotation, bool local = true);
-        Transform &scale(const glm::vec3 &scale);
+        Transform &translate(glm::vec3 translation, bool local = true);
+        Transform &rotate(glm::vec3 euler_angles, bool local = true);
+        Transform &rotate(glm::quat rotation, bool local = true);
+        Transform &scale(glm::vec3 scale);
 
-        Transform &look_in(const glm::vec3 &direction, const glm::vec3 &up = gfx::utils::s_up.xyz());
+        Transform &look_in(glm::vec3 direction, glm::vec3 up = gfx::utils::s_up.xyz());
 
     private:
         void update_matrix() const;

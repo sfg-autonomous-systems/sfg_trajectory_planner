@@ -7,7 +7,7 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx::utils
 {
-    Ray position_ss_to_ray_ws(const glm::vec2 &position_ss, const glm::mat4 &ws_to_vs_matrix, const glm::mat4 &vs_to_cs_matrix, glm::vec4 cs_to_ss_vector)
+    Ray position_ss_to_ray_ws(glm::vec2 position_ss, const glm::mat4 &ws_to_vs_matrix, const glm::mat4 &vs_to_cs_matrix, glm::vec4 cs_to_ss_vector)
     {
         // We need to flip the y coordinate because glm::project assumes the origin is at the bottom-left while ImGui assumes the origin is at the top-left.
         cs_to_ss_vector = glm::vec4(cs_to_ss_vector.x, cs_to_ss_vector.y + cs_to_ss_vector.w, cs_to_ss_vector.z, -cs_to_ss_vector.w);
@@ -16,7 +16,7 @@ namespace sfg_trajectory_planner::engine::core::gfx::utils
         return {origin_ws, direction_ws};
     }
 
-    glm::vec3 position_ws_to_position_ss(const glm::vec3 &position_ws, const glm::mat4 &ws_to_vs_matrix, const glm::mat4 &vs_to_cs_matrix, glm::vec4 cs_to_ss_vector)
+    glm::vec3 position_ws_to_position_ss(glm::vec3 position_ws, const glm::mat4 &ws_to_vs_matrix, const glm::mat4 &vs_to_cs_matrix, glm::vec4 cs_to_ss_vector)
     {
         cs_to_ss_vector = glm::vec4(cs_to_ss_vector.x, cs_to_ss_vector.y + cs_to_ss_vector.w, cs_to_ss_vector.z, -cs_to_ss_vector.w);
         return glm::project(position_ws, ws_to_vs_matrix, vs_to_cs_matrix, cs_to_ss_vector);

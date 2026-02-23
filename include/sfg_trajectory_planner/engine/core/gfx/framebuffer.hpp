@@ -8,7 +8,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class FrameBuffer
     {
     public:
-        FrameBuffer(const glm::vec3 &clear_color, glm::ivec2 size);
+        FrameBuffer(glm::vec3 clear_color, glm::ivec2 size);
         FrameBuffer(const FrameBuffer &) = delete;
         FrameBuffer &operator=(const FrameBuffer &) = delete;
         FrameBuffer(FrameBuffer &&) noexcept;

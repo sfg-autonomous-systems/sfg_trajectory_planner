@@ -114,16 +114,16 @@ namespace sfg_trajectory_planner::app::core
         return m_waypoints.size();
     }
 
-    void Trajectory::set_topic_name(const std::string &topic_name)
+    void Trajectory::set_topic_name(std::string topic_name)
     {
         // ToDo: Validate topic name.
-        m_topic_name = topic_name;
+        m_topic_name = std::move(topic_name);
     }
 
-    void Trajectory::set_frame_id(const std::string &frame_id)
+    void Trajectory::set_frame_id(std::string frame_id)
     {
         // ToDo: Validate frame ID.
-        m_frame_id = frame_id;
+        m_frame_id = std::move(frame_id);
     }
 
     void Trajectory::set_time_from_start(float time_from_start)
@@ -131,9 +131,9 @@ namespace sfg_trajectory_planner::app::core
         m_time_from_start = glm::max(time_from_start, 0.0f);
     }
 
-    void Trajectory::set_color(const glm::vec3 &color)
+    void Trajectory::set_color(glm::vec3 color)
     {
-        m_color = color;
+        m_color = std::move(color);
     }
 
     bool Trajectory::empty() const

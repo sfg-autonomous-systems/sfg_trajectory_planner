@@ -105,12 +105,12 @@ namespace sfg_trajectory_planner::engine::core::gfx
         return m_camera;
     }
 
-    void Renderer::add_line(const glm::vec3 &start_ws, const glm::vec3 &end_ws, const glm::vec3 &color)
+    void Renderer::add_line(glm::vec3 start_ws, glm::vec3 end_ws, glm::vec3 color)
     {
         add_line(glm::mat4(1.0f), start_ws, end_ws, color);
     }
 
-    void Renderer::add_line(const glm::mat4 &ls_to_ws_matrix, const glm::vec3 &start_ls, const glm::vec3 &end_ls, const glm::vec3 &color)
+    void Renderer::add_line(const glm::mat4 &ls_to_ws_matrix, glm::vec3 start_ls, glm::vec3 end_ls, glm::vec3 color)
     {
         m_line_mesh.add_vertices({{ls_to_ws_matrix * glm::vec4(start_ls, 1.0f), color}});
         m_line_mesh.add_vertices({{ls_to_ws_matrix * glm::vec4(end_ls, 1.0f), color}});
@@ -188,10 +188,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     void Renderer::add_text(
-        const glm::vec3 &position_ws,
+        glm::vec3 position_ws,
         const std::string &text,
         float font_size_ss,
-        const glm::vec3 &color,
+        glm::vec3 color,
         TextAnchor anchor)
     {
         add_text(glm::mat4(1.0f), position_ws, text, font_size_ss, color, anchor);
@@ -199,10 +199,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     void Renderer::add_text(
         const glm::mat4 &ls_to_ws_matrix,
-        const glm::vec3 &position_ls,
+        glm::vec3 position_ls,
         const std::string &text,
         float font_size_ss,
-        const glm::vec3 &color,
+        glm::vec3 color,
         TextAnchor anchor)
     {
         const glm::mat4 &ws_to_vs_matrix = m_camera.get_ws_to_vs_matrix();

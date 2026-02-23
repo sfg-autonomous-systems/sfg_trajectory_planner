@@ -16,9 +16,9 @@ namespace sfg_trajectory_planner::app::core
         float get_grid_spacing() const;
         glm::vec3 get_color() const;
 
-        void set_grid_size(const glm::vec2 &grid_size);
+        void set_grid_size(glm::vec2 grid_size);
         void set_grid_spacing(float grid_spacing);
-        void set_color(const glm::vec3 &color);
+        void set_color(glm::vec3 color);
 
     private:
         glm::vec2 m_grid_size = {10.0f, 10.0f};

@@ -19,10 +19,10 @@ namespace sfg_trajectory_planner::app::core
         glm::vec3 get_color() const;
         size_t get_waypoint_count() const;
 
-        void set_topic_name(const std::string &topic_name);
-        void set_frame_id(const std::string &frame_id);
+        void set_topic_name(std::string topic_name);
+        void set_frame_id(std::string frame_id);
         void set_time_from_start(float time_from_start);
-        void set_color(const glm::vec3 &color);
+        void set_color(glm::vec3 color);
 
         bool empty() const;
 

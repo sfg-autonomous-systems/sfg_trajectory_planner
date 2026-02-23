@@ -18,15 +18,15 @@ namespace sfg_trajectory_planner::engine::core
     {
     }
 
-    Transform::Transform(const glm::mat4 &matrix) : m_matrix(matrix), m_dirty(false)
+    Transform::Transform(glm::mat4 matrix) : m_matrix(matrix), m_dirty(false)
     {
         update_components();
     }
 
-    Transform::Transform(const glm::vec3 &translation, const glm::quat &rotation, const glm::vec3 &scale)
-        : m_translation(translation),
-          m_rotation(rotation),
-          m_scale(scale),
+    Transform::Transform(glm::vec3 translation, glm::quat rotation, glm::vec3 scale)
+        : m_translation(std::move(translation)),
+          m_rotation(std::move(rotation)),
+          m_scale(std::move(scale)),
           m_dirty(false)
     {
         update_matrix();
@@ -80,30 +80,30 @@ namespace sfg_trajectory_planner::engine::core
         return m_scale;
     }
 
-    void Transform::set_matrix(const glm::mat4 &matrix)
+    void Transform::set_matrix(glm::mat4 matrix)
     {
-        m_matrix = matrix;
+        m_matrix = std::move(matrix);
         m_dirty = false;
         update_components();
     }
 
     void Transform::set_translation(glm::vec3 translation)
     {
-        m_translation = translation;
+        m_translation = std::move(translation);
         m_dirty = true;
     }
 
     void Transform::set_euler_angles(glm::vec3 euler_angles)
     {
-        m_euler_angles = euler_angles;
-        m_rotation = glm::quat(glm::radians(euler_angles));
+        m_euler_angles = std::move(euler_angles);
+        m_rotation = glm::quat(glm::radians(m_euler_angles));
         m_dirty = true;
     }
 
     void Transform::set_rotation(glm::quat rotation)
     {
-        m_rotation = rotation;
-        m_euler_angles = glm::degrees(glm::eulerAngles(rotation));
+        m_rotation = std::move(rotation);
+        m_euler_angles = glm::degrees(glm::eulerAngles(m_rotation));
         m_dirty = true;
     }
 
@@ -115,7 +115,7 @@ namespace sfg_trajectory_planner::engine::core
         m_dirty = true;
     }
 
-    Transform &Transform::translate(const glm::vec3 &translation, bool local)
+    Transform &Transform::translate(glm::vec3 translation, bool local)
     {
         if (local)
         {
@@ -128,12 +128,12 @@ namespace sfg_trajectory_planner::engine::core
         return *this;
     }
 
-    Transform &Transform::rotate(const glm::vec3 &euler_angles, bool local)
+    Transform &Transform::rotate(glm::vec3 euler_angles, bool local)
     {
         return rotate(glm::quat(glm::radians(euler_angles)), local);
     }
 
-    Transform &Transform::rotate(const glm::quat &rotation, bool local)
+    Transform &Transform::rotate(glm::quat rotation, bool local)
     {
         if (local)
         {
@@ -146,13 +146,13 @@ namespace sfg_trajectory_planner::engine::core
         return *this;
     }
 
-    Transform &Transform::scale(const glm::vec3 &scale)
+    Transform &Transform::scale(glm::vec3 scale)
     {
         set_scale(m_scale * scale);
         return *this;
     }
 
-    Transform &Transform::look_in(const glm::vec3 &direction, const glm::vec3 &up)
+    Transform &Transform::look_in(glm::vec3 direction, glm::vec3 up)
     {
         const auto epsilon = 0.001f;
 

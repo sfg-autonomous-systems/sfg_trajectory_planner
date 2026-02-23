@@ -76,7 +76,7 @@ namespace sfg_trajectory_planner::app::core
         return m_color;
     }
 
-    void Grid::set_grid_size(const glm::vec2 &grid_size)
+    void Grid::set_grid_size(glm::vec2 grid_size)
     {
         m_grid_size = glm::max(grid_size, 0.1f);
     }
@@ -86,8 +86,8 @@ namespace sfg_trajectory_planner::app::core
         m_grid_spacing = glm::max(grid_spacing, 0.1f);
     }
 
-    void Grid::set_color(const glm::vec3 &color)
+    void Grid::set_color(glm::vec3 color)
     {
-        m_color = color;
+        m_color = std::move(color);
     }
 }

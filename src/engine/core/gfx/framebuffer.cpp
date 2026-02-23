@@ -4,7 +4,7 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    FrameBuffer::FrameBuffer(const glm::vec3 &clear_color, glm::ivec2 size)
+    FrameBuffer::FrameBuffer(glm::vec3 clear_color, glm::ivec2 size)
         : m_clear_color(clear_color)
     {
         resize_if_needed(size);

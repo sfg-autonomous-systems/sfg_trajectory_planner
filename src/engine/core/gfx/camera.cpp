@@ -6,9 +6,9 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    void Camera::set_cs_to_ss_vector(const glm::ivec4 &viewport)
+    void Camera::set_cs_to_ss_vector(glm::ivec4 cs_to_ss_vector)
     {
-        m_cs_to_ss_vector = viewport;
+        m_cs_to_ss_vector = std::move(cs_to_ss_vector);
     }
 
     void Camera::set_projection(Projection projection)
@@ -63,7 +63,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         m_zoom_level = glm::clamp(m_zoom_level - delta, s_near_plane, s_far_plane);
     }
 
-    void Camera::start_pan(const glm::vec2 &position_ss)
+    void Camera::start_pan(glm::vec2 position_ss)
     {
         auto ray_ws = screen_point_to_ray(position_ss);
         auto distance_ws = utils::intersect_ray_plane(ray_ws, m_focus_point_ws, glm::inverse(m_ws_to_vs_matrix)[2]);
@@ -71,7 +71,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         m_pan_start_ws = intersection_ws;
     }
 
-    void Camera::pan(const glm::vec2 &position_ss)
+    void Camera::pan(glm::vec2 position_ss)
     {
         auto ray_ws = screen_point_to_ray(position_ss);
         auto distance_ws = utils::intersect_ray_plane(ray_ws, m_focus_point_ws, glm::inverse(m_ws_to_vs_matrix)[2]);
@@ -79,7 +79,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         m_focus_point_ws -= intersection_ws - m_pan_start_ws;
     }
 
-    void Camera::focus_on(const glm::vec3 &point_ws)
+    void Camera::focus_on(glm::vec3 point_ws)
     {
         m_focus_point_ws = point_ws;
     }
@@ -133,12 +133,12 @@ namespace sfg_trajectory_planner::engine::core::gfx
         }
     }
 
-    Ray Camera::screen_point_to_ray(const glm::vec2 &point_ss) const
+    Ray Camera::screen_point_to_ray(glm::vec2 point_ss) const
     {
         return utils::position_ss_to_ray_ws(point_ss, m_ws_to_vs_matrix, m_vs_to_cs_matrix, m_cs_to_ss_vector);
     }
 
-    glm::vec3 Camera::world_to_screen_point(const glm::vec3 &point_ws) const
+    glm::vec3 Camera::world_to_screen_point(glm::vec3 point_ws) const
     {
         return utils::position_ws_to_position_ss(point_ws, m_ws_to_vs_matrix, m_vs_to_cs_matrix, m_cs_to_ss_vector);
     }

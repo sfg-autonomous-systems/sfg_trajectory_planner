@@ -142,23 +142,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::set_vertices(std::initializer_list<VertexType> vertices)
-    {
-        m_vertices = vertices;
-        m_dirty = true;
-    }
-
-    template <typename VertexType>
     void Mesh<VertexType>::set_vertices(std::vector<VertexType> vertices)
     {
         m_vertices = std::move(vertices);
-        m_dirty = true;
-    }
-
-    template <typename VertexType>
-    void Mesh<VertexType>::add_vertices(std::initializer_list<VertexType> vertices)
-    {
-        m_vertices.insert(m_vertices.end(), vertices.begin(), vertices.end());
         m_dirty = true;
     }
 
@@ -170,23 +156,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::set_indices(std::initializer_list<std::uint32_t> indices)
-    {
-        m_indices = indices;
-        m_dirty = true;
-    }
-
-    template <typename VertexType>
     void Mesh<VertexType>::set_indices(std::vector<std::uint32_t> indices)
     {
         m_indices = std::move(indices);
-        m_dirty = true;
-    }
-
-    template <typename VertexType>
-    void Mesh<VertexType>::add_indices(std::initializer_list<std::uint32_t> indices)
-    {
-        m_indices.insert(m_indices.end(), indices.begin(), indices.end());
         m_dirty = true;
     }
 

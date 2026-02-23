@@ -26,7 +26,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         static constexpr float s_min_pitch = glm::radians(-90.0f);
         static constexpr float s_max_pitch = glm::radians(90.0f);
 
-        void set_cs_to_ss_vector(const glm::ivec4 &cs_to_ss_vector);
+        void set_cs_to_ss_vector(glm::ivec4 cs_to_ss_vector);
         void set_projection(Projection projection);
 
         Projection get_projection() const;
@@ -36,14 +36,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         void orbit(float delta_x, float delta_y);
         void zoom(float delta);
-        void start_pan(const glm::vec2 &position_ss);
-        void pan(const glm::vec2 &position_ss);
-        void focus_on(const glm::vec3 &point_ws);
+        void start_pan(glm::vec2 position_ss);
+        void pan(glm::vec2 position_ss);
+        void focus_on(glm::vec3 point_ws);
 
         void update();
         void synchronize_from_matrix(const glm::mat4 &ws_to_vs_matrix);
-        Ray screen_point_to_ray(const glm::vec2 &point_ss) const;
-        glm::vec3 world_to_screen_point(const glm::vec3 &point_ws) const;
+        Ray screen_point_to_ray(glm::vec2 point_ss) const;
+        glm::vec3 world_to_screen_point(glm::vec3 point_ws) const;
 
     private:
         Projection m_projection = Projection::Perspective;
