@@ -218,7 +218,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         auto projection_scaling = m_camera.get_vs_to_cs_matrix()[1][1];
         auto viewport_height = m_camera.get_cs_to_ss_vector().w;
         auto pixel_world_size = depth / (projection_scaling * viewport_height * 0.5f);
-        auto font_scale_factor = font_size_ss / m_text_font.get_baked_height();
+        auto font_scale_factor = 4.0f * font_size_ss / m_text_font.get_baked_height();
         auto final_scale = pixel_world_size * font_scale_factor;
 
         glm::vec3 camera_right_ws = {ws_to_vs_matrix[0][0], ws_to_vs_matrix[1][0], ws_to_vs_matrix[2][0]};
@@ -228,13 +228,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         stbtt_aligned_quad quad;
         auto x_cursor = 0.0f;
         auto y_cursor = 0.0f;
-        auto current_index = m_text_mesh.vertex_count();
 
-        // Reserve memory to avoid reallocations.
-        std::vector<TextVertex> vertices;
-        vertices.reserve(text.size() * 4);
-        std::vector<uint32_t> indices;
-        indices.reserve(text.size() * 6);
+        RenderTextRequest request;
+        request.m_distance_from_camera = depth;
 
         for (char character : text)
         {
@@ -251,23 +247,12 @@ namespace sfg_trajectory_planner::engine::core::gfx
             glm::vec3 top_left_ws = position_ws + (camera_right_ws * min_x) + (camera_up_ws * max_y);
 
             // Add vertices.
-            vertices.push_back({bottom_left_ws, {quad.s0, quad.t1}, color});
-            vertices.push_back({bottom_right_ws, {quad.s1, quad.t1}, color});
-            vertices.push_back({top_right_ws, {quad.s1, quad.t0}, color});
-            vertices.push_back({top_left_ws, {quad.s0, quad.t0}, color});
-
-            // Add Indices.
-            indices.push_back(current_index + 0);
-            indices.push_back(current_index + 1);
-            indices.push_back(current_index + 2);
-            indices.push_back(current_index + 2);
-            indices.push_back(current_index + 3);
-            indices.push_back(current_index + 0);
-
-            current_index += 4;
+            request.m_vertices[0] = {bottom_left_ws, {quad.s0, quad.t1}, color};
+            request.m_vertices[1] = {bottom_right_ws, {quad.s1, quad.t1}, color};
+            request.m_vertices[2] = {top_right_ws, {quad.s1, quad.t0}, color};
+            request.m_vertices[3] = {top_left_ws, {quad.s0, quad.t0}, color};
+            m_render_text_requests.push_back(request);
         }
-        m_text_mesh.add_vertices(vertices);
-        m_text_mesh.add_indices(indices);
     }
 
     GLuint Renderer::render()
@@ -296,8 +281,26 @@ namespace sfg_trajectory_planner::engine::core::gfx
             m_line_mesh.clear();
         }
 
-        if (!m_text_mesh.empty())
+        if (!m_render_text_requests.empty())
         {
+            // Sort the pending text by distance from the camera so that alpha blending works correctly.
+            std::sort(
+                m_render_text_requests.begin(),
+                m_render_text_requests.end(),
+                [](const RenderTextRequest &a, const RenderTextRequest &b)
+                {
+                    return a.m_distance_from_camera > b.m_distance_from_camera;
+                });
+
+            std::uint32_t current_index = m_text_mesh.vertex_count();
+
+            for (const auto &request : m_render_text_requests)
+            {
+                m_text_mesh.add_vertices({request.m_vertices[0], request.m_vertices[1], request.m_vertices[2], request.m_vertices[3]});
+                m_text_mesh.add_indices({current_index + 0, current_index + 1, current_index + 2, current_index + 2, current_index + 3, current_index + 0});
+                current_index += 4;
+            }
+
             m_text_shader.bind();
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_text_font.get_font_atlas());
@@ -307,6 +310,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
             m_text_mesh.render();
             m_text_shader.unbind();
             m_text_mesh.clear();
+            m_render_text_requests.clear();
         }
         m_framebuffer.unbind();
 

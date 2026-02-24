@@ -70,6 +70,13 @@ namespace sfg_trajectory_planner::engine::core::gfx
             glm::vec3 m_color;
         };
 
+        struct RenderTextRequest
+        {
+        public:
+            TextVertex m_vertices[4];
+            float m_distance_from_camera;
+        };
+
         const Camera &m_camera;
         FrameBuffer m_framebuffer;
 
@@ -78,6 +85,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         Shader m_line_shader;
 
         // Text related resources.
+        std::vector<RenderTextRequest> m_render_text_requests;
         Mesh<TextVertex> m_text_mesh;
         Shader m_text_shader;
         TextFont m_text_font;
