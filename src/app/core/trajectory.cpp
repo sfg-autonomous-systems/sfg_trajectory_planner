@@ -83,7 +83,7 @@ namespace sfg_trajectory_planner::app::core
                 ls_to_ws_matrix,
                 m_waypoints[index].m_transform_ls.get_translation(),
                 "t+" + fmt::format("{:.1f}", time_from_start),
-                ImGui::GetFontSize(),
+                2.0f * ImGui::GetFontSize(),
                 glm::vec3(color.x, color.y, color.z),
                 engine::core::gfx::TextAnchor::Center);
         }

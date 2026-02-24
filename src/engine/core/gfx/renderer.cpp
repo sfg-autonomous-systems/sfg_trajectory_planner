@@ -208,18 +208,18 @@ namespace sfg_trajectory_planner::engine::core::gfx
         const glm::mat4 &ws_to_vs_matrix = m_camera.get_ws_to_vs_matrix();
         glm::vec3 position_ws = ls_to_ws_matrix * glm::vec4(position_ls, 1.0f);
         glm::vec3 position_vs = ws_to_vs_matrix * glm::vec4(position_ws, 1.0f);
-        auto depth = -position_vs.z;
+        auto depth_vs = -position_vs.z;
 
-        if (depth <= 0.0f)
+        if (depth_vs <= 0.0f)
         {
             return;
         }
 
         auto projection_scaling = m_camera.get_vs_to_cs_matrix()[1][1];
-        auto viewport_height = m_camera.get_cs_to_ss_vector().w;
-        auto pixel_world_size = depth / (projection_scaling * viewport_height * 0.5f);
-        auto font_scale_factor = 4.0f * font_size_ss / m_text_font.get_baked_height();
-        auto final_scale = pixel_world_size * font_scale_factor;
+        auto viewport_height_ss = m_camera.get_cs_to_ss_vector().w;
+        auto pixel_height_ws = depth_vs / (projection_scaling * viewport_height_ss * 0.5f);
+        auto font_scale_factor = font_size_ss / m_text_font.get_baked_height();
+        auto scale = pixel_height_ws * font_scale_factor;
 
         glm::vec3 camera_right_ws = {ws_to_vs_matrix[0][0], ws_to_vs_matrix[1][0], ws_to_vs_matrix[2][0]};
         glm::vec3 camera_up_ws = {ws_to_vs_matrix[0][1], ws_to_vs_matrix[1][1], ws_to_vs_matrix[2][1]};
@@ -230,16 +230,16 @@ namespace sfg_trajectory_planner::engine::core::gfx
         auto y_cursor = 0.0f;
 
         RenderTextRequest request;
-        request.m_distance_from_camera = depth;
+        request.m_distance_from_camera = depth_vs;
 
         for (char character : text)
         {
             m_text_font.get_character_quad(character, &x_cursor, &y_cursor, &quad);
 
-            float min_x = (quad.x0 + offset.x) * final_scale;
-            float max_x = (quad.x1 + offset.x) * final_scale;
-            float min_y = -(quad.y1 + offset.y) * final_scale;
-            float max_y = -(quad.y0 + offset.y) * final_scale;
+            float min_x = (quad.x0 + offset.x) * scale;
+            float max_x = (quad.x1 + offset.x) * scale;
+            float min_y = -(quad.y1 + offset.y) * scale;
+            float max_y = -(quad.y0 + offset.y) * scale;
 
             glm::vec3 bottom_left_ws = position_ws + (camera_right_ws * min_x) + (camera_up_ws * min_y);
             glm::vec3 bottom_right_ws = position_ws + (camera_right_ws * max_x) + (camera_up_ws * min_y);
