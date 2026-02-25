@@ -4,51 +4,60 @@
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
+#include <rclcpp/logging.hpp>
+
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/scene_object.hpp"
 #include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
+#include "sfg_trajectory_planner/engine/editor/history/record_object_action.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    SceneObjectEditor<void>::SceneObjectEditor(const EditorContext &editor_context) : m_editor_context(editor_context)
+    SceneObjectEditor<void>::SceneObjectEditor(EditorContext &editor_context) : m_editor_context(editor_context)
     {
     }
 
-    bool SceneObjectEditor<void>::render_editor(core::gfx::Renderer &renderer)
+    void SceneObjectEditor<void>::render_editor(core::gfx::Renderer &renderer)
     {
         auto *object = target();
 
-        return render_transform_editor(
+        render_transform_editor(
             renderer,
             object->get_transform_ls(),
             object->get_parent() ? object->get_parent()->get_ls_to_ws_matrix() : glm::mat4(1.0f));
     }
 
-    bool SceneObjectEditor<void>::render_inspector()
+    void SceneObjectEditor<void>::render_inspector()
     {
-        auto changed = false;
         auto *object = target();
+        auto dirty = false;
+        auto record_object = false;
         auto name = object->get_name();
-
-        if (ImGui::InputText("Name", &name))
-        {
-            object->set_name(name);
-            changed = true;
-        }
-
         auto type = object->get_type();
+        auto uuid = uuids::to_string(object->get_uuid());
+
+        dirty |= ImGui::InputText("Name", &name);
+        record_object |= ImGui::IsItemActivated();
+
         ImGui::BeginDisabled();
         ImGui::InputText("Type", &type);
-
-        auto uuid = uuids::to_string(object->get_uuid());
         ImGui::InputText("UUID", &uuid);
         ImGui::EndDisabled();
 
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            changed |= render_transform_inspector(object->get_transform_ls());
+            render_transform_inspector(object->get_transform_ls());
         }
-        return changed;
+
+        if (record_object)
+        {
+            m_editor_context.m_undo.execute(std::make_unique<engine::editor::history::RecordObjectAction>(object));
+        }
+
+        if (dirty)
+        {
+            object->set_name(name);
+        }
     }
 
     core::SceneObject *SceneObjectEditor<void>::target() const
@@ -93,43 +102,33 @@ namespace sfg_trajectory_planner::engine::editor
 
     bool SceneObjectEditor<void>::render_transform_inspector(core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
     {
-        auto changed = false;
+        auto dirty = false;
+        auto record_object = false;
 
         if (!render_labels)
         {
             ImGui::PushItemWidth(-1.0f);
         }
 
-        ImGui::BeginDisabled(!can_translate);
         auto translation = transform.get_translation();
+        auto euler_angles = transform.get_euler_angles();
+        auto scale = transform.get_scale();
 
-        if (ImGui::DragFloat3(render_labels ? "Position [m]" : "##position", glm::value_ptr(translation), 0.01f))
-        {
-            transform.set_translation(translation);
-            changed = true;
-        }
+        ImGui::BeginDisabled(!can_translate);
+        dirty |= ImGui::DragFloat3(render_labels ? "Position [m]" : "##position", glm::value_ptr(translation), 0.01f);
+        record_object |= ImGui::IsItemActivated();
         ImGui::SetItemTooltip("Position [m]");
         ImGui::EndDisabled();
 
         ImGui::BeginDisabled(!can_rotate);
-        auto euler_angles = transform.get_euler_angles();
-
-        if (ImGui::DragFloat3(render_labels ? "Rotation [deg]" : "##rotation", glm::value_ptr(euler_angles), 0.01f))
-        {
-            transform.set_euler_angles(euler_angles);
-            changed = true;
-        }
+        dirty |= ImGui::DragFloat3(render_labels ? "Rotation [deg]" : "##rotation", glm::value_ptr(euler_angles), 0.01f);
+        record_object |= ImGui::IsItemActivated();
         ImGui::SetItemTooltip("Rotation [deg]");
         ImGui::EndDisabled();
 
         ImGui::BeginDisabled(!can_scale);
-        auto scale = transform.get_scale();
-
-        if (ImGui::DragFloat3(render_labels ? "Scale" : "##scale", glm::value_ptr(scale), 0.01f))
-        {
-            transform.set_scale(scale);
-            changed = true;
-        }
+        dirty |= ImGui::DragFloat3(render_labels ? "Scale" : "##scale", glm::value_ptr(scale), 0.01f);
+        record_object |= ImGui::IsItemActivated();
         ImGui::SetItemTooltip("Scale");
         ImGui::EndDisabled();
 
@@ -137,6 +136,18 @@ namespace sfg_trajectory_planner::engine::editor
         {
             ImGui::PopItemWidth();
         }
-        return changed;
+
+        if (record_object)
+        {
+            m_editor_context.m_undo.execute(std::make_unique<engine::editor::history::RecordObjectAction>(target()));
+        }
+
+        if (dirty)
+        {
+            transform.set_translation(translation);
+            transform.set_euler_angles(euler_angles);
+            transform.set_scale(scale);
+        }
+        return dirty;
     }
 }

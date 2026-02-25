@@ -6,7 +6,7 @@
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    class SceneObjectEditorFactory : public core::GenericFactory<SceneObjectEditor<void>, const EditorContext &>
+    class SceneObjectEditorFactory : public core::GenericFactory<SceneObjectEditor<void>, EditorContext &>
     {
     };
 }

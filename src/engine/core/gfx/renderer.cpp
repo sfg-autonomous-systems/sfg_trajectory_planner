@@ -119,10 +119,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
     bool Renderer::add_gizmo(glm::mat4 &ls_to_ws_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id)
     {
         ImGuizmo::PushID(id);
-        auto manipulated = ImGuizmo::Manipulate(glm::value_ptr(m_camera.get_ws_to_vs_matrix()), glm::value_ptr(m_camera.get_vs_to_cs_matrix()), operation, mode, glm::value_ptr(ls_to_ws_matrix));
+        auto dirty = ImGuizmo::Manipulate(glm::value_ptr(m_camera.get_ws_to_vs_matrix()), glm::value_ptr(m_camera.get_vs_to_cs_matrix()), operation, mode, glm::value_ptr(ls_to_ws_matrix));
         ImGuizmo::PopID();
 
-        return manipulated;
+        return dirty;
     }
 
     bool Renderer::add_view_gizmo(glm::mat4 &ws_to_vs_matrix, void *id)
@@ -177,14 +177,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
         style.Colors[ImGuizmo::DIRECTION_Y] = old_colors[1];
         style.Colors[ImGuizmo::DIRECTION_Z] = old_colors[2];
 
-        auto changed = ImGuizmo::IsUsingViewManipulate();
+        auto dirty = ImGuizmo::IsUsingViewManipulate();
 
-        if (changed)
+        if (dirty)
         {
             // Undo the pretransformation and update the actual view matrix if something has interacted with the view manipulation cube.
             ws_to_vs_matrix = imguizmo_ws_to_vs_matrix * hatch_correction * glm::inverse(basis_alignment);
         }
-        return changed;
+        return dirty;
     }
 
     void Renderer::add_text(

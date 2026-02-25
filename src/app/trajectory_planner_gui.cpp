@@ -37,7 +37,7 @@ namespace sfg_trajectory_planner::app
         // Do the same for scene object editors.
         m_scene_object_editor_factory.register_type<engine::core::SceneObject, engine::editor::SceneObjectEditor<void>>();
         m_scene_object_editor_factory.register_type<app::core::Trajectory, app::editor::TrajectoryEditor>(
-            [node](const engine::editor::EditorContext &editor_context)
+            [node](engine::editor::EditorContext &editor_context)
             { return std::make_unique<app::editor::TrajectoryEditor>(editor_context, node); });
         m_scene_object_editor_factory.register_type<app::core::Grid, app::editor::GridEditor>();
 

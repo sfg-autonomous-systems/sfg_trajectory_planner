@@ -5,10 +5,18 @@
 
 namespace sfg_trajectory_planner::engine::editor::history
 {
-    RecordObjectAction::RecordObjectAction(const core::Scene &scene, uuids::uuid object_uuid)
-        : m_scene(scene),
-          m_object_uuid(object_uuid)
+    RecordObjectAction::RecordObjectAction(core::SceneObject *object)
+        : m_scene(object->get_scene()),
+          m_object_uuid(object ? object->get_uuid() : uuids::uuid{})
     {
+        if (!object)
+        {
+            return;
+        }
+
+        core::serialization::YamlSerializer serializer;
+        object->serialize(&serializer);
+        m_serialized_data = serializer.to_bytes();
     }
 
     void RecordObjectAction::redo()

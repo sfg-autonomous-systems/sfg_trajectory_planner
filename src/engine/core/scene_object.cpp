@@ -63,6 +63,11 @@ namespace sfg_trajectory_planner::engine::core
     {
     }
 
+    const Scene &SceneObject::get_scene() const
+    {
+        return m_scene;
+    }
+
     std::string SceneObject::get_name() const
     {
         return m_name;

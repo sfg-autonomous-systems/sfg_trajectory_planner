@@ -6,46 +6,49 @@
 
 #include "sfg_trajectory_planner/app/core/grid.hpp"
 #include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
+#include "sfg_trajectory_planner/engine/editor/history/record_object_action.hpp"
 
 namespace sfg_trajectory_planner::app::editor
 {
-    GridEditor::GridEditor(const engine::editor::EditorContext &editor_context) : SceneObjectEditor(editor_context)
+    GridEditor::GridEditor(engine::editor::EditorContext &editor_context) : SceneObjectEditor(editor_context)
     {
     }
 
-    bool GridEditor::render_inspector()
+    void GridEditor::render_inspector()
     {
-        auto changed = SceneObjectEditor::render_inspector();
+        SceneObjectEditor::render_inspector();
 
         if (!ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            return changed;
+            return;
         }
 
         auto grid = target();
+        auto dirty = false;
+        auto record_object = false;
         auto grid_size = grid->get_grid_size();
-
-        if (ImGui::DragFloat2("Grid Size [m]", glm::value_ptr(grid_size), 0.1f))
-        {
-            grid->set_grid_size(grid_size);
-            changed = true;
-        }
-
         auto grid_spacing = grid->get_grid_spacing();
-
-        if (ImGui::DragFloat("Grid Spacing [m]", &grid_spacing, 0.1f))
-        {
-            grid->set_grid_spacing(grid_spacing);
-            changed = true;
-        }
-
         auto color = grid->get_color();
 
-        if (ImGui::ColorEdit3("Color", glm::value_ptr(color)))
+        dirty |= ImGui::DragFloat2("Grid Size [m]", glm::value_ptr(grid_size), 0.1f);
+        record_object |= ImGui::IsItemActivated();
+
+        dirty |= ImGui::DragFloat("Grid Spacing [m]", &grid_spacing, 0.1f);
+        record_object |= ImGui::IsItemActivated();
+
+        dirty |= ImGui::ColorEdit3("Color", glm::value_ptr(color));
+        record_object |= ImGui::IsItemActivated();
+
+        if (record_object)
         {
-            grid->set_color(color);
-            changed = true;
+            m_editor_context.m_undo.execute(std::make_unique<engine::editor::history::RecordObjectAction>(grid));
         }
-        return changed;
+
+        if (dirty)
+        {
+            grid->set_grid_size(grid_size);
+            grid->set_grid_spacing(grid_spacing);
+            grid->set_color(color);
+        }
     }
 }

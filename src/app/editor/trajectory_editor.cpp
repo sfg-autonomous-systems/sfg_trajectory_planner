@@ -24,14 +24,14 @@ namespace sfg_trajectory_planner::app::editor
     static constexpr auto s_modify_waypoint_constraints_popup_id = "modify_waypoint_constraints_popup";
     static constexpr auto s_modify_waypoint_constraints_button_text = "C";
 
-    TrajectoryEditor::TrajectoryEditor(const engine::editor::EditorContext &editor_context, rclcpp::Node *node) : SceneObjectEditor(editor_context), m_node(node)
+    TrajectoryEditor::TrajectoryEditor(engine::editor::EditorContext &editor_context, rclcpp::Node *node) : SceneObjectEditor(editor_context), m_node(node)
     {
         create_trajectory_publisher(target()->get_topic_name());
     }
 
-    bool TrajectoryEditor::render_editor(engine::core::gfx::Renderer &renderer)
+    void TrajectoryEditor::render_editor(engine::core::gfx::Renderer &renderer)
     {
-        auto changed = SceneObjectEditor::render_editor(renderer);
+        SceneObjectEditor::render_editor(renderer);
         auto trajectory = target();
         auto ls_to_ws_matrix = trajectory->get_ls_to_ws_matrix();
         auto gizmo_operation = m_editor_context.m_selection_context.get_gizmo_operation();
@@ -47,7 +47,6 @@ namespace sfg_trajectory_planner::app::editor
                 if (auto modified_transform_ls = render_transform_editor(renderer, transform_ls, ls_to_ws_matrix))
                 {
                     trajectory->set_waypoint_transform_ls(m_selected_waypoint_index, modified_transform_ls.value());
-                    changed = true;
                 }
             }
         }
@@ -76,16 +75,15 @@ namespace sfg_trajectory_planner::app::editor
                 m_selected_waypoint_index = std::numeric_limits<size_t>::max();
             }
         }
-        return changed;
     }
 
-    bool TrajectoryEditor::render_inspector()
+    void TrajectoryEditor::render_inspector()
     {
-        auto changed = SceneObjectEditor::render_inspector();
+        SceneObjectEditor::render_inspector();
 
         if (!ImGui::CollapsingHeader("Object", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            return changed;
+            return;
         }
 
         if (ImGui::Button("Publish Trajectory", ImVec2(-1.0f, 0.0f)))
@@ -99,7 +97,6 @@ namespace sfg_trajectory_planner::app::editor
         if (ImGui::InputText("Topic Name", &topic_name))
         {
             trajectory->set_topic_name(topic_name);
-            changed = true;
         }
 
         if (ImGui::IsItemDeactivatedAfterEdit())
@@ -112,7 +109,6 @@ namespace sfg_trajectory_planner::app::editor
         if (ImGui::InputText("Frame ID", &frame_id))
         {
             trajectory->set_frame_id(frame_id);
-            changed = true;
         }
 
         auto time_from_start = trajectory->get_time_from_start();
@@ -120,7 +116,6 @@ namespace sfg_trajectory_planner::app::editor
         if (ImGui::DragFloat("Time from start [s]", &time_from_start, 0.01f, 0.0f, std::numeric_limits<float>::max()))
         {
             trajectory->set_time_from_start(time_from_start);
-            changed = true;
         }
 
         auto color = trajectory->get_color();
@@ -128,7 +123,6 @@ namespace sfg_trajectory_planner::app::editor
         if (ImGui::ColorEdit3("Color", glm::value_ptr(color)))
         {
             trajectory->set_color(color);
-            changed = true;
         }
 
         if (ImGui::BeginTable("waypoints_table", 4, s_waypoints_table_flags))
@@ -153,7 +147,6 @@ namespace sfg_trajectory_planner::app::editor
             if (ImGui::Button(s_add_button_text))
             {
                 trajectory->add_waypoint();
-                changed = true;
             }
             ImGui::SetItemTooltip("Add Waypoint");
 
@@ -180,7 +173,6 @@ namespace sfg_trajectory_planner::app::editor
                 if (ImGui::DragFloat("##time_from_last", &time_from_last, 0.01f, 0.0f, std::numeric_limits<float>::max()))
                 {
                     trajectory->set_waypoint_time_from_last(index, time_from_last);
-                    changed = true;
                 }
 
                 ImGui::TableNextColumn();
@@ -189,7 +181,6 @@ namespace sfg_trajectory_planner::app::editor
                 if (render_transform_inspector(transform_ls, trajectory->can_translate_waypoint(index), trajectory->can_rotate_waypoint(index), trajectory->can_scale_waypoint(index), false))
                 {
                     trajectory->set_waypoint_transform_ls(index, transform_ls);
-                    changed = true;
                 }
 
                 ImGui::TableNextColumn();
@@ -205,7 +196,6 @@ namespace sfg_trajectory_planner::app::editor
                         m_selected_waypoint_index--;
                     }
                     trajectory->remove_waypoint(index);
-                    changed = true;
                 }
                 ImGui::SetItemTooltip("Remove Waypoint");
 
@@ -241,7 +231,6 @@ namespace sfg_trajectory_planner::app::editor
             }
             ImGui::EndTable();
         }
-        return changed;
     }
 
     void TrajectoryEditor::publish_trajectory(rclcpp::Time time)

@@ -4,8 +4,8 @@
 
 namespace sfg_trajectory_planner::engine::editor::history
 {
-    ReparentAction::ReparentAction(const core::Scene &scene, core::SceneObject *child, core::SceneObject *old_parent, core::SceneObject *new_parent)
-        : m_scene(scene),
+    ReparentAction::ReparentAction(core::SceneObject *child, core::SceneObject *old_parent, core::SceneObject *new_parent)
+        : m_scene(child->get_scene()),
           m_child_uuid(child->get_uuid()),
           m_old_parent_uuid(old_parent ? old_parent->get_uuid() : uuids::uuid{}),
           m_new_parent_uuid(new_parent ? new_parent->get_uuid() : uuids::uuid{})

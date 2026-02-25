@@ -28,17 +28,18 @@ namespace sfg_trajectory_planner::engine::editor
     class SceneObjectEditor<void>
     {
     public:
-        SceneObjectEditor(const EditorContext &editor_context);
-        SceneObjectEditor(const SceneObjectEditor &) = delete;
-        SceneObjectEditor &operator=(const SceneObjectEditor &) = delete;
-        SceneObjectEditor(SceneObjectEditor &&) = delete;
-        SceneObjectEditor &operator=(SceneObjectEditor &&) = delete;
+        SceneObjectEditor(EditorContext &editor_context);
         virtual ~SceneObjectEditor() = default;
 
-        virtual bool render_editor(core::gfx::Renderer &renderer);
-        virtual bool render_inspector();
+        virtual void render_editor(core::gfx::Renderer &renderer);
+        virtual void render_inspector();
 
     protected:
+        SceneObjectEditor(const SceneObjectEditor &) = default;
+        SceneObjectEditor &operator=(const SceneObjectEditor &) = default;
+        SceneObjectEditor(SceneObjectEditor &&) = default;
+        SceneObjectEditor &operator=(SceneObjectEditor &&) = default;
+
         core::SceneObject *target() const;
 
         std::optional<core::Transform> render_transform_editor(core::gfx::Renderer &renderer, const core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix = glm::mat4(1.0f));
@@ -46,7 +47,7 @@ namespace sfg_trajectory_planner::engine::editor
         std::optional<core::Transform> render_transform_inspector(const core::Transform &transform, bool render_translation = true, bool render_rotation = true, bool render_scale = true, bool render_labels = true);
         bool render_transform_inspector(core::Transform &transform, bool render_translation = true, bool render_rotation = true, bool render_scale = true, bool render_labels = true);
 
-        const EditorContext &m_editor_context;
+        EditorContext &m_editor_context;
     };
 
     template <typename ObjectType>

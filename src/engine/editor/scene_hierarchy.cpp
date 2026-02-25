@@ -73,7 +73,7 @@ namespace sfg_trajectory_planner::engine::editor
 
         if (m_reparent_request.m_child)
         {
-            m_editor_context.m_undo.execute(std::make_unique<history::ReparentAction>(m_scene, m_reparent_request.m_child, m_reparent_request.m_child->get_parent(), m_reparent_request.m_parent));
+            m_editor_context.m_undo.execute(std::make_unique<history::ReparentAction>(m_reparent_request.m_child, m_reparent_request.m_child->get_parent(), m_reparent_request.m_parent));
             m_reparent_request = {nullptr, nullptr};
         }
     }

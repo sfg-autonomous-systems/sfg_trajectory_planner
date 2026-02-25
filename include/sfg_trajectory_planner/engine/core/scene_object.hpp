@@ -49,6 +49,7 @@ namespace sfg_trajectory_planner::engine::core
 
         virtual void render_object(gfx::Renderer &renderer);
 
+        const Scene &get_scene() const;
         std::string get_name() const;
         std::string get_type() const;
         uuids::uuid get_uuid() const;

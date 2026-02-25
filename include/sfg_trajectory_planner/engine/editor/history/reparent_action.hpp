@@ -15,7 +15,7 @@ namespace sfg_trajectory_planner::engine::editor::history
     class ReparentAction : public IAction
     {
     public:
-        ReparentAction(const core::Scene &scene, core::SceneObject *child, core::SceneObject *old_parent, core::SceneObject *new_parent);
+        ReparentAction(core::SceneObject *child, core::SceneObject *old_parent, core::SceneObject *new_parent);
         void redo() override;
         void undo() override;
 

@@ -7,6 +7,7 @@
 namespace sfg_trajectory_planner::engine::core
 {
     class Scene;
+    class SceneObject;
 }
 
 namespace sfg_trajectory_planner::engine::editor::history
@@ -14,7 +15,7 @@ namespace sfg_trajectory_planner::engine::editor::history
     class RecordObjectAction : public IAction
     {
     public:
-        RecordObjectAction(const core::Scene &scene, uuids::uuid object_uuid);
+        RecordObjectAction(core::SceneObject *object);
         void redo() override;
         void undo() override;
 
