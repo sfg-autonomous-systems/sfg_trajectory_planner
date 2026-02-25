@@ -16,14 +16,12 @@ namespace sfg_trajectory_planner::engine::core::serialization
         };
 
         AbstractSerializer() = default;
-        AbstractSerializer(const AbstractSerializer &) = delete;
-        AbstractSerializer &operator=(const AbstractSerializer &) = delete;
-        AbstractSerializer(AbstractSerializer &&) = delete;
-        AbstractSerializer &operator=(AbstractSerializer &&) = delete;
         virtual ~AbstractSerializer() = default;
 
         virtual void save_to_file(const std::filesystem::path &path) = 0;
         virtual void load_from_file(const std::filesystem::path &path) = 0;
+        virtual std::vector<std::uint8_t> to_bytes() const = 0;
+        virtual void from_bytes(const std::vector<std::uint8_t> &data) = 0;
 
         // Serialization methods for primitive types and strings.
         virtual void serialize(const std::string &key, bool value) = 0;
@@ -54,6 +52,11 @@ namespace sfg_trajectory_planner::engine::core::serialization
         virtual void end_sequence() = 0;
 
     protected:
+        AbstractSerializer(const AbstractSerializer &) = default;
+        AbstractSerializer &operator=(const AbstractSerializer &) = default;
+        AbstractSerializer(AbstractSerializer &&) = default;
+        AbstractSerializer &operator=(AbstractSerializer &&) = default;
+
         // Deserialization methods for primitive types and strings.
         virtual void deserialize(const std::string &key, bool &value) = 0;
         virtual void deserialize(const std::string &key, size_t &value) = 0;

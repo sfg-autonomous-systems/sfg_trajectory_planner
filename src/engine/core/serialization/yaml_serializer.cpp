@@ -1,5 +1,6 @@
 #include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
 
+#include <cstring>
 #include <fstream>
 
 namespace sfg_trajectory_planner::engine::core::serialization
@@ -18,6 +19,29 @@ namespace sfg_trajectory_planner::engine::core::serialization
     void YamlSerializer::load_from_file(const std::filesystem::path &path)
     {
         m_root_node = YAML::LoadFile(path);
+        m_node_stack.clear();
+        m_node_stack.push_back(m_root_node);
+        m_sequence_context.clear();
+    }
+
+    std::vector<std::uint8_t> YamlSerializer::to_bytes() const
+    {
+        YAML::Emitter emitter;
+        emitter << m_root_node;
+        auto size = emitter.size();
+        const auto yaml = reinterpret_cast<const std::uint8_t *>(emitter.c_str());
+        return {yaml, yaml + size};
+    }
+
+    void YamlSerializer::from_bytes(const std::vector<std::uint8_t> &data)
+    {
+        if (data.empty())
+        {
+            m_root_node = YAML::Node(YAML::NodeType::Map);
+            return;
+        }
+
+        m_root_node = YAML::Load(std::string(reinterpret_cast<const char *>(data.data()), data.size()));
         m_node_stack.clear();
         m_node_stack.push_back(m_root_node);
         m_sequence_context.clear();
@@ -164,16 +188,16 @@ namespace sfg_trajectory_planner::engine::core::serialization
 
         switch (mode)
         {
-        case Mode::Read:
-        {
-            m_node_stack.push_back({current_node()[name]});
-            return current_node().size();
-        }
-        case Mode::Write:
-        {
-            m_node_stack.push_back({current_node()[name]});
-            break;
-        }
+            case Mode::Read:
+            {
+                m_node_stack.push_back({current_node()[name]});
+                return current_node().size();
+            }
+            case Mode::Write:
+            {
+                m_node_stack.push_back({current_node()[name]});
+                break;
+            }
         }
         return 0;
     }
@@ -190,17 +214,17 @@ namespace sfg_trajectory_planner::engine::core::serialization
 
         switch (sequence_context.m_mode)
         {
-        case Mode::Read:
-        {
-            m_node_stack.push_back(current_node()[sequence_context.m_index++]);
-            break;
-        }
-        case Mode::Write:
-        {
-            current_node().push_back({});
-            m_node_stack.push_back(current_node()[current_node().size() - 1]);
-            break;
-        }
+            case Mode::Read:
+            {
+                m_node_stack.push_back(current_node()[sequence_context.m_index++]);
+                break;
+            }
+            case Mode::Write:
+            {
+                current_node().push_back({});
+                m_node_stack.push_back(current_node()[current_node().size() - 1]);
+                break;
+            }
         }
     }
 

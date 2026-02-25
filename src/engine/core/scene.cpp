@@ -36,6 +36,34 @@ namespace sfg_trajectory_planner::engine::core
         serializer->end_sequence();
     }
 
+    void Scene::serialize_object(SceneObject *object, serialization::AbstractSerializer *serializer) const
+    {
+        object->serialize(serializer);
+        serializer->begin_sequence("children", engine::core::serialization::AbstractSerializer::Mode::Write);
+
+        for (auto child : object->get_children())
+        {
+            serializer->next_item();
+            serialize_object(child, serializer);
+        }
+        serializer->end_sequence();
+    }
+
+    SceneObject *Scene::deserialize_object(SceneObject *parent, serialization::AbstractSerializer *serializer)
+    {
+        auto object = create_object(serializer->deserialize<std::string>("type"), "", parent, uuids::uuid::from_string(serializer->deserialize<std::string>("uuid")).value());
+        object->deserialize(serializer);
+        auto child_count = serializer->begin_sequence("children", engine::core::serialization::AbstractSerializer::Mode::Read);
+
+        for (size_t index = 0; index < child_count; index++)
+        {
+            serializer->next_item();
+            deserialize_object(object, serializer);
+        }
+        serializer->end_sequence();
+        return object;
+    }
+
     std::vector<SceneObjectFactory::RegisteredTypeInfo> Scene::get_possible_types() const
     {
         return m_factory.get_registered_types();
@@ -88,33 +116,6 @@ namespace sfg_trajectory_planner::engine::core
             }
         }
         return objects;
-    }
-
-    void Scene::serialize_object(SceneObject *object, serialization::AbstractSerializer *serializer) const
-    {
-        object->serialize(serializer);
-        serializer->begin_sequence("children", engine::core::serialization::AbstractSerializer::Mode::Write);
-
-        for (auto child : object->get_children())
-        {
-            serializer->next_item();
-            serialize_object(child, serializer);
-        }
-        serializer->end_sequence();
-    }
-
-    void Scene::deserialize_object(SceneObject *parent, serialization::AbstractSerializer *serializer)
-    {
-        auto object = create_object(serializer->deserialize<std::string>("type"), "", parent, uuids::uuid::from_string(serializer->deserialize<std::string>("uuid")).value());
-        object->deserialize(serializer);
-        auto child_count = serializer->begin_sequence("children", engine::core::serialization::AbstractSerializer::Mode::Read);
-
-        for (size_t index = 0; index < child_count; index++)
-        {
-            serializer->next_item();
-            deserialize_object(object, serializer);
-        }
-        serializer->end_sequence();
     }
 
     SceneObject *Scene::create_object(const std::string &type, const std::string &name, SceneObject *parent, uuids::uuid uuid)
