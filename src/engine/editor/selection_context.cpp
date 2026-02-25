@@ -1,12 +1,11 @@
 #include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
-#include "sfg_trajectory_planner/engine/editor/scene_object_editor.hpp"
 #include "sfg_trajectory_planner/engine/editor/scene_object_editor_factory.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    SelectionContext::SelectionContext(const core::Scene &scene, const SceneObjectEditorFactory &editor_factory) : m_scene(scene), m_editor_factory(editor_factory)
+    SelectionContext::SelectionContext(const core::Scene &scene, std::function<void(core::SceneObject *)> on_selection_changed) : m_scene(scene), m_on_selection_changed(on_selection_changed)
     {
     }
 
@@ -27,11 +26,6 @@ namespace sfg_trajectory_planner::engine::editor
         return m_gizmo_mode;
     }
 
-    SceneObjectEditor *SelectionContext::get_selected_editor() const
-    {
-        return get_selected() == nullptr ? nullptr : m_selected_object_editor.get();
-    }
-
     void SelectionContext::set_selected(core::SceneObject *object)
     {
         auto uuid = object ? object->get_uuid() : uuids::uuid{};
@@ -41,15 +35,7 @@ namespace sfg_trajectory_planner::engine::editor
             return;
         }
         m_selected_object_uuid = uuid;
-
-        if (m_selected_object_uuid.is_nil())
-        {
-            m_selected_object_editor.reset();
-        }
-        else
-        {
-            m_selected_object_editor = m_editor_factory.create_object(object->get_type(), *this);
-        }
+        m_on_selection_changed(object);
     }
 
     void SelectionContext::set_gizmo_operation(ImGuizmo::OPERATION operation)

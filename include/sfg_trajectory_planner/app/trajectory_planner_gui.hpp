@@ -13,10 +13,10 @@
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
 #include "sfg_trajectory_planner/engine/core/scene_object_factory.hpp"
+#include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
 #include "sfg_trajectory_planner/engine/editor/inspector.hpp"
 #include "sfg_trajectory_planner/engine/editor/scene_hierarchy.hpp"
 #include "sfg_trajectory_planner/engine/editor/scene_object_editor_factory.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 #include "sfg_trajectory_planner/engine/editor/viewport.hpp"
 
 namespace sfg_trajectory_planner::app
@@ -69,7 +69,7 @@ namespace sfg_trajectory_planner::app
         engine::core::gfx::Camera m_camera;
         engine::core::gfx::Renderer m_renderer;
 
-        engine::editor::SelectionContext m_selection_context;
+        engine::editor::EditorContext m_editor_context;
 
         // GUI elements for the different windows.
         engine::editor::SceneHierarchy m_scene_hierarchy;

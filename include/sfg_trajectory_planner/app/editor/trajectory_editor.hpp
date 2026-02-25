@@ -5,12 +5,17 @@
 #include "sfg_agent_msgs/msg/trajectory.hpp"
 #include "sfg_trajectory_planner/engine/editor/scene_object_editor.hpp"
 
+namespace sfg_trajectory_planner::app::core
+{
+    class Trajectory;
+}
+
 namespace sfg_trajectory_planner::app::editor
 {
-    class TrajectoryEditor : public engine::editor::SceneObjectEditor
+    class TrajectoryEditor : public engine::editor::SceneObjectEditor<core::Trajectory>
     {
     public:
-        TrajectoryEditor(const engine::editor::SelectionContext &selection_context, rclcpp::Node *node);
+        TrajectoryEditor(const engine::editor::EditorContext &editor_context, rclcpp::Node *node);
         bool render_editor(engine::core::gfx::Renderer &renderer) override;
         bool render_inspector() override;
         void publish_trajectory(rclcpp::Time time);

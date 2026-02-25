@@ -4,56 +4,59 @@
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
-#include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
+#include "sfg_trajectory_planner/engine/core/scene_object.hpp"
+#include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    SceneObjectEditor::SceneObjectEditor(const SelectionContext &selection_context) : m_selection_context(selection_context)
+    SceneObjectEditor<void>::SceneObjectEditor(const EditorContext &editor_context) : m_editor_context(editor_context)
     {
     }
 
-    bool SceneObjectEditor::render_editor(core::gfx::Renderer &renderer)
+    bool SceneObjectEditor<void>::render_editor(core::gfx::Renderer &renderer)
     {
-        auto *selected_object = m_selection_context.get_selected();
+        auto *object = target();
 
         return render_transform_editor(
             renderer,
-            selected_object->get_transform_ls(),
-            selected_object->get_parent() ? selected_object->get_parent()->get_ls_to_ws_matrix() : glm::mat4(1.0f));
+            object->get_transform_ls(),
+            object->get_parent() ? object->get_parent()->get_ls_to_ws_matrix() : glm::mat4(1.0f));
     }
 
-    bool SceneObjectEditor::render_inspector()
+    bool SceneObjectEditor<void>::render_inspector()
     {
         auto changed = false;
-        auto *selected_object = m_selection_context.get_selected();
-
-        sfg_imgui_vendor::PushIdGuard guard(this);
-        auto name = selected_object->get_name();
+        auto *object = target();
+        auto name = object->get_name();
 
         if (ImGui::InputText("Name", &name))
         {
-            selected_object->set_name(name);
+            object->set_name(name);
             changed = true;
         }
 
-        auto type = selected_object->get_type();
+        auto type = object->get_type();
         ImGui::BeginDisabled();
         ImGui::InputText("Type", &type);
 
-        auto uuid = uuids::to_string(selected_object->get_uuid());
+        auto uuid = uuids::to_string(object->get_uuid());
         ImGui::InputText("UUID", &uuid);
         ImGui::EndDisabled();
 
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            changed |= render_transform_inspector(selected_object->get_transform_ls());
+            changed |= render_transform_inspector(object->get_transform_ls());
         }
         return changed;
     }
 
-    std::optional<core::Transform> SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, const core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix)
+    core::SceneObject *SceneObjectEditor<void>::target() const
+    {
+        return m_editor_context.m_selection_context.get_selected();
+    }
+
+    std::optional<core::Transform> SceneObjectEditor<void>::render_transform_editor(core::gfx::Renderer &renderer, const core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix)
     {
         std::optional<core::Transform> modified_transform_ls = transform_ls;
 
@@ -64,12 +67,12 @@ namespace sfg_trajectory_planner::engine::editor
         return std::nullopt;
     }
 
-    bool SceneObjectEditor::render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix)
+    bool SceneObjectEditor<void>::render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix)
     {
         auto changed = false;
         auto ws_matrix = ls_to_ws_matrix * transform_ls.get_matrix();
 
-        if (renderer.add_gizmo(ws_matrix, m_selection_context.get_gizmo_operation(), m_selection_context.get_gizmo_mode(), &transform_ls))
+        if (renderer.add_gizmo(ws_matrix, m_editor_context.m_selection_context.get_gizmo_operation(), m_editor_context.m_selection_context.get_gizmo_mode(), &transform_ls))
         {
             transform_ls.set_matrix(glm::inverse(ls_to_ws_matrix) * ws_matrix);
             changed = true;
@@ -77,7 +80,7 @@ namespace sfg_trajectory_planner::engine::editor
         return changed;
     }
 
-    std::optional<core::Transform> SceneObjectEditor::render_transform_inspector(const core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
+    std::optional<core::Transform> SceneObjectEditor<void>::render_transform_inspector(const core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
     {
         std::optional<core::Transform> modified_transform = transform;
 
@@ -88,7 +91,7 @@ namespace sfg_trajectory_planner::engine::editor
         return std::nullopt;
     }
 
-    bool SceneObjectEditor::render_transform_inspector(core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
+    bool SceneObjectEditor<void>::render_transform_inspector(core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)
     {
         auto changed = false;
 

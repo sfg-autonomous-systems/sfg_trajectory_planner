@@ -7,18 +7,18 @@
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
+#include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
 #include "sfg_trajectory_planner/engine/editor/scene_object_editor.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 #include "sfg_utils/ros_utils.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    Viewport::Viewport(rclcpp::Node *node, core::Scene &scene, core::gfx::Camera &camera, core::gfx::Renderer &renderer, SelectionContext &selection_context)
+    Viewport::Viewport(rclcpp::Node *node, core::Scene &scene, core::gfx::Camera &camera, core::gfx::Renderer &renderer, EditorContext &editor_context)
         : GuiElement(),
           m_scene(scene),
           m_camera(camera),
           m_renderer(renderer),
-          m_selection_context(selection_context)
+          m_editor_context(editor_context)
     {
         // Declare and retrieve ROS parameters.
         m_orbit_speed = sfg_utils::ros_utils::declare_parameter_if_not_declared(*node, "gui.viewport.camera.orbit_speed", m_orbit_speed);
@@ -45,9 +45,9 @@ namespace sfg_trajectory_planner::engine::editor
             render_object(*object);
         }
 
-        if (auto editor = m_selection_context.get_selected_editor())
+        if (m_editor_context.m_editor)
         {
-            editor->render_editor(m_renderer);
+            m_editor_context.m_editor->render_editor(m_renderer);
         }
 
         // Display the rendered image as an ImGui background.
@@ -88,22 +88,22 @@ namespace sfg_trajectory_planner::engine::editor
 
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_W))
         {
-            m_selection_context.set_gizmo_operation(ImGuizmo::TRANSLATE);
+            m_editor_context.m_selection_context.set_gizmo_operation(ImGuizmo::TRANSLATE);
         }
 
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_E))
         {
-            m_selection_context.set_gizmo_operation(ImGuizmo::ROTATE);
+            m_editor_context.m_selection_context.set_gizmo_operation(ImGuizmo::ROTATE);
         }
 
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_R))
         {
-            m_selection_context.set_gizmo_operation(ImGuizmo::SCALE);
+            m_editor_context.m_selection_context.set_gizmo_operation(ImGuizmo::SCALE);
         }
 
         if (!io.WantCaptureKeyboard && ImGui::IsKeyPressed(ImGuiKey_F))
         {
-            if (auto selected_object = m_selection_context.get_selected())
+            if (auto selected_object = m_editor_context.m_selection_context.get_selected())
             {
                 m_camera.focus_on(glm::vec3(selected_object->get_ls_to_ws_matrix()[3]));
             }
@@ -157,7 +157,7 @@ namespace sfg_trajectory_planner::engine::editor
 
             for (size_t i = 0; i < std::size(supported_gizmo_operations); ++i)
             {
-                if (m_selection_context.get_gizmo_operation() == supported_gizmo_operations[i])
+                if (m_editor_context.m_selection_context.get_gizmo_operation() == supported_gizmo_operations[i])
                 {
                     index = i;
                     break;
@@ -166,14 +166,14 @@ namespace sfg_trajectory_planner::engine::editor
 
             if (ImGui::Combo("Gizmo Operation", &index, supported_gizmo_operation_displaynames))
             {
-                m_selection_context.set_gizmo_operation(supported_gizmo_operations[index]);
+                m_editor_context.m_selection_context.set_gizmo_operation(supported_gizmo_operations[index]);
             }
 
-            index = magic_enum::enum_index(m_selection_context.get_gizmo_mode()).value();
+            index = magic_enum::enum_index(m_editor_context.m_selection_context.get_gizmo_mode()).value();
 
             if (ImGui::Combo("Gizmo Mode", &index, "Local\0World\0"))
             {
-                m_selection_context.set_gizmo_mode(magic_enum::enum_value<ImGuizmo::MODE>(index));
+                m_editor_context.m_selection_context.set_gizmo_mode(magic_enum::enum_value<ImGuizmo::MODE>(index));
             }
 
             index = magic_enum::enum_index(m_camera.get_projection()).value();

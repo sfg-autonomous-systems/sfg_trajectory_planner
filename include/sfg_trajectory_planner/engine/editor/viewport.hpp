@@ -23,7 +23,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    class SelectionContext;
+    class EditorContext;
 }
 
 namespace sfg_trajectory_planner::engine::editor
@@ -31,7 +31,7 @@ namespace sfg_trajectory_planner::engine::editor
     class Viewport : public sfg_imgui_vendor::GuiElement
     {
     public:
-        Viewport(rclcpp::Node *node, core::Scene &scene, core::gfx::Camera &camera, core::gfx::Renderer &renderer, SelectionContext &selection_context);
+        Viewport(rclcpp::Node *node, core::Scene &scene, core::gfx::Camera &camera, core::gfx::Renderer &renderer, EditorContext &editor_context);
         void render_internal() override;
 
     private:
@@ -46,6 +46,6 @@ namespace sfg_trajectory_planner::engine::editor
         core::Scene &m_scene;
         core::gfx::Camera &m_camera;
         core::gfx::Renderer &m_renderer;
-        SelectionContext &m_selection_context;
+        EditorContext &m_editor_context;
     };
 }

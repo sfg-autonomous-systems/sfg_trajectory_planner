@@ -10,7 +10,7 @@
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
+#include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
 
 namespace sfg_trajectory_planner::app::editor
 {
@@ -24,17 +24,17 @@ namespace sfg_trajectory_planner::app::editor
     static constexpr auto s_modify_waypoint_constraints_popup_id = "modify_waypoint_constraints_popup";
     static constexpr auto s_modify_waypoint_constraints_button_text = "C";
 
-    TrajectoryEditor::TrajectoryEditor(const engine::editor::SelectionContext &selection_context, rclcpp::Node *node) : SceneObjectEditor(selection_context), m_node(node)
+    TrajectoryEditor::TrajectoryEditor(const engine::editor::EditorContext &editor_context, rclcpp::Node *node) : SceneObjectEditor(editor_context), m_node(node)
     {
-        create_trajectory_publisher(dynamic_cast<core::Trajectory *>(m_selection_context.get_selected())->get_topic_name());
+        create_trajectory_publisher(target()->get_topic_name());
     }
 
     bool TrajectoryEditor::render_editor(engine::core::gfx::Renderer &renderer)
     {
         auto changed = SceneObjectEditor::render_editor(renderer);
-        auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
+        auto trajectory = target();
         auto ls_to_ws_matrix = trajectory->get_ls_to_ws_matrix();
-        auto gizmo_operation = m_selection_context.get_gizmo_operation();
+        auto gizmo_operation = m_editor_context.m_selection_context.get_gizmo_operation();
 
         if (m_selected_waypoint_index < trajectory->get_waypoint_count())
         {
@@ -93,7 +93,7 @@ namespace sfg_trajectory_planner::app::editor
             publish_trajectory(m_node->now());
         }
 
-        auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
+        auto trajectory = target();
         auto topic_name = trajectory->get_topic_name();
 
         if (ImGui::InputText("Topic Name", &topic_name))
@@ -251,7 +251,7 @@ namespace sfg_trajectory_planner::app::editor
             return;
         }
 
-        auto trajectory = dynamic_cast<core::Trajectory *>(m_selection_context.get_selected());
+        auto trajectory = dynamic_cast<core::Trajectory *>(m_editor_context.m_selection_context.get_selected());
         auto ls_to_ws_matrix = trajectory->get_ls_to_ws_matrix();
 
         auto msg = std::make_unique<sfg_agent_msgs::msg::Trajectory>();

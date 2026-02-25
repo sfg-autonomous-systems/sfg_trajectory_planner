@@ -5,6 +5,7 @@
 #include "sfg_trajectory_planner/app/editor/grid_editor.hpp"
 #include "sfg_trajectory_planner/app/editor/trajectory_editor.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
+#include "sfg_trajectory_planner/engine/editor/history/action.hpp"
 
 namespace sfg_trajectory_planner::app
 {
@@ -25,10 +26,8 @@ namespace sfg_trajectory_planner::app
         : GuiElement(),
           m_scene(m_scene_object_factory),
           m_renderer(m_camera, {0.0f, 0.0f, 0.0f}),
-          m_selection_context(m_scene, m_scene_object_editor_factory),
-          m_scene_hierarchy(m_scene, m_selection_context),
-          m_viewport(node, m_scene, m_camera, m_renderer, m_selection_context),
-          m_inspector(m_selection_context)
+          m_editor_context(m_scene, m_scene_object_editor_factory),
+          m_scene_hierarchy(m_scene, m_editor_context), m_viewport(node, m_scene, m_camera, m_renderer, m_editor_context), m_inspector(m_editor_context)
     {
         // Add supported scene object types to the factory.
         m_scene_object_factory.register_type<engine::core::SceneObject, engine::core::SceneObject>("Scene Object");
@@ -36,10 +35,10 @@ namespace sfg_trajectory_planner::app
         m_scene_object_factory.register_type<app::core::Grid, app::core::Grid>("Grid");
 
         // Do the same for scene object editors.
-        m_scene_object_editor_factory.register_type<engine::core::SceneObject, engine::editor::SceneObjectEditor>();
+        m_scene_object_editor_factory.register_type<engine::core::SceneObject, engine::editor::SceneObjectEditor<void>>();
         m_scene_object_editor_factory.register_type<app::core::Trajectory, app::editor::TrajectoryEditor>(
-            [node](const engine::editor::SelectionContext &selection_context)
-            { return std::make_unique<app::editor::TrajectoryEditor>(selection_context, node); });
+            [node](const engine::editor::EditorContext &editor_context)
+            { return std::make_unique<app::editor::TrajectoryEditor>(editor_context, node); });
         m_scene_object_editor_factory.register_type<app::core::Grid, app::editor::GridEditor>();
 
         m_scene.create_object<app::core::Grid>("Grid");
@@ -87,6 +86,20 @@ namespace sfg_trajectory_planner::app
                 }
                 ImGui::EndMenu();
             }
+
+            if (ImGui::BeginMenu("Edit"))
+            {
+                if (ImGui::MenuItem("Undo", nullptr, false, m_editor_context.m_undo.can_undo()))
+                {
+                    m_editor_context.m_undo.undo();
+                }
+
+                if (ImGui::MenuItem("Redo", nullptr, false, m_editor_context.m_undo.can_redo()))
+                {
+                    m_editor_context.m_undo.redo();
+                }
+                ImGui::EndMenu();
+            }
             ImGui::EndMenuBar();
         }
 
@@ -126,6 +139,16 @@ namespace sfg_trajectory_planner::app
             ImGui::EndTable();
         }
         ImGui::End();
+
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z, false))
+        {
+            m_editor_context.m_undo.undo();
+        }
+
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y, false))
+        {
+            m_editor_context.m_undo.redo();
+        }
     }
 
     void TrajectoryPlannerGui::file_dialog_callback(void *, const char *const *file_list, int)

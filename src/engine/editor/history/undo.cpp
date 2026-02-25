@@ -36,4 +36,14 @@ namespace sfg_trajectory_planner::engine::editor::history
         action->redo();
         m_undo_stack.push_back(std::move(action));
     }
+
+    bool Undo::can_undo() const
+    {
+        return !m_undo_stack.empty();
+    }
+
+    bool Undo::can_redo() const
+    {
+        return !m_redo_stack.empty();
+    }
 }

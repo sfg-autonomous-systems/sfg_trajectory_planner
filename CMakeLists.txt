@@ -87,6 +87,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "src/engine/core/scene_object.cpp"
   "src/engine/core/serialization/yaml_serializer.cpp"
   "src/engine/core/transform.cpp"
+  "src/engine/editor/editor_context.cpp"
   "src/engine/editor/history/create_object_action.cpp"
   "src/engine/editor/history/destroy_object_action.cpp"
   "src/engine/editor/history/record_object_action.cpp"

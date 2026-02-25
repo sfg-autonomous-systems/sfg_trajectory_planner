@@ -4,7 +4,7 @@
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    class SelectionContext;
+    class EditorContext;
 }
 
 namespace sfg_trajectory_planner::engine::editor
@@ -12,10 +12,10 @@ namespace sfg_trajectory_planner::engine::editor
     class Inspector : public sfg_imgui_vendor::GuiElement
     {
     public:
-        Inspector(const SelectionContext &selection_context);
+        Inspector(const EditorContext &editor_context);
         void render_internal() override;
 
     private:
-        const SelectionContext &m_selection_context;
+        const EditorContext &m_editor_context;
     };
 }

@@ -2,7 +2,7 @@
 
 #include "sfg_imgui_vendor/push_id_guard.hpp"
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
+#include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
 
 namespace sfg_trajectory_planner::engine::editor
 {
@@ -18,10 +18,10 @@ namespace sfg_trajectory_planner::engine::editor
     static constexpr auto s_remove_button_text = "-";
     static constexpr auto s_create_object_popup_id = "create_object_popup";
 
-    SceneHierarchy::SceneHierarchy(core::Scene &scene, SelectionContext &selection_context)
+    SceneHierarchy::SceneHierarchy(core::Scene &scene, EditorContext &editor_context)
         : GuiElement(),
           m_scene(scene),
-          m_selection_context(selection_context),
+          m_editor_context(editor_context),
           m_reparent_request({nullptr, nullptr})
     {
     }
@@ -88,9 +88,9 @@ namespace sfg_trajectory_planner::engine::editor
         {
             object.set_visible(visible);
 
-            if (!visible && m_selection_context.get_selected() == &object)
+            if (!visible && m_editor_context.m_selection_context.get_selected() == &object)
             {
-                m_selection_context.set_selected(nullptr);
+                m_editor_context.m_selection_context.set_selected(nullptr);
             }
         }
 
@@ -103,7 +103,7 @@ namespace sfg_trajectory_planner::engine::editor
             flags = flags | ImGuiTreeNodeFlags_Leaf;
         }
 
-        if (m_selection_context.get_selected() == &object)
+        if (m_editor_context.m_selection_context.get_selected() == &object)
         {
             flags = flags | ImGuiTreeNodeFlags_Selected;
         }
@@ -112,7 +112,7 @@ namespace sfg_trajectory_planner::engine::editor
 
         if (ImGui::IsItemClicked())
         {
-            m_selection_context.set_selected(&object);
+            m_editor_context.m_selection_context.set_selected(&object);
         }
 
         if (ImGui::BeginDragDropSource())
@@ -138,9 +138,9 @@ namespace sfg_trajectory_planner::engine::editor
 
         if (ImGui::Button(s_remove_button_text))
         {
-            if (m_selection_context.get_selected() == &object)
+            if (m_editor_context.m_selection_context.get_selected() == &object)
             {
-                m_selection_context.set_selected(nullptr);
+                m_editor_context.m_selection_context.set_selected(nullptr);
             }
             m_scene.destroy_object(&object);
 

@@ -5,11 +5,11 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
 #include "sfg_trajectory_planner/app/core/grid.hpp"
-#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
+#include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
 
 namespace sfg_trajectory_planner::app::editor
 {
-    GridEditor::GridEditor(const engine::editor::SelectionContext &selection_context) : SceneObjectEditor(selection_context)
+    GridEditor::GridEditor(const engine::editor::EditorContext &editor_context) : SceneObjectEditor(editor_context)
     {
     }
 
@@ -22,7 +22,7 @@ namespace sfg_trajectory_planner::app::editor
             return changed;
         }
 
-        auto grid = dynamic_cast<core::Grid *>(m_selection_context.get_selected());
+        auto grid = target();
         auto grid_size = grid->get_grid_size();
 
         if (ImGui::DragFloat2("Grid Size [m]", glm::value_ptr(grid_size), 0.1f))

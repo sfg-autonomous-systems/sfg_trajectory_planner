@@ -12,7 +12,7 @@ namespace sfg_trajectory_planner::engine::core
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    class SelectionContext;
+    class EditorContext;
 }
 
 namespace sfg_trajectory_planner::engine::editor
@@ -20,7 +20,7 @@ namespace sfg_trajectory_planner::engine::editor
     class SceneHierarchy : public sfg_imgui_vendor::GuiElement
     {
     public:
-        SceneHierarchy(core::Scene &scene, SelectionContext &selection_context);
+        SceneHierarchy(core::Scene &scene, EditorContext &editor_context);
         void render_internal() override;
 
     private:
@@ -34,7 +34,7 @@ namespace sfg_trajectory_planner::engine::editor
         void render_object_separator(core::SceneObject *parent);
 
         core::Scene &m_scene;
-        SelectionContext &m_selection_context;
+        EditorContext &m_editor_context;
         ReparentRequest m_reparent_request;
     };
 }

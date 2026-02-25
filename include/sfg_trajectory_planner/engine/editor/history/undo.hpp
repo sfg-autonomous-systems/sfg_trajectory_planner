@@ -17,6 +17,9 @@ namespace sfg_trajectory_planner::engine::editor::history
         void undo();
         void redo();
 
+        bool can_undo() const;
+        bool can_redo() const;
+
     private:
         std::vector<std::unique_ptr<IAction>> m_undo_stack;
         std::vector<std::unique_ptr<IAction>> m_redo_stack;
