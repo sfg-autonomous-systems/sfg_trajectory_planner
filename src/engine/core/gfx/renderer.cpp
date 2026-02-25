@@ -257,11 +257,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     GLuint Renderer::render()
     {
-        if (m_camera.get_cs_to_ss_vector().z > 0 && m_camera.get_cs_to_ss_vector().w > 0)
-        {
-            m_framebuffer.resize_if_needed(m_camera.get_cs_to_ss_vector().zw());
-        }
-
+        m_framebuffer.resize_if_needed(m_camera.get_cs_to_ss_vector().zw());
         m_framebuffer.bind();
         m_framebuffer.clear();
 

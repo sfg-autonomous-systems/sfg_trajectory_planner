@@ -45,7 +45,7 @@ namespace sfg_trajectory_planner::engine::core
     template <typename KeyType, typename DerivedType>
     std::unique_ptr<DerivedType> GenericFactory<BaseType, Args...>::create_object(Args... args) const
     {
-        return std::dynamic_pointer_cast<DerivedType>(create_object(SceneObject::get_type<KeyType>(), std::forward<Args>(args)...));
+        return std::static_pointer_cast<DerivedType>(create_object(SceneObject::get_type<KeyType>(), std::forward<Args>(args)...));
     }
 
     template <typename BaseType, typename... Args>

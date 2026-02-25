@@ -37,7 +37,7 @@ namespace sfg_trajectory_planner::engine::core
         template <typename ObjectType>
         static std::string get_type();
 
-        SceneObject(ConstructionKey key, Scene &scene, uuids::uuid uuid);
+        SceneObject(ConstructionKey key, const Scene &scene, uuids::uuid uuid);
         SceneObject(const SceneObject &) = delete;
         SceneObject &operator=(const SceneObject &) = delete;
         SceneObject(SceneObject &&) = delete;
@@ -52,26 +52,27 @@ namespace sfg_trajectory_planner::engine::core
         std::string get_name() const;
         std::string get_type() const;
         uuids::uuid get_uuid() const;
-
+        bool is_visible() const;
         Transform &get_transform_ls();
         glm::mat4 get_ls_to_ws_matrix() const;
         glm::mat4 get_ws_to_ls_matrix() const;
         SceneObject *get_parent() const;
         const std::vector<SceneObject *> &get_children() const;
-        bool is_visible() const;
+        bool is_ancestor_of(const SceneObject *object) const;
+        bool is_descendant_of(const SceneObject *object) const;
 
         void set_name(std::string name);
-        void set_parent(SceneObject *parent);
         void set_visible(bool visible);
+        void set_parent(SceneObject *parent);
 
     protected:
-        Scene &m_scene;
+        const Scene &m_scene;
         std::string m_name;
         const uuids::uuid m_uuid;
+        bool m_visible;
         Transform m_transform_ls;
         SceneObject *m_parent;
         std::vector<SceneObject *> m_children;
-        bool m_visible;
     };
 }
 

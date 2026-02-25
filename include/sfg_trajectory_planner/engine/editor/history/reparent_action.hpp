@@ -7,6 +7,7 @@
 namespace sfg_trajectory_planner::engine::core
 {
     class Scene;
+    class SceneObject;
 }
 
 namespace sfg_trajectory_planner::engine::editor::history
@@ -14,7 +15,7 @@ namespace sfg_trajectory_planner::engine::editor::history
     class ReparentAction : public IAction
     {
     public:
-        ReparentAction(const core::Scene &scene, uuids::uuid child_uuid, uuids::uuid old_parent_uuid, uuids::uuid new_parent_uuid);
+        ReparentAction(const core::Scene &scene, core::SceneObject *child, core::SceneObject *old_parent, core::SceneObject *new_parent);
         void redo() override;
         void undo() override;
 

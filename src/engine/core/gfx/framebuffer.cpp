@@ -82,7 +82,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     void FrameBuffer::resize_if_needed(glm::ivec2 size)
     {
-        if (size == m_size)
+        if (size == m_size || size.x <= 0 || size.y <= 0)
         {
             return;
         }
