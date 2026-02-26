@@ -10,16 +10,22 @@ namespace sfg_trajectory_planner::engine::core
     class SceneObject;
 }
 
+namespace sfg_trajectory_planner::engine::editor
+{
+    class SelectionContext;
+}
+
 namespace sfg_trajectory_planner::engine::editor::history
 {
     class CreateObjectAction : public IAction
     {
     public:
-        CreateObjectAction(core::Scene &scene, std::string type, std::string name, core::SceneObject *parent);
+        CreateObjectAction(SelectionContext &selection_context, core::Scene &scene, std::string type, std::string name, core::SceneObject *parent);
         void redo() override;
         void undo() override;
 
     private:
+        SelectionContext &m_selection_context;
         core::Scene &m_scene;
         std::string m_type;
         std::string m_name;

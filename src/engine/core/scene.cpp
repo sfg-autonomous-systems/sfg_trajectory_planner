@@ -128,6 +128,7 @@ namespace sfg_trajectory_planner::engine::core
             return nullptr;
         }
 
+        assert(m_objects.find(object_ptr->get_uuid()) == m_objects.end() && "Factory created an object with a UUID that already exists in the scene. This should never happen.");
         m_objects[object->get_uuid()] = std::move(object);
         object_ptr->set_name(name);
         object_ptr->set_parent(parent ? parent : m_root.get());

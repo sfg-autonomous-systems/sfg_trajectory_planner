@@ -57,7 +57,13 @@ namespace sfg_trajectory_planner::engine::editor
                 {
                     if (ImGui::MenuItem(type.m_display_name.c_str()))
                     {
-                        m_editor_context.m_undo.execute(std::make_unique<history::CreateObjectAction>(m_scene, type.m_type, type.m_display_name, m_editor_context.m_selection_context.get_selected()));
+                        m_editor_context.m_undo.execute(
+                            std::make_unique<history::CreateObjectAction>(
+                                m_editor_context.m_selection_context,
+                                m_scene,
+                                type.m_type,
+                                type.m_display_name,
+                                m_editor_context.m_selection_context.get_selected()));
                     }
                 }
                 ImGui::EndPopup();
@@ -141,15 +147,7 @@ namespace sfg_trajectory_planner::engine::editor
 
         if (ImGui::Button(s_remove_button_text))
         {
-            auto selected_object = m_editor_context.m_selection_context.get_selected();
-
-            // We need to check if the currently selected object is being deleted. Since the scene doesn't just destroy the object itself
-            // but also all of its descendants, we also need to clear the selection if any of the descendants of the deleted object is currently selected.
-            if (selected_object == &object || object.is_ancestor_of(selected_object))
-            {
-                m_editor_context.m_selection_context.set_selected(nullptr);
-            }
-            m_editor_context.m_undo.execute(std::make_unique<history::DestroyObjectAction>(m_scene, &object));
+            m_editor_context.m_undo.execute(std::make_unique<history::DestroyObjectAction>(m_editor_context.m_selection_context, m_scene, &object));
 
             if (expanded)
             {

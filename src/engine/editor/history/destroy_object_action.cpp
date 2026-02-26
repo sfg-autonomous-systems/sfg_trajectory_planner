@@ -2,41 +2,39 @@
 
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
+#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner::engine::editor::history
 {
-    DestroyObjectAction::DestroyObjectAction(core::Scene &scene, core::SceneObject *object)
-        : m_scene(scene),
-          m_parent_uuid(object && object->get_parent() ? object->get_parent()->get_uuid() : uuids::uuid{}),
-          m_object_uuid(object ? object->get_uuid() : uuids::uuid{})
+    DestroyObjectAction::DestroyObjectAction(SelectionContext &selection_context, core::Scene &scene, core::SceneObject *object)
+        : m_selection_context(selection_context),
+          m_scene(scene),
+          // It's responsibility of the caller to ensure that the object is not null.
+          m_object_uuid(object->get_uuid()),
+          m_parent_uuid(object->get_parent() ? object->get_parent()->get_uuid() : uuids::uuid{})
     {
-        if (object)
-        {
-            core::serialization::YamlSerializer serializer;
-            m_scene.serialize_object(object, &serializer);
-            m_serialized_data = serializer.to_bytes();
-        }
+        core::serialization::YamlSerializer serializer;
+        m_scene.serialize_object(object, &serializer);
+        m_serialized_data = serializer.to_bytes();
     }
 
     void DestroyObjectAction::redo()
     {
         auto object = m_scene.find_object_by_uuid(m_object_uuid);
+        auto selected_object = m_selection_context.get_selected();
 
-        if (!object)
+        // We need to check if the currently selected object is being deleted. Since the scene doesn't just destroy the object itself
+        // but also all of its descendants, we also need to clear the selection if any of the descendants of the deleted object is currently selected.
+        if (selected_object == object || object->is_ancestor_of(selected_object))
         {
-            return;
+            m_selected_object_uuid = selected_object->get_uuid();
+            m_selection_context.set_selected(nullptr);
         }
         m_scene.destroy_object(object);
     }
 
     void DestroyObjectAction::undo()
     {
-        auto object = m_scene.find_object_by_uuid(m_object_uuid);
-
-        if (object)
-        {
-            return;
-        }
         core::serialization::YamlSerializer serializer;
         serializer.from_bytes(m_serialized_data);
         m_scene.deserialize_object(m_scene.find_object_by_uuid(m_parent_uuid), &serializer);

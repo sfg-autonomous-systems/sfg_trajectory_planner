@@ -2,11 +2,13 @@
 
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
+#include "sfg_trajectory_planner/engine/editor/selection_context.hpp"
 
 namespace sfg_trajectory_planner::engine::editor::history
 {
-    CreateObjectAction::CreateObjectAction(core::Scene &scene, std::string type, std::string name, core::SceneObject *parent)
-        : m_scene(scene),
+    CreateObjectAction::CreateObjectAction(SelectionContext &selection_context, core::Scene &scene, std::string type, std::string name, core::SceneObject *parent)
+        : m_selection_context(selection_context),
+          m_scene(scene),
           m_type(std::move(type)),
           m_name(std::move(name)),
           m_parent_uuid(parent ? parent->get_uuid() : uuids::uuid{})
@@ -45,6 +47,13 @@ namespace sfg_trajectory_planner::engine::editor::history
         if (!object)
         {
             return;
+        }
+
+        auto selected_object = m_selection_context.get_selected();
+
+        if (selected_object == object || object->is_ancestor_of(selected_object))
+        {
+            m_selection_context.set_selected(nullptr);
         }
         m_scene.destroy_object(object);
     }

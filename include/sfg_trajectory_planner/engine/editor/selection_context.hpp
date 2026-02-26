@@ -32,7 +32,7 @@ namespace sfg_trajectory_planner::engine::editor
         const core::Scene &m_scene;
         std::function<void(core::SceneObject *)> m_on_selection_changed;
 
-        uuids::uuid m_selected_object_uuid;
+        uuids::uuid m_object_uuid;
         ImGuizmo::MODE m_gizmo_mode = ImGuizmo::LOCAL;
         ImGuizmo::OPERATION m_gizmo_operation = ImGuizmo::TRANSLATE;
     };
