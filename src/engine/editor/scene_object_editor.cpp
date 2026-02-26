@@ -78,15 +78,24 @@ namespace sfg_trajectory_planner::engine::editor
 
     bool SceneObjectEditor<void>::render_transform_editor(core::gfx::Renderer &renderer, core::Transform &transform_ls, const glm::mat4 &ls_to_ws_matrix)
     {
-        auto changed = false;
+        auto dirty = false;
+        auto record_object = false;
         auto ws_matrix = ls_to_ws_matrix * transform_ls.get_matrix();
 
-        if (renderer.add_gizmo(ws_matrix, m_editor_context.m_selection_context.get_gizmo_operation(), m_editor_context.m_selection_context.get_gizmo_mode(), &transform_ls))
+        auto was_using = ImGuizmo::IsUsingAny();
+        dirty |= renderer.add_gizmo(ws_matrix, m_editor_context.m_selection_context.get_gizmo_operation(), m_editor_context.m_selection_context.get_gizmo_mode(), &transform_ls);
+        record_object |= !was_using && ImGuizmo::IsUsingAny();
+
+        if (record_object)
+        {
+            m_editor_context.m_undo.execute(std::make_unique<engine::editor::history::RecordObjectAction>(target()));
+        }
+
+        if (dirty)
         {
             transform_ls.set_matrix(glm::inverse(ls_to_ws_matrix) * ws_matrix);
-            changed = true;
         }
-        return changed;
+        return dirty;
     }
 
     std::optional<core::Transform> SceneObjectEditor<void>::render_transform_inspector(const core::Transform &transform, bool can_translate, bool can_rotate, bool can_scale, bool render_labels)

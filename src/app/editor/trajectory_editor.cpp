@@ -11,6 +11,7 @@
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/utils.hpp"
 #include "sfg_trajectory_planner/engine/editor/editor_context.hpp"
+#include "sfg_trajectory_planner/engine/editor/history/record_object_action.hpp"
 
 namespace sfg_trajectory_planner::app::editor
 {
@@ -53,7 +54,8 @@ namespace sfg_trajectory_planner::app::editor
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
-            auto did_select_waypoint = false;
+            auto distance_from_camera_squared = std::numeric_limits<float>::max();
+            glm::vec3 camera_position_ws = glm::inverse(renderer.get_camera().get_ws_to_vs_matrix())[3].xyz();
 
             for (size_t index = 0; index < trajectory->get_waypoint_count(); index++)
             {
@@ -61,16 +63,16 @@ namespace sfg_trajectory_planner::app::editor
                 auto screen_position = renderer.get_camera().world_to_screen_point(waypoint_position);
                 auto can_select_waypoint = !ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny();
                 auto is_hovering_waypoint = glm::length(screen_position.xy() - glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y)) < 10.0f && ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                auto distance_squared = glm::length2(camera_position_ws - waypoint_position);
 
-                if (can_select_waypoint && is_hovering_waypoint)
+                if (can_select_waypoint && is_hovering_waypoint && distance_squared < distance_from_camera_squared)
                 {
                     m_selected_waypoint_index = index;
-                    did_select_waypoint = true;
-                    break;
+                    distance_from_camera_squared = distance_squared;
                 }
             }
 
-            if (!did_select_waypoint && !ImGuizmo::IsUsingAny())
+            if (distance_from_camera_squared == std::numeric_limits<float>::max() && !ImGuizmo::IsUsingAny())
             {
                 m_selected_waypoint_index = std::numeric_limits<size_t>::max();
             }
@@ -92,38 +94,39 @@ namespace sfg_trajectory_planner::app::editor
         }
 
         auto trajectory = target();
+        auto dirty = false;
+        auto record_object = false;
+        auto add_waypoint = false;
         auto topic_name = trajectory->get_topic_name();
-
-        if (ImGui::InputText("Topic Name", &topic_name))
-        {
-            trajectory->set_topic_name(topic_name);
-        }
-
-        if (ImGui::IsItemDeactivatedAfterEdit())
-        {
-            create_trajectory_publisher(trajectory->get_topic_name());
-        }
-
         auto frame_id = trajectory->get_frame_id();
-
-        if (ImGui::InputText("Frame ID", &frame_id))
-        {
-            trajectory->set_frame_id(frame_id);
-        }
-
         auto time_from_start = trajectory->get_time_from_start();
-
-        if (ImGui::DragFloat("Time from start [s]", &time_from_start, 0.01f, 0.0f, std::numeric_limits<float>::max()))
-        {
-            trajectory->set_time_from_start(time_from_start);
-        }
-
         auto color = trajectory->get_color();
 
-        if (ImGui::ColorEdit3("Color", glm::value_ptr(color)))
+        dirty |= ImGui::InputText("Topic Name", &topic_name);
+        record_object |= ImGui::IsItemActivated();
+
+        auto was_editing = ImGui::IsItemDeactivatedAfterEdit();
+        auto is_editing = ImGui::IsItemActive();
+        auto state_mismatch = (trajectory->get_topic_name() != m_trajectory_publisher->get_topic_name());
+
+        // We need to recreate the publisher if...
+        //     - the topic name was changed and the user has finished editing the text field.
+        //     - there is a mismatch between the trajectory's topic name and the publisher's
+        //       topic name which is not caused by the user currently editing the text field.
+        //       This can happen when the user undos a change to the topic name.
+        if (was_editing || (state_mismatch && !is_editing))
         {
-            trajectory->set_color(color);
+            create_trajectory_publisher(topic_name);
         }
+
+        dirty |= ImGui::InputText("Frame ID", &frame_id);
+        record_object |= ImGui::IsItemActivated();
+
+        dirty |= ImGui::DragFloat("Time from start [s]", &time_from_start, 0.01f, 0.0f, std::numeric_limits<float>::max());
+        record_object |= ImGui::IsItemActivated();
+
+        dirty |= ImGui::ColorEdit3("Color", glm::value_ptr(color));
+        record_object |= ImGui::IsItemActivated();
 
         if (ImGui::BeginTable("waypoints_table", 4, s_waypoints_table_flags))
         {
@@ -144,10 +147,9 @@ namespace sfg_trajectory_planner::app::editor
 
             ImGui::TableNextColumn();
 
-            if (ImGui::Button(s_add_button_text))
-            {
-                trajectory->add_waypoint();
-            }
+            add_waypoint = ImGui::Button(s_add_button_text);
+            dirty |= add_waypoint;
+            record_object |= ImGui::IsItemActivated();
             ImGui::SetItemTooltip("Add Waypoint");
 
             for (size_t index = 0; index < trajectory->get_waypoint_count(); index++)
@@ -168,15 +170,17 @@ namespace sfg_trajectory_planner::app::editor
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-1.0f);
 
+                auto waypoint_dirty = false;
+                auto waypoint_record_object = false;
+                auto remove_waypoint = false;
                 auto time_from_last = trajectory->get_waypoint_time_from_last(index);
+                auto transform_ls = trajectory->get_waypoint_transform_ls(index);
+                auto constraints = trajectory->get_waypoint_constraints(index);
 
-                if (ImGui::DragFloat("##time_from_last", &time_from_last, 0.01f, 0.0f, std::numeric_limits<float>::max()))
-                {
-                    trajectory->set_waypoint_time_from_last(index, time_from_last);
-                }
+                waypoint_dirty |= ImGui::DragFloat("##time_from_last", &time_from_last, 0.01f, 0.0f, std::numeric_limits<float>::max());
+                waypoint_record_object |= ImGui::IsItemActivated();
 
                 ImGui::TableNextColumn();
-                auto transform_ls = trajectory->get_waypoint_transform_ls(index);
 
                 if (render_transform_inspector(transform_ls, trajectory->can_translate_waypoint(index), trajectory->can_rotate_waypoint(index), trajectory->can_scale_waypoint(index), false))
                 {
@@ -185,18 +189,9 @@ namespace sfg_trajectory_planner::app::editor
 
                 ImGui::TableNextColumn();
 
-                if (ImGui::Button(s_remove_button_text))
-                {
-                    if (m_selected_waypoint_index == index)
-                    {
-                        m_selected_waypoint_index = std::numeric_limits<size_t>::max();
-                    }
-                    else if (m_selected_waypoint_index > index)
-                    {
-                        m_selected_waypoint_index--;
-                    }
-                    trajectory->remove_waypoint(index);
-                }
+                remove_waypoint = ImGui::Button(s_remove_button_text);
+                waypoint_dirty |= remove_waypoint;
+                waypoint_record_object |= ImGui::IsItemActivated();
                 ImGui::SetItemTooltip("Remove Waypoint");
 
                 if (ImGui::Button(s_modify_waypoint_constraints_button_text))
@@ -208,7 +203,6 @@ namespace sfg_trajectory_planner::app::editor
                 if (ImGui::BeginPopup(s_modify_waypoint_constraints_popup_id))
                 {
                     using namespace magic_enum::bitwise_operators;
-                    auto constraints = trajectory->get_waypoint_constraints(index);
 
                     for (auto constraint : magic_enum::enum_values<core::Waypoint::Constraints>())
                     {
@@ -218,18 +212,62 @@ namespace sfg_trajectory_planner::app::editor
                         {
                             if (selected)
                             {
-                                trajectory->set_waypoint_constraints(index, trajectory->get_waypoint_constraints(index) & ~constraint);
+                                constraints &= ~constraint;
                             }
                             else
                             {
-                                trajectory->set_waypoint_constraints(index, trajectory->get_waypoint_constraints(index) | constraint);
+                                constraints |= constraint;
                             }
+                            waypoint_dirty = true;
+                            waypoint_record_object |= ImGui::IsItemActivated();
                         }
                     }
                     ImGui::EndPopup();
                 }
+
+                if (waypoint_record_object)
+                {
+                    m_editor_context.m_undo.execute(std::make_unique<engine::editor::history::RecordObjectAction>(trajectory));
+                }
+
+                if (waypoint_dirty)
+                {
+                    trajectory->set_waypoint_time_from_last(index, time_from_last);
+                    trajectory->set_waypoint_constraints(index, constraints);
+
+                    if (remove_waypoint)
+                    {
+                        if (m_selected_waypoint_index == index)
+                        {
+                            m_selected_waypoint_index = std::numeric_limits<size_t>::max();
+                        }
+                        else if (m_selected_waypoint_index > index)
+                        {
+                            m_selected_waypoint_index--;
+                        }
+                        trajectory->remove_waypoint(index--);
+                    }
+                }
             }
             ImGui::EndTable();
+        }
+
+        if (record_object)
+        {
+            m_editor_context.m_undo.execute(std::make_unique<engine::editor::history::RecordObjectAction>(trajectory));
+        }
+
+        if (dirty)
+        {
+            trajectory->set_topic_name(topic_name);
+            trajectory->set_frame_id(frame_id);
+            trajectory->set_time_from_start(time_from_start);
+            trajectory->set_color(color);
+
+            if (add_waypoint)
+            {
+                trajectory->add_waypoint();
+            }
         }
     }
 
