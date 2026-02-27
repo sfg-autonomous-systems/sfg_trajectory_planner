@@ -1,11 +1,15 @@
 #include "sfg_trajectory_planner/app/trajectory_planner_gui.hpp"
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 #include "sfg_trajectory_planner/app/core/grid.hpp"
 #include "sfg_trajectory_planner/app/core/trajectory.hpp"
 #include "sfg_trajectory_planner/app/editor/grid_editor.hpp"
 #include "sfg_trajectory_planner/app/editor/trajectory_editor.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
 #include "sfg_trajectory_planner/engine/editor/history/action.hpp"
+
+#define STRINGIFY(x) #x
 
 namespace sfg_trajectory_planner::app
 {
@@ -23,9 +27,9 @@ namespace sfg_trajectory_planner::app
     TrajectoryPlannerGui::FileDialogResult TrajectoryPlannerGui::s_file_dialog_result;
 
     TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
-        : GuiElement(),
+        : m_asset_locator(ament_index_cpp::get_package_share_directory(STRINGIFY(sfg_trajectory_planner)) + "/assets"),
           m_scene(m_scene_object_factory),
-          m_renderer(m_camera, {0.0f, 0.0f, 0.0f}),
+          m_renderer(m_asset_locator, m_camera, {0.0f, 0.0f, 0.0f}),
           m_editor_context(m_scene, m_scene_object_editor_factory),
           m_scene_hierarchy(m_scene, m_editor_context), m_viewport(node, m_scene, m_camera, m_renderer, m_editor_context), m_inspector(m_editor_context)
     {
@@ -211,3 +215,5 @@ namespace sfg_trajectory_planner::app
         }
     }
 }
+
+#undef STRINGIFY

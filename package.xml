@@ -7,6 +7,7 @@
   <maintainer email="constantin.blessing@hs-esslingen.de">Constantin Blessing</maintainer>
   <license>MIT</license>
 
+  <depend>ament_index_cpp</depend>
   <depend>fmt</depend>
   <depend>magic_enum</depend>
   <depend>rclcpp</depend>

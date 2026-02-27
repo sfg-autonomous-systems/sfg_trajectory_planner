@@ -1,72 +1,13 @@
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 
+#include <filesystem>
 #include <glm/gtc/type_ptr.hpp>
 #include <SDL3/SDL.h>
 #include <stdexcept>
-#include <string>
-#include <vector>
 
+#include "sfg_trajectory_planner/engine/core/asset_locator.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/fonts/roboto_regular.hpp"
-
-static constexpr auto s_line_vertex_shader_source = R"(
-#version 330 core
-layout (location = 0) in vec3 a_PositionWs;
-layout (location = 1) in vec4 a_Color;
-
-uniform mat4 u_WsToCsMatrix;
-
-out vec4 v_Color;
-
-void main() {
-    v_Color = a_Color;
-    gl_Position = u_WsToCsMatrix * vec4(a_PositionWs, 1.0);
-}
-)";
-static constexpr auto s_line_fragment_shader_source = R"(
-#version 330 core
-in vec4 v_Color;
-out vec4 f_Color;
-
-void main() {
-    f_Color = v_Color;
-}
-)";
-
-static constexpr auto s_text_vertex_shader_source = R"(
-#version 330 core
-layout(location=0) in vec3 a_PositionWs; 
-layout(location=1) in vec2 a_UV; 
-layout(location=2) in vec4 a_Color;
-
-uniform mat4 u_WsToCsMatrix; 
-
-out vec2 v_UV; 
-out vec4 v_Color;
-
-void main() { 
-    v_UV = a_UV; 
-    v_Color = a_Color; 
-    gl_Position = u_WsToCsMatrix * vec4(a_PositionWs, 1.0); 
-})";
-static constexpr auto s_text_fragment_shader_source = R"(
-#version 330 core
-in vec2 v_UV; 
-in vec4 v_Color; 
-
-out vec4 f_Color;
-
-uniform sampler2D u_FontAtlas; 
-
-void main() { 
-    float alpha = texture(u_FontAtlas, v_UV).r;
-    
-    if(alpha < 0.1)
-    {
-        discard;
-    }
-    f_Color = vec4(v_Color.rgb, v_Color.a * alpha); 
-})";
+#include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
@@ -88,14 +29,17 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(TextVertex), (void *)offsetof(TextVertex, m_color));
     }
 
-    Renderer::Renderer(const Camera &camera, glm::vec3 clear_color)
+    Renderer::Renderer(
+        const AssetLocator &asset_locator,
+        const Camera &camera,
+        glm::vec3 clear_color)
         : m_camera(camera),
           m_framebuffer(clear_color, m_camera.get_cs_to_ss_vector().zw()),
           m_line_mesh(Mesh<LineVertex>::Topology::Lines),
-          m_line_shader(s_line_vertex_shader_source, s_line_fragment_shader_source),
+          m_line_shader(asset_locator.load_asset<Shader>(std::filesystem::path("shaders/line.vert"), std::filesystem::path("shaders/line.frag"))),
           m_text_mesh(Mesh<TextVertex>::Topology::Triangles),
-          m_text_shader(s_text_vertex_shader_source, s_text_fragment_shader_source),
-          m_text_font(fonts::roboto_regular_ttf, 64.0f)
+          m_text_shader(asset_locator.load_asset<Shader>(std::filesystem::path("shaders/text.vert"), std::filesystem::path("shaders/text.frag"))),
+          m_text_font(asset_locator.load_asset<TextFont>(std::filesystem::path("fonts/roboto_regular.ttf"), 64.0f))
     {
         ImGuizmo::AllowAxisFlip(false);
     }
@@ -218,12 +162,12 @@ namespace sfg_trajectory_planner::engine::core::gfx
         auto projection_scaling = m_camera.get_vs_to_cs_matrix()[1][1];
         auto viewport_height_ss = m_camera.get_cs_to_ss_vector().w;
         auto pixel_height_ws = depth_vs / (projection_scaling * viewport_height_ss * 0.5f);
-        auto font_scale_factor = font_size_ss / m_text_font.get_baked_height();
+        auto font_scale_factor = font_size_ss / m_text_font->get_baked_height();
         auto scale = pixel_height_ws * font_scale_factor;
 
         glm::vec3 camera_right_ws = {ws_to_vs_matrix[0][0], ws_to_vs_matrix[1][0], ws_to_vs_matrix[2][0]};
         glm::vec3 camera_up_ws = {ws_to_vs_matrix[0][1], ws_to_vs_matrix[1][1], ws_to_vs_matrix[2][1]};
-        glm::vec2 offset = m_text_font.text_anchor_to_offset(text, anchor);
+        glm::vec2 offset = m_text_font->text_anchor_to_offset(text, anchor);
 
         stbtt_aligned_quad quad;
         auto x_cursor = 0.0f;
@@ -234,7 +178,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         for (char character : text)
         {
-            m_text_font.get_character_quad(character, &x_cursor, &y_cursor, &quad);
+            m_text_font->get_character_quad(character, &x_cursor, &y_cursor, &quad);
 
             float min_x = (quad.x0 + offset.x) * scale;
             float max_x = (quad.x1 + offset.x) * scale;
@@ -265,15 +209,15 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         if (!m_line_mesh.empty())
         {
-            m_line_shader.bind();
-            glUniformMatrix4fv(glGetUniformLocation(m_line_shader.get_id(), "u_WsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ws_to_cs_matrix));
+            m_line_shader->bind();
+            glUniformMatrix4fv(glGetUniformLocation(m_line_shader->get_id(), "u_WsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ws_to_cs_matrix));
 
             if (m_line_mesh.get_topology() == Mesh<LineVertex>::Topology::Lines)
             {
                 glLineWidth(2.0f);
             }
             m_line_mesh.render();
-            m_line_shader.unbind();
+            m_line_shader->unbind();
             m_line_mesh.clear();
         }
 
@@ -297,14 +241,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
                 current_index += 4;
             }
 
-            m_text_shader.bind();
+            m_text_shader->bind();
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, m_text_font.get_font_atlas());
-            glUniform1i(glGetUniformLocation(m_text_shader.get_id(), "u_FontAtlas"), 0);
-            glUniformMatrix4fv(glGetUniformLocation(m_text_shader.get_id(), "u_WsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ws_to_cs_matrix));
+            glBindTexture(GL_TEXTURE_2D, m_text_font->get_font_atlas());
+            glUniform1i(glGetUniformLocation(m_text_shader->get_id(), "u_FontAtlas"), 0);
+            glUniformMatrix4fv(glGetUniformLocation(m_text_shader->get_id(), "u_WsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ws_to_cs_matrix));
 
             m_text_mesh.render();
-            m_text_shader.unbind();
+            m_text_shader->unbind();
             m_text_mesh.clear();
             m_render_text_requests.clear();
         }

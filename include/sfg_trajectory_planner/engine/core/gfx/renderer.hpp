@@ -11,12 +11,17 @@
 
 #include "sfg_trajectory_planner/engine/core/gfx/framebuffer.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/mesh.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/text_font.hpp"
+
+namespace sfg_trajectory_planner::engine::core
+{
+    class AssetLocator;
+}
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     class Camera;
+    class Shader;
 }
 
 namespace sfg_trajectory_planner::engine::core::gfx
@@ -24,7 +29,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class Renderer
     {
     public:
-        Renderer(const Camera &camera, glm::vec3 clear_color = glm::vec3(0.0f, 0.0f, 0.0f));
+        Renderer(
+            const AssetLocator &asset_locator,
+            const Camera &camera,
+            glm::vec3 clear_color = glm::vec3(0.0f, 0.0f, 0.0f));
 
         const Camera &get_camera() const;
 
@@ -82,12 +90,12 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         // Line related resources.
         Mesh<LineVertex> m_line_mesh;
-        Shader m_line_shader;
+        std::shared_ptr<Shader> m_line_shader;
 
         // Text related resources.
         std::vector<RenderTextRequest> m_render_text_requests;
         Mesh<TextVertex> m_text_mesh;
-        Shader m_text_shader;
-        TextFont m_text_font;
+        std::shared_ptr<Shader> m_text_shader;
+        std::shared_ptr<TextFont> m_text_font;
     };
 }

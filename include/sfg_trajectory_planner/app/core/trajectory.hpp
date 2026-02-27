@@ -8,7 +8,7 @@ namespace sfg_trajectory_planner::app::core
     class Trajectory : public engine::core::SceneObject
     {
     public:
-        Trajectory(engine::core::SceneObject::ConstructionKey key, engine::core::Scene &scene, uuids::uuid uuid);
+        Trajectory(engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid);
         void serialize(engine::core::serialization::AbstractSerializer *serializer) const override;
         void deserialize(engine::core::serialization::AbstractSerializer *serializer) override;
         void render_object(engine::core::gfx::Renderer &renderer) override;

@@ -1,10 +1,32 @@
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 
+#include <fstream>
 #include <stdexcept>
 #include <string>
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
+    Shader::Shader(std::filesystem::path vertex_source_filepath, std::filesystem::path fragment_source_filepath)
+    {
+        std::string vertex_source;
+        std::string fragment_source;
+
+        try
+        {
+            using Iterator = std::istreambuf_iterator<char>;
+
+            std::ifstream vertex_source_file(vertex_source_filepath);
+            std::ifstream fragment_source_file(fragment_source_filepath);
+            vertex_source = std::string((Iterator(vertex_source_file)), Iterator());
+            fragment_source = std::string((Iterator(fragment_source_file)), Iterator());
+        }
+        catch (const std::exception &exception)
+        {
+            throw std::runtime_error(std::string("Failed to read shader source files: ") + exception.what());
+        }
+        *this = Shader(vertex_source.c_str(), fragment_source.c_str());
+    }
+
     Shader::Shader(const char *vertex_source, const char *fragment_source)
     {
         auto success = 0;

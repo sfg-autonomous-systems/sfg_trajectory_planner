@@ -12,6 +12,7 @@ cmake_policy(SET CMP0079 NEW)
 # Find dependencies.                                                                                     #
 # ########################################################################################################
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -83,6 +84,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "src/engine/core/gfx/shader.cpp"
   "src/engine/core/gfx/text_font.cpp"
   "src/engine/core/gfx/utils.cpp"
+  "src/engine/core/asset_locator.cpp"
   "src/engine/core/scene.cpp"
   "src/engine/core/scene_object.cpp"
   "src/engine/core/serialization/yaml_serializer.cpp"
@@ -108,6 +110,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "${PROJECT_SOURCE_DIR}/third_party/glad/include"
   "${stb_SOURCE_DIR}"
   AMENT_DEPENDENCIES
+  ament_index_cpp
   rclcpp
   rclcpp_components
   sfg_agent_msgs
@@ -124,6 +127,14 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
 
 # Add GLM_SWIZZLE to the compile definitions of the trajectory_planner library to enable swizzling for glm vector types.
 target_compile_definitions(${target_name} PRIVATE GLM_FORCE_SWIZZLE GLM_ENABLE_EXPERIMENTAL)
+
+# ########################################################################################################
+# Add other files/directories.                                                                           #
+# ########################################################################################################
+install(DIRECTORY
+  "assets"
+  DESTINATION "share/${PROJECT_NAME}/"
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

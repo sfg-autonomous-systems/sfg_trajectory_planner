@@ -5,7 +5,7 @@
 
 namespace sfg_trajectory_planner::engine::core
 {
-    class SceneObjectFactory : public GenericFactory<SceneObject, SceneObject::ConstructionKey, Scene &, uuids::uuid>
+    class SceneObjectFactory : public GenericFactory<SceneObject, SceneObject::ConstructionKey, const Scene &, uuids::uuid>
     {
     };
 }
