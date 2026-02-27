@@ -39,9 +39,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void add_line(glm::vec3 start_ws, glm::vec3 end_ws, glm::vec3 color);
         void add_line(const glm::mat4 &ls_to_ws_matrix, glm::vec3 start_ls, glm::vec3 end_ls, glm::vec3 color);
 
-        bool add_gizmo(glm::mat4 &ls_to_ws_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id = nullptr);
-        bool add_view_gizmo(glm::mat4 &ws_to_vs_matrix, void *id = nullptr);
-
         void add_text(
             glm::vec3 position_ws,
             const std::string &text,
@@ -55,6 +52,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
             float font_size_ss = 12.0f,
             glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f),
             TextAnchor anchor = TextAnchor::TopLeft);
+
+        bool add_gizmo(glm::mat4 &ls_to_ws_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id = nullptr);
+        bool add_view_gizmo(glm::mat4 &ws_to_vs_matrix, void *id = nullptr);
 
         GLuint render();
 

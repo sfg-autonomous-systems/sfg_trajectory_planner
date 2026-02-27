@@ -60,6 +60,74 @@ namespace sfg_trajectory_planner::engine::core::gfx
         m_line_mesh.add_vertices({{ls_to_ws_matrix * glm::vec4(end_ls, 1.0f), color}});
     }
 
+    void Renderer::add_text(
+        glm::vec3 position_ws,
+        const std::string &text,
+        float font_size_ss,
+        glm::vec3 color,
+        TextAnchor anchor)
+    {
+        add_text(glm::mat4(1.0f), position_ws, text, font_size_ss, color, anchor);
+    }
+
+    void Renderer::add_text(
+        const glm::mat4 &ls_to_ws_matrix,
+        glm::vec3 position_ls,
+        const std::string &text,
+        float font_size_ss,
+        glm::vec3 color,
+        TextAnchor anchor)
+    {
+        const glm::mat4 &ws_to_vs_matrix = m_camera.get_ws_to_vs_matrix();
+        glm::vec3 position_ws = ls_to_ws_matrix * glm::vec4(position_ls, 1.0f);
+        glm::vec3 position_vs = ws_to_vs_matrix * glm::vec4(position_ws, 1.0f);
+        auto depth_vs = -position_vs.z;
+
+        if (depth_vs <= 0.0f)
+        {
+            return;
+        }
+
+        auto projection_scaling = m_camera.get_vs_to_cs_matrix()[1][1];
+        auto viewport_height_ss = m_camera.get_cs_to_ss_vector().w;
+        auto pixel_height_ws = depth_vs / (projection_scaling * viewport_height_ss * 0.5f);
+        auto font_scale_factor = font_size_ss / m_text_font->get_baked_height();
+        auto scale = pixel_height_ws * font_scale_factor;
+
+        glm::vec3 camera_right_ws = {ws_to_vs_matrix[0][0], ws_to_vs_matrix[1][0], ws_to_vs_matrix[2][0]};
+        glm::vec3 camera_up_ws = {ws_to_vs_matrix[0][1], ws_to_vs_matrix[1][1], ws_to_vs_matrix[2][1]};
+        glm::vec2 offset = m_text_font->text_anchor_to_offset(text, anchor);
+
+        stbtt_aligned_quad quad;
+        auto x_cursor = 0.0f;
+        auto y_cursor = 0.0f;
+
+        RenderTextRequest request;
+        request.m_distance_from_camera = depth_vs;
+
+        for (char character : text)
+        {
+            m_text_font->get_character_quad(character, &x_cursor, &y_cursor, &quad);
+
+            float min_x = (quad.x0 + offset.x) * scale;
+            float max_x = (quad.x1 + offset.x) * scale;
+            float min_y = -(quad.y1 + offset.y) * scale;
+            float max_y = -(quad.y0 + offset.y) * scale;
+
+            glm::vec3 bottom_left_ws = position_ws + (camera_right_ws * min_x) + (camera_up_ws * min_y);
+            glm::vec3 bottom_right_ws = position_ws + (camera_right_ws * max_x) + (camera_up_ws * min_y);
+            glm::vec3 top_right_ws = position_ws + (camera_right_ws * max_x) + (camera_up_ws * max_y);
+            glm::vec3 top_left_ws = position_ws + (camera_right_ws * min_x) + (camera_up_ws * max_y);
+
+            // Add vertices.
+            request.m_vertices[0] = {bottom_left_ws, {quad.s0, quad.t1}, color};
+            request.m_vertices[1] = {bottom_right_ws, {quad.s1, quad.t1}, color};
+            request.m_vertices[2] = {top_right_ws, {quad.s1, quad.t0}, color};
+            request.m_vertices[3] = {top_left_ws, {quad.s0, quad.t0}, color};
+            m_render_text_requests.push_back(request);
+        }
+    }
+
     bool Renderer::add_gizmo(glm::mat4 &ls_to_ws_matrix, ImGuizmo::OPERATION operation, ImGuizmo::MODE mode, void *id)
     {
         ImGuizmo::PushID(id);
@@ -129,74 +197,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
             ws_to_vs_matrix = imguizmo_ws_to_vs_matrix * hatch_correction * glm::inverse(basis_alignment);
         }
         return dirty;
-    }
-
-    void Renderer::add_text(
-        glm::vec3 position_ws,
-        const std::string &text,
-        float font_size_ss,
-        glm::vec3 color,
-        TextAnchor anchor)
-    {
-        add_text(glm::mat4(1.0f), position_ws, text, font_size_ss, color, anchor);
-    }
-
-    void Renderer::add_text(
-        const glm::mat4 &ls_to_ws_matrix,
-        glm::vec3 position_ls,
-        const std::string &text,
-        float font_size_ss,
-        glm::vec3 color,
-        TextAnchor anchor)
-    {
-        const glm::mat4 &ws_to_vs_matrix = m_camera.get_ws_to_vs_matrix();
-        glm::vec3 position_ws = ls_to_ws_matrix * glm::vec4(position_ls, 1.0f);
-        glm::vec3 position_vs = ws_to_vs_matrix * glm::vec4(position_ws, 1.0f);
-        auto depth_vs = -position_vs.z;
-
-        if (depth_vs <= 0.0f)
-        {
-            return;
-        }
-
-        auto projection_scaling = m_camera.get_vs_to_cs_matrix()[1][1];
-        auto viewport_height_ss = m_camera.get_cs_to_ss_vector().w;
-        auto pixel_height_ws = depth_vs / (projection_scaling * viewport_height_ss * 0.5f);
-        auto font_scale_factor = font_size_ss / m_text_font->get_baked_height();
-        auto scale = pixel_height_ws * font_scale_factor;
-
-        glm::vec3 camera_right_ws = {ws_to_vs_matrix[0][0], ws_to_vs_matrix[1][0], ws_to_vs_matrix[2][0]};
-        glm::vec3 camera_up_ws = {ws_to_vs_matrix[0][1], ws_to_vs_matrix[1][1], ws_to_vs_matrix[2][1]};
-        glm::vec2 offset = m_text_font->text_anchor_to_offset(text, anchor);
-
-        stbtt_aligned_quad quad;
-        auto x_cursor = 0.0f;
-        auto y_cursor = 0.0f;
-
-        RenderTextRequest request;
-        request.m_distance_from_camera = depth_vs;
-
-        for (char character : text)
-        {
-            m_text_font->get_character_quad(character, &x_cursor, &y_cursor, &quad);
-
-            float min_x = (quad.x0 + offset.x) * scale;
-            float max_x = (quad.x1 + offset.x) * scale;
-            float min_y = -(quad.y1 + offset.y) * scale;
-            float max_y = -(quad.y0 + offset.y) * scale;
-
-            glm::vec3 bottom_left_ws = position_ws + (camera_right_ws * min_x) + (camera_up_ws * min_y);
-            glm::vec3 bottom_right_ws = position_ws + (camera_right_ws * max_x) + (camera_up_ws * min_y);
-            glm::vec3 top_right_ws = position_ws + (camera_right_ws * max_x) + (camera_up_ws * max_y);
-            glm::vec3 top_left_ws = position_ws + (camera_right_ws * min_x) + (camera_up_ws * max_y);
-
-            // Add vertices.
-            request.m_vertices[0] = {bottom_left_ws, {quad.s0, quad.t1}, color};
-            request.m_vertices[1] = {bottom_right_ws, {quad.s1, quad.t1}, color};
-            request.m_vertices[2] = {top_right_ws, {quad.s1, quad.t0}, color};
-            request.m_vertices[3] = {top_left_ws, {quad.s0, quad.t0}, color};
-            m_render_text_requests.push_back(request);
-        }
     }
 
     GLuint Renderer::render()
