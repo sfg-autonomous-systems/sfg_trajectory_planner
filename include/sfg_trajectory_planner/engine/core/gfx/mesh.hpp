@@ -2,8 +2,22 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
+    class IMesh
+    {
+    public:
+        IMesh() = default;
+        virtual ~IMesh() = default;
+        virtual void render() = 0;
+
+    protected:
+        IMesh(const IMesh &) = default;
+        IMesh &operator=(const IMesh &) = default;
+        IMesh(IMesh &&) = default;
+        IMesh &operator=(IMesh &&) = default;
+    };
+
     template <typename VertexType>
-    class Mesh
+    class Mesh : public IMesh
     {
     public:
         enum class Topology
@@ -19,7 +33,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         Mesh &operator=(Mesh &&) noexcept;
         ~Mesh();
 
-        void render();
+        void render() override;
         void clear();
 
         Topology get_topology() const;

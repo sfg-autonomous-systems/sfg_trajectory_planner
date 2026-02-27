@@ -38,7 +38,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         void add_line(glm::vec3 start_ws, glm::vec3 end_ws, glm::vec3 color);
         void add_line(const glm::mat4 &ls_to_ws_matrix, glm::vec3 start_ls, glm::vec3 end_ls, glm::vec3 color);
-
+        void add_mesh(const glm::mat4 &ls_to_ws_matrix, IMesh *mesh, Shader *shader);
         void add_text(
             glm::vec3 position_ws,
             const std::string &text,
@@ -78,6 +78,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
             glm::vec3 m_color;
         };
 
+        struct RenderMeshRequest
+        {
+        public:
+            glm::mat4 m_ls_to_ws_matrix;
+            IMesh *m_mesh;
+            Shader *m_shader;
+        };
+
         struct RenderTextRequest
         {
         public:
@@ -91,6 +99,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         // Line related resources.
         Mesh<LineVertex> m_line_mesh;
         std::shared_ptr<Shader> m_line_shader;
+
+        // Mesh related resources.
+        std::vector<RenderMeshRequest> m_render_mesh_requests;
 
         // Text related resources.
         std::vector<RenderTextRequest> m_render_text_requests;

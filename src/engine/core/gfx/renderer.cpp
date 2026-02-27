@@ -60,6 +60,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
         m_line_mesh.add_vertices({{ls_to_ws_matrix * glm::vec4(end_ls, 1.0f), color}});
     }
 
+    void Renderer::add_mesh(const glm::mat4 &ls_to_ws_matrix, IMesh *mesh, Shader *shader)
+    {
+        m_render_mesh_requests.push_back({ls_to_ws_matrix, mesh, shader});
+    }
+
     void Renderer::add_text(
         glm::vec3 position_ws,
         const std::string &text,
@@ -207,6 +212,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         glm::mat4 ws_to_cs_matrix = m_camera.get_vs_to_cs_matrix() * m_camera.get_ws_to_vs_matrix();
 
+        // Render lines.
         if (!m_line_mesh.empty())
         {
             m_line_shader->bind();
@@ -221,6 +227,22 @@ namespace sfg_trajectory_planner::engine::core::gfx
             m_line_mesh.clear();
         }
 
+        // Render meshes.
+        if (!m_render_mesh_requests.empty())
+        {
+            for (const auto &request : m_render_mesh_requests)
+            {
+                auto ls_to_cs_matrix = ws_to_cs_matrix * request.m_ls_to_ws_matrix;
+
+                request.m_shader->bind();
+                glUniformMatrix4fv(glGetUniformLocation(request.m_shader->get_id(), "u_LsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ls_to_cs_matrix));
+                request.m_mesh->render();
+                request.m_shader->unbind();
+            }
+            m_render_mesh_requests.clear();
+        }
+
+        // Render text.
         if (!m_render_text_requests.empty())
         {
             // Sort the pending text by distance from the camera so that alpha blending works correctly.
