@@ -14,7 +14,12 @@
 
 namespace sfg_trajectory_planner::app::core
 {
-    Trajectory::Trajectory(engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid) : SceneObject(key, scene, uuid)
+    Trajectory::Trajectory(
+        engine::core::SceneObject::ConstructionKey key,
+        const engine::core::Scene &scene,
+        uuids::uuid uuid,
+        const engine::core::AssetLocator &)
+        : SceneObject(key, scene, uuid)
     {
     }
 

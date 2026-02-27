@@ -12,6 +12,8 @@ namespace sfg_trajectory_planner::engine::core
     class GenericFactory
     {
     public:
+        using CreatorFunction = std::function<std::unique_ptr<BaseType>(Args... args)>;
+
         struct RegisteredTypeInfo
         {
             std::string m_type;
@@ -24,7 +26,10 @@ namespace sfg_trajectory_planner::engine::core
         void register_type(const std::string &display_name = "");
 
         template <typename KeyType, typename DerivedType>
-        void register_type(std::function<std::unique_ptr<BaseType>(Args... args)> creator, const std::string &display_name = "");
+        void register_type(CreatorFunction creator);
+
+        template <typename KeyType, typename DerivedType>
+        void register_type(const std::string &display_name, CreatorFunction creator);
 
         template <typename KeyType, typename DerivedType>
         std::unique_ptr<DerivedType> create_object(Args... args) const;
@@ -35,7 +40,7 @@ namespace sfg_trajectory_planner::engine::core
         {
         public:
             RegisteredTypeInfo m_info;
-            std::function<std::unique_ptr<BaseType>(Args... args)> m_creator;
+            CreatorFunction m_creator;
         };
 
         std::unordered_map<std::string, RegisteredType> m_registered_types;

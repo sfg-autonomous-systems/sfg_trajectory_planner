@@ -35,17 +35,24 @@ namespace sfg_trajectory_planner::app
     {
         // Add supported scene object types to the factory.
         m_scene_object_factory.register_type<engine::core::SceneObject, engine::core::SceneObject>("Scene Object");
-        m_scene_object_factory.register_type<app::core::Trajectory, app::core::Trajectory>("Trajectory");
-        m_scene_object_factory.register_type<app::core::Grid, app::core::Grid>("Grid");
+        m_scene_object_factory.register_type<core::Trajectory, core::Trajectory>(
+            "Trajectory",
+            [this](engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid)
+            {
+                return std::make_unique<core::Trajectory>(key, scene, uuid, m_asset_locator);
+            });
+        m_scene_object_factory.register_type<core::Grid, core::Grid>("Grid");
 
         // Do the same for scene object editors.
         m_scene_object_editor_factory.register_type<engine::core::SceneObject, engine::editor::SceneObjectEditor<void>>();
-        m_scene_object_editor_factory.register_type<app::core::Trajectory, app::editor::TrajectoryEditor>(
+        m_scene_object_editor_factory.register_type<core::Trajectory, editor::TrajectoryEditor>(
             [node](engine::editor::EditorContext &editor_context)
-            { return std::make_unique<app::editor::TrajectoryEditor>(editor_context, node); });
-        m_scene_object_editor_factory.register_type<app::core::Grid, app::editor::GridEditor>();
+            {
+                return std::make_unique<editor::TrajectoryEditor>(editor_context, node);
+            });
+        m_scene_object_editor_factory.register_type<core::Grid, editor::GridEditor>();
 
-        m_scene.create_object<app::core::Grid>("Grid");
+        m_scene.create_object<core::Grid>("Grid");
     }
 
     void TrajectoryPlannerGui::render_internal()

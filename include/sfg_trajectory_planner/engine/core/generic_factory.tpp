@@ -21,16 +21,23 @@ namespace sfg_trajectory_planner::engine::core
     void GenericFactory<BaseType, Args...>::register_type(const std::string &display_name)
     {
         register_type<KeyType, DerivedType>(
+            display_name,
             [](Args... args)
             {
                 return std::make_unique<DerivedType>(std::forward<Args>(args)...);
-            },
-            display_name);
+            });
     }
 
     template <typename BaseType, typename... Args>
     template <typename KeyType, typename DerivedType>
-    void GenericFactory<BaseType, Args...>::register_type(std::function<std::unique_ptr<BaseType>(Args... args)> creator, const std::string &display_name)
+    void GenericFactory<BaseType, Args...>::register_type(CreatorFunction creator)
+    {
+        register_type<KeyType, DerivedType>("", creator);
+    }
+
+    template <typename BaseType, typename... Args>
+    template <typename KeyType, typename DerivedType>
+    void GenericFactory<BaseType, Args...>::register_type(const std::string &display_name, CreatorFunction creator)
     {
         auto type = SceneObject::get_type<KeyType>();
 
