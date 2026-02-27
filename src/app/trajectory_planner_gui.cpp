@@ -162,7 +162,7 @@ namespace sfg_trajectory_planner::app
         }
     }
 
-    void TrajectoryPlannerGui::file_dialog_callback(void *, const char *const *file_list, int)
+    void TrajectoryPlannerGui::file_dialog_callback(void *, const char *const *file_list, std::int32_t)
     {
         std::lock_guard lock(s_file_dialog_mutex);
 
