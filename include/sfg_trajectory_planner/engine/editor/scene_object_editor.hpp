@@ -28,6 +28,8 @@ namespace sfg_trajectory_planner::engine::editor
     class SceneObjectEditor<void>
     {
     public:
+        using TargetObjectType = core::SceneObject;
+
         SceneObjectEditor(EditorContext &editor_context);
         virtual ~SceneObjectEditor() = default;
 
@@ -54,6 +56,7 @@ namespace sfg_trajectory_planner::engine::editor
     class SceneObjectEditor : public SceneObjectEditor<void>
     {
     public:
+        using TargetObjectType = ObjectType;
         using SceneObjectEditor<void>::SceneObjectEditor;
 
     protected:

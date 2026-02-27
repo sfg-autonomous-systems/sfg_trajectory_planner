@@ -5,12 +5,12 @@
 
 namespace sfg_trajectory_planner::engine::editor
 {
-    EditorContext::EditorContext(core::Scene &scene, SceneObjectEditorFactory &editor_factory)
+    EditorContext::EditorContext(core::Scene &scene, const SceneObjectEditorFactory &editor_factory)
         : m_selection_context(
               scene,
               [this, &editor_factory](core::SceneObject *object)
               {
-                  m_editor = object ? editor_factory.create_object(object->get_type(), *this) : nullptr;
+                  m_editor = object ? editor_factory.create_type(object->get_type(), *this) : nullptr;
               })
     {
     }

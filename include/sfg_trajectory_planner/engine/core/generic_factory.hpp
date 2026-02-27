@@ -24,16 +24,14 @@ namespace sfg_trajectory_planner::engine::core
 
         template <typename KeyType, typename DerivedType>
         void register_type(const std::string &display_name = "");
-
         template <typename KeyType, typename DerivedType>
         void register_type(CreatorFunction creator);
-
         template <typename KeyType, typename DerivedType>
         void register_type(const std::string &display_name, CreatorFunction creator);
 
         template <typename KeyType, typename DerivedType>
-        std::unique_ptr<DerivedType> create_object(Args... args) const;
-        std::unique_ptr<BaseType> create_object(const std::string &type, Args... args) const;
+        std::unique_ptr<DerivedType> create_type(Args... args) const;
+        std::unique_ptr<BaseType> create_type(const std::string &type, Args... args) const;
 
     private:
         struct RegisteredType

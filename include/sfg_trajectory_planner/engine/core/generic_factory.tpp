@@ -50,13 +50,13 @@ namespace sfg_trajectory_planner::engine::core
 
     template <typename BaseType, typename... Args>
     template <typename KeyType, typename DerivedType>
-    std::unique_ptr<DerivedType> GenericFactory<BaseType, Args...>::create_object(Args... args) const
+    std::unique_ptr<DerivedType> GenericFactory<BaseType, Args...>::create_type(Args... args) const
     {
-        return std::static_pointer_cast<DerivedType>(create_object(SceneObject::get_type<KeyType>(), std::forward<Args>(args)...));
+        return std::static_pointer_cast<DerivedType>(create_type(SceneObject::get_type<KeyType>(), std::forward<Args>(args)...));
     }
 
     template <typename BaseType, typename... Args>
-    std::unique_ptr<BaseType> GenericFactory<BaseType, Args...>::create_object(const std::string &type, Args... args) const
+    std::unique_ptr<BaseType> GenericFactory<BaseType, Args...>::create_type(const std::string &type, Args... args) const
     {
         auto iterator = m_registered_types.find(type);
 

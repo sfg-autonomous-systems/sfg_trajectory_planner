@@ -120,7 +120,7 @@ namespace sfg_trajectory_planner::engine::core
 
     SceneObject *Scene::create_object(const std::string &type, const std::string &name, SceneObject *parent, uuids::uuid uuid)
     {
-        auto object = m_factory.create_object(type, SceneObject::ConstructionKey{}, *this, uuid);
+        auto object = m_factory.create_type(type, SceneObject::ConstructionKey{}, *this, uuid);
         auto object_ptr = object.get();
 
         if (!object_ptr)

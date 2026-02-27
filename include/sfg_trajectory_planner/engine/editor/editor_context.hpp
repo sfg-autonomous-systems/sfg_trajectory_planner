@@ -15,7 +15,7 @@ namespace sfg_trajectory_planner::engine::editor
     class EditorContext
     {
     public:
-        EditorContext(core::Scene &scene, SceneObjectEditorFactory &editor_factory);
+        EditorContext(core::Scene &scene, const SceneObjectEditorFactory &editor_factory);
 
         SelectionContext m_selection_context;
         history::Undo m_undo;
