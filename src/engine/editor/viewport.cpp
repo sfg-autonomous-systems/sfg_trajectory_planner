@@ -14,8 +14,7 @@
 namespace sfg_trajectory_planner::engine::editor
 {
     Viewport::Viewport(rclcpp::Node *node, core::Scene &scene, core::gfx::Camera &camera, core::gfx::Renderer &renderer, EditorContext &editor_context)
-        : GuiElement(),
-          m_scene(scene),
+        : m_scene(scene),
           m_camera(camera),
           m_renderer(renderer),
           m_editor_context(editor_context)

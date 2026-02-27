@@ -22,8 +22,7 @@ namespace sfg_trajectory_planner::engine::editor
     static constexpr auto s_create_object_popup_id = "create_object_popup";
 
     SceneHierarchy::SceneHierarchy(core::Scene &scene, EditorContext &editor_context)
-        : GuiElement(),
-          m_scene(scene),
+        : m_scene(scene),
           m_editor_context(editor_context),
           m_reparent_request({nullptr, nullptr})
     {
