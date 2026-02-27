@@ -60,9 +60,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         m_line_mesh.add_vertices({{ls_to_ws_matrix * glm::vec4(end_ls, 1.0f), color}});
     }
 
-    void Renderer::add_mesh(const glm::mat4 &ls_to_ws_matrix, IMesh *mesh, Shader *shader)
+    void Renderer::add_renderable(const glm::mat4 &ls_to_ws_matrix, IRenderable *renderable, Shader *shader)
     {
-        m_render_mesh_requests.push_back({ls_to_ws_matrix, mesh, shader});
+        m_render_renderable_requests.push_back({ls_to_ws_matrix, renderable, shader});
     }
 
     void Renderer::add_text(
@@ -227,19 +227,19 @@ namespace sfg_trajectory_planner::engine::core::gfx
             m_line_mesh.clear();
         }
 
-        // Render meshes.
-        if (!m_render_mesh_requests.empty())
+        // Render renderables.
+        if (!m_render_renderable_requests.empty())
         {
-            for (const auto &request : m_render_mesh_requests)
+            for (const auto &request : m_render_renderable_requests)
             {
                 auto ls_to_cs_matrix = ws_to_cs_matrix * request.m_ls_to_ws_matrix;
 
                 request.m_shader->bind();
                 glUniformMatrix4fv(glGetUniformLocation(request.m_shader->get_id(), "u_LsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ls_to_cs_matrix));
-                request.m_mesh->render();
+                request.m_renderable->render();
                 request.m_shader->unbind();
             }
-            m_render_mesh_requests.clear();
+            m_render_renderable_requests.clear();
         }
 
         // Render text.

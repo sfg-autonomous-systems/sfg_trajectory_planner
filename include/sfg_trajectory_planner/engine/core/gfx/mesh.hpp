@@ -1,23 +1,11 @@
 #pragma once
 
+#include "sfg_trajectory_planner/engine/core/gfx/renderable.hpp"
+
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    class IMesh
-    {
-    public:
-        IMesh() = default;
-        virtual ~IMesh() = default;
-        virtual void render() = 0;
-
-    protected:
-        IMesh(const IMesh &) = default;
-        IMesh &operator=(const IMesh &) = default;
-        IMesh(IMesh &&) = default;
-        IMesh &operator=(IMesh &&) = default;
-    };
-
     template <typename VertexType>
-    class Mesh : public IMesh
+    class Mesh : public IRenderable
     {
     public:
         enum class Topology
