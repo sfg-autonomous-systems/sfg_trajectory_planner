@@ -13,11 +13,6 @@
 #include "sfg_trajectory_planner/engine/core/gfx/mesh.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/text_font.hpp"
 
-namespace sfg_trajectory_planner::engine::core
-{
-    class AssetLocator;
-}
-
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     class Camera;
@@ -30,8 +25,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
     public:
         Renderer(
-            const AssetLocator &asset_locator,
             const Camera &camera,
+            std::shared_ptr<Shader> line_shader,
+            std::shared_ptr<Shader> text_shader,
+            std::shared_ptr<TextFont> text_font,
             glm::vec3 clear_color = glm::vec3(0.0f, 0.0f, 0.0f));
 
         const Camera &get_camera() const;

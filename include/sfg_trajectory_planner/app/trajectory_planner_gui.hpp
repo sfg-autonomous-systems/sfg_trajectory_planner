@@ -9,7 +9,7 @@
 #include <SDL3/SDL.h>
 
 #include "sfg_imgui_vendor/gui_element.hpp"
-#include "sfg_trajectory_planner/engine/core/asset_locator.hpp"
+#include "sfg_trajectory_planner/engine/core/assets/asset_locator.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
 #include "sfg_trajectory_planner/engine/core/scene.hpp"
@@ -66,7 +66,7 @@ namespace sfg_trajectory_planner::app
         engine::editor::SceneObjectEditorFactory m_scene_object_editor_factory;
 
         // Core engine components.
-        engine::core::AssetLocator m_asset_locator;
+        engine::core::assets::AssetLocator m_asset_locator;
         engine::core::Scene m_scene;
         engine::core::gfx::Camera m_camera;
         engine::core::gfx::Renderer m_renderer;

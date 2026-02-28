@@ -5,7 +5,6 @@
 #include <SDL3/SDL.h>
 #include <stdexcept>
 
-#include "sfg_trajectory_planner/engine/core/asset_locator.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 
@@ -30,16 +29,18 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     Renderer::Renderer(
-        const AssetLocator &asset_locator,
         const Camera &camera,
+        std::shared_ptr<Shader> line_shader,
+        std::shared_ptr<Shader> text_shader,
+        std::shared_ptr<TextFont> text_font,
         glm::vec3 clear_color)
         : m_camera(camera),
           m_framebuffer(clear_color, m_camera.get_cs_to_ss_vector().zw()),
           m_line_mesh(Mesh<LineVertex>::Topology::Lines),
-          m_line_shader(asset_locator.load_asset<Shader>(std::filesystem::path("shaders/line.vert"), std::filesystem::path("shaders/line.frag"))),
+          m_line_shader(line_shader),
           m_text_mesh(Mesh<TextVertex>::Topology::Triangles),
-          m_text_shader(asset_locator.load_asset<Shader>(std::filesystem::path("shaders/text.vert"), std::filesystem::path("shaders/text.frag"))),
-          m_text_font(asset_locator.load_asset<TextFont>(std::filesystem::path("fonts/roboto_regular.ttf"), 64.0f))
+          m_text_shader(text_shader),
+          m_text_font(text_font)
     {
         ImGuizmo::AllowAxisFlip(false);
     }

@@ -3,7 +3,7 @@
 #include "sfg_trajectory_planner/app/core/waypoint.hpp"
 #include "sfg_trajectory_planner/engine/core/scene_object.hpp"
 
-namespace sfg_trajectory_planner::engine::core
+namespace sfg_trajectory_planner::engine::core::assets
 {
     class AssetLocator;
 }
@@ -13,7 +13,7 @@ namespace sfg_trajectory_planner::app::core
     class Trajectory : public engine::core::SceneObject
     {
     public:
-        Trajectory(engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid, const engine::core::AssetLocator &asset_locator);
+        Trajectory(engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid, const engine::core::assets::AssetLocator &asset_locator);
         void serialize(engine::core::serialization::AbstractSerializer *serializer) const override;
         void deserialize(engine::core::serialization::AbstractSerializer *serializer) override;
         void render_object(engine::core::gfx::Renderer &renderer) override;

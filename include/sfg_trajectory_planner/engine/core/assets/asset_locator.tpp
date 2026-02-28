@@ -1,9 +1,9 @@
-#include "sfg_trajectory_planner/engine/core/asset_locator.hpp"
+#include "sfg_trajectory_planner/engine/core/assets/asset_locator.hpp"
 
 #include <sstream>
 #include <type_traits>
 
-namespace sfg_trajectory_planner::engine::core
+namespace sfg_trajectory_planner::engine::core::assets
 {
 
     template <typename AssetType, typename... Args>

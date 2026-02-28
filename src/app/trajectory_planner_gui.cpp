@@ -6,6 +6,7 @@
 #include "sfg_trajectory_planner/app/core/trajectory.hpp"
 #include "sfg_trajectory_planner/app/editor/grid_editor.hpp"
 #include "sfg_trajectory_planner/app/editor/trajectory_editor.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
 #include "sfg_trajectory_planner/engine/editor/history/action.hpp"
 
@@ -29,7 +30,11 @@ namespace sfg_trajectory_planner::app
     TrajectoryPlannerGui::TrajectoryPlannerGui(rclcpp::Node *node)
         : m_asset_locator(ament_index_cpp::get_package_share_directory(STRINGIFY(sfg_trajectory_planner)) + "/assets"),
           m_scene(m_scene_object_factory),
-          m_renderer(m_asset_locator, m_camera, {0.0f, 0.0f, 0.0f}),
+          m_renderer(m_camera,
+                     m_asset_locator.load_asset<engine::core::gfx::Shader>(std::filesystem::path("shaders/line.vert"), std::filesystem::path("shaders/line.frag")),
+                     m_asset_locator.load_asset<engine::core::gfx::Shader>(std::filesystem::path("shaders/text.vert"), std::filesystem::path("shaders/text.frag")),
+                     m_asset_locator.load_asset<engine::core::gfx::TextFont>(std::filesystem::path("fonts/roboto_regular.ttf"), 64.0f),
+                     {0.0f, 0.0f, 0.0f}),
           m_editor_context(m_scene, m_scene_object_editor_factory),
           m_scene_hierarchy(m_scene, m_editor_context), m_viewport(node, m_scene, m_camera, m_renderer, m_editor_context), m_inspector(m_editor_context)
     {

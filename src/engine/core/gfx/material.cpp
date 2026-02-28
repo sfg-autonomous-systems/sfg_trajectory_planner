@@ -2,7 +2,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "sfg_trajectory_planner/engine/core/asset_locator.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx

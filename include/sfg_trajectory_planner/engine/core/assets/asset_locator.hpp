@@ -13,12 +13,12 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class TextFont;
 }
 
-namespace sfg_trajectory_planner::engine::core
+namespace sfg_trajectory_planner::engine::core::assets
 {
     class AssetLocator
     {
     public:
-        explicit AssetLocator(std::filesystem::path asset_directory);
+        AssetLocator(std::filesystem::path asset_directory);
 
         template <typename AssetType, typename... Args>
         std::shared_ptr<AssetType> load_asset(Args &&...args) const;
@@ -42,4 +42,4 @@ namespace sfg_trajectory_planner::engine::core
     };
 }
 
-#include "sfg_trajectory_planner/engine/core/asset_locator.tpp"
+#include "sfg_trajectory_planner/engine/core/assets/asset_locator.tpp"

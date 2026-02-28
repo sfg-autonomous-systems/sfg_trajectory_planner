@@ -1,4 +1,4 @@
-#include "sfg_trajectory_planner/engine/core/asset_locator.hpp"
+#include "sfg_trajectory_planner/engine/core/assets/asset_locator.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -9,7 +9,7 @@
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/text_font.hpp"
 
-namespace sfg_trajectory_planner::engine::core
+namespace sfg_trajectory_planner::engine::core::assets
 {
     AssetLocator::AssetLocator(std::filesystem::path asset_directory)
         : m_asset_directory(std::move(asset_directory))
