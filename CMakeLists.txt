@@ -80,6 +80,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
 
   "src/engine/core/gfx/camera.cpp"
   "src/engine/core/gfx/framebuffer.cpp"
+  "src/engine/core/gfx/material.cpp"
   "src/engine/core/gfx/renderer.cpp"
   "src/engine/core/gfx/shader.cpp"
   "src/engine/core/gfx/text_font.cpp"

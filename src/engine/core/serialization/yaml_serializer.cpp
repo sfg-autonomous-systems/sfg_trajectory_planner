@@ -10,15 +10,15 @@ namespace sfg_trajectory_planner::engine::core::serialization
         m_node_stack.push_back(m_root_node);
     }
 
-    void YamlSerializer::save_to_file(const std::filesystem::path &path)
+    void YamlSerializer::save_to_file(const std::filesystem::path &filepath)
     {
-        std::ofstream stream(path);
+        std::ofstream stream(filepath);
         stream << m_root_node;
     }
 
-    void YamlSerializer::load_from_file(const std::filesystem::path &path)
+    void YamlSerializer::load_from_file(const std::filesystem::path &filepath)
     {
-        m_root_node = YAML::LoadFile(path);
+        m_root_node = YAML::LoadFile(filepath);
         m_node_stack.clear();
         m_node_stack.push_back(m_root_node);
         m_sequence_context.clear();

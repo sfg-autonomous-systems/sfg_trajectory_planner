@@ -11,8 +11,8 @@ namespace sfg_trajectory_planner::engine::core::serialization
     public:
         YamlSerializer();
 
-        void save_to_file(const std::filesystem::path &path) override;
-        void load_from_file(const std::filesystem::path &path) override;
+        void save_to_file(const std::filesystem::path &filepath) override;
+        void load_from_file(const std::filesystem::path &filepath) override;
         std::vector<std::uint8_t> to_bytes() const override;
         void from_bytes(const std::vector<std::uint8_t> &data) override;
 

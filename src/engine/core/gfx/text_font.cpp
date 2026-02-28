@@ -7,28 +7,8 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    TextFont::TextFont(const std::filesystem::path &filepath, float height) : m_baked_height(height)
-    {
-        std::ifstream file(filepath, std::ios::binary | std::ios::ate);
-
-        if (!file.is_open())
-        {
-            std::cerr << "Failed to open font file: " << filepath << std::endl;
-            return;
-        }
-        std::streamsize size = file.tellg();
-        file.seekg(0, std::ios::beg);
-        std::vector<unsigned char> data(size);
-
-        if (!file.read(reinterpret_cast<char *>(data.data()), size))
-        {
-            return;
-        }
-
-        *this = TextFont(data.data(), height);
-    }
-
-    TextFont::TextFont(std::uint8_t *data, float height) : m_baked_height(height)
+    TextFont::TextFont(std::uint8_t *data, float height)
+        : m_baked_height(height)
     {
         std::vector<unsigned char> font_atlas(s_font_atlas_width * s_font_atlas_height);
 

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <filesystem>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <stb_truetype.h>
-#include <vector>
+#include <string>
 
 #include "sfg_trajectory_planner/engine/core/gfx/text_anchor.hpp"
 
@@ -13,7 +12,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class TextFont
     {
     public:
-        TextFont(const std::filesystem::path &filepath, float height = 64.0f);
         TextFont(std::uint8_t *data, float height = 64.0f);
         TextFont(const TextFont &) = delete;
         TextFont &operator=(const TextFont &) = delete;

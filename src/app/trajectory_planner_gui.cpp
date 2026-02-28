@@ -66,7 +66,7 @@ namespace sfg_trajectory_planner::app
 
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu("File"))
+            if (ImGui::BeginMenu("Scene"))
             {
                 std::lock_guard lock(s_file_dialog_mutex);
                 auto enabled = s_file_dialog_result.m_state == FileDialogResult::State::Idle;
