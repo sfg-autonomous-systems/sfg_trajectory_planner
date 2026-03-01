@@ -67,4 +67,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
     {
         m_uniforms[name] = value;
     }
+
+    Shader *Material::get_shader() const
+    {
+        return m_shader.get();
+    }
 }

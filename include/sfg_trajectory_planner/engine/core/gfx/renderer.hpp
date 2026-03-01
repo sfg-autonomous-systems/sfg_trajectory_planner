@@ -16,6 +16,7 @@
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     class Camera;
+    class Material;
     class Shader;
 }
 
@@ -35,7 +36,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         void add_line(glm::vec3 start_ws, glm::vec3 end_ws, glm::vec3 color);
         void add_line(const glm::mat4 &ls_to_ws_matrix, glm::vec3 start_ls, glm::vec3 end_ls, glm::vec3 color);
-        void add_renderable(const glm::mat4 &ls_to_ws_matrix, IRenderable *renderable, Shader *shader);
+        void add_renderable(const glm::mat4 &ls_to_ws_matrix, IRenderable *renderable, Material *material);
         void add_text(
             glm::vec3 position_ws,
             const std::string &text,
@@ -80,7 +81,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         public:
             glm::mat4 m_ls_to_ws_matrix;
             IRenderable *m_renderable;
-            Shader *m_shader;
+            Material *m_material;
         };
 
         struct RenderTextRequest

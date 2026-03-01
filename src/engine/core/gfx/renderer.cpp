@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/material.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
@@ -61,9 +62,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         m_line_mesh.add_vertices({{ls_to_ws_matrix * glm::vec4(end_ls, 1.0f), color}});
     }
 
-    void Renderer::add_renderable(const glm::mat4 &ls_to_ws_matrix, IRenderable *renderable, Shader *shader)
+    void Renderer::add_renderable(const glm::mat4 &ls_to_ws_matrix, IRenderable *renderable, Material *material)
     {
-        m_render_renderable_requests.push_back({ls_to_ws_matrix, renderable, shader});
+        m_render_renderable_requests.push_back({ls_to_ws_matrix, renderable, material});
     }
 
     void Renderer::add_text(
@@ -235,10 +236,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
             {
                 auto ls_to_cs_matrix = ws_to_cs_matrix * request.m_ls_to_ws_matrix;
 
-                request.m_shader->bind();
-                request.m_shader->set_ls_to_cs_matrix(ls_to_cs_matrix);
+                request.m_material->bind();
+                request.m_material->get_shader()->set_ls_to_cs_matrix(ls_to_cs_matrix);
                 request.m_renderable->render();
-                request.m_shader->unbind();
+                request.m_material->unbind();
             }
             m_render_renderable_requests.clear();
         }

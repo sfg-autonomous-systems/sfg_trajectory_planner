@@ -24,6 +24,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void bind() const override;
         void unbind() const override;
         void set_uniform(const std::string &name, const UniformValue &value);
+        Shader *get_shader() const;
 
     private:
         std::shared_ptr<Shader> m_shader;
