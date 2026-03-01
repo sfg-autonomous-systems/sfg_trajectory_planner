@@ -1,11 +1,12 @@
 #pragma once
 
+#include "sfg_trajectory_planner/engine/core/gfx/bindable.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderable.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     template <typename VertexType>
-    class Mesh : public IRenderable
+    class Mesh : public IRenderable, public IBindable
     {
     public:
         enum class Topology
@@ -35,9 +36,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void add_indices(const std::vector<std::uint32_t> &indices);
 
     private:
-        void bind();
-        void unbind();
-        void upload();
+        void bind() const override;
+        void unbind() const override;
+        void upload() const;
 
         const Topology m_topology;
         std::vector<VertexType> m_vertices;
@@ -47,9 +48,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         GLuint m_vbo = 0;
         GLuint m_ebo = 0;
 
-        std::uint32_t m_vbo_size = 100;
-        std::uint32_t m_ebo_size = 100;
-        bool m_dirty = true;
+        mutable std::uint32_t m_vbo_size = 100;
+        mutable std::uint32_t m_ebo_size = 100;
+        mutable bool m_dirty = true;
     };
 }
 

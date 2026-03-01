@@ -3,9 +3,11 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
+#include "sfg_trajectory_planner/engine/core/gfx/bindable.hpp"
+
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    class FrameBuffer
+    class FrameBuffer : public IBindable
     {
     public:
         FrameBuffer(glm::vec3 clear_color, glm::ivec2 size);
@@ -17,8 +19,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         GLuint get_color_texture() const;
 
-        void bind();
-        void unbind();
+        void bind() const override;
+        void unbind() const override;
         void clear();
         void resize_if_needed(glm::ivec2 size);
         void enable_transparency(bool enable);

@@ -60,13 +60,13 @@ namespace sfg_trajectory_planner::engine::core::gfx
         return m_color_texture;
     }
 
-    void FrameBuffer::bind()
+    void FrameBuffer::bind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
         glViewport(0, 0, m_size.x, m_size.y);
     }
 
-    void FrameBuffer::unbind()
+    void FrameBuffer::unbind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

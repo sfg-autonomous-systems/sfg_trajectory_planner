@@ -170,7 +170,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::bind()
+    void Mesh<VertexType>::bind() const
     {
         if (m_dirty)
         {
@@ -181,13 +181,13 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::unbind()
+    void Mesh<VertexType>::unbind() const
     {
         glBindVertexArray(0);
     }
 
     template <typename VertexType>
-    void Mesh<VertexType>::upload()
+    void Mesh<VertexType>::upload() const
     {
         if (m_vertices.size() > m_vbo_size)
         {

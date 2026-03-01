@@ -2,9 +2,11 @@
 
 #include <glad/glad.h>
 
+#include "sfg_trajectory_planner/engine/core/gfx/bindable.hpp"
+
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    class Shader
+    class Shader : public IBindable
     {
     public:
         Shader(const char *vertex_source, const char *fragment_source);
@@ -14,8 +16,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
         Shader &operator=(Shader &&) noexcept;
         ~Shader();
 
-        void bind() const;
-        void unbind() const;
+        void bind() const override;
+        void unbind() const override;
         GLuint get_id() const;
 
     private:
