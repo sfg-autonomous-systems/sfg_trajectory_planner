@@ -76,8 +76,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glClearColor(m_clear_color.r, m_clear_color.g, m_clear_color.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     void FrameBuffer::resize_if_needed(glm::ivec2 size)
@@ -111,5 +109,18 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_depth_rbo);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void FrameBuffer::enable_transparency(bool enable)
+    {
+        if (enable)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
+        else
+        {
+            glDisable(GL_BLEND);
+        }
     }
 }

@@ -21,6 +21,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void unbind();
         void clear();
         void resize_if_needed(glm::ivec2 size);
+        void enable_transparency(bool enable);
 
     private:
         glm::vec3 m_clear_color;

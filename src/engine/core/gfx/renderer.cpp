@@ -243,6 +243,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
             m_render_renderable_requests.clear();
         }
 
+        m_framebuffer.enable_transparency(true);
+
         // Render text.
         if (!m_render_text_requests.empty())
         {
@@ -275,6 +277,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
             m_text_mesh.clear();
             m_render_text_requests.clear();
         }
+        m_framebuffer.enable_transparency(false);
         m_framebuffer.unbind();
 
         return m_framebuffer.get_color_texture();
