@@ -18,15 +18,14 @@ namespace sfg_trajectory_planner::engine::core::assets
 
     std::shared_ptr<gfx::Material> AssetLocator::load_material(const std::filesystem::path &filepath) const
     {
-        auto material_node = YAML::LoadFile(resolve_arg(filepath).string());
-        auto vertex_shader_path = material_node["vertex_shader"].as<std::string>();
-        auto fragment_shader_path = material_node["fragment_shader"].as<std::string>();
-        auto shader = load_asset<gfx::Shader>(vertex_shader_path.c_str(), fragment_shader_path.c_str());
+        auto material_file = YAML::LoadFile(resolve_arg(filepath).string());
+        auto shader_filepath = material_file["shader"].as<std::string>();
+        auto shader = load_asset<gfx::Shader>(shader_filepath);
         auto material = std::make_shared<gfx::Material>(shader);
 
-        if (material_node["uniforms"])
+        if (material_file["uniforms"])
         {
-            for (const auto &uniform_node : material_node["uniforms"])
+            for (const auto &uniform_node : material_file["uniforms"])
             {
                 auto uniform_name = uniform_node.first.as<std::string>();
                 const auto &value_node = uniform_node.second;
@@ -74,26 +73,21 @@ namespace sfg_trajectory_planner::engine::core::assets
         return material;
     }
 
-    std::shared_ptr<gfx::Shader> AssetLocator::load_shader(const std::filesystem::path &vertex_source_filepath, const std::filesystem::path &fragment_source_filepath) const
+    std::shared_ptr<gfx::Shader> AssetLocator::load_shader(const std::filesystem::path &filepath) const
     {
-        std::string vertex_source;
-        std::string fragment_source;
+        std::string shader_source;
 
         try
         {
             using Iterator = std::istreambuf_iterator<char>;
-
-            std::ifstream vertex_source_file(resolve_arg(vertex_source_filepath));
-            std::ifstream fragment_source_file(resolve_arg(fragment_source_filepath));
-            vertex_source = std::string((Iterator(vertex_source_file)), Iterator());
-            fragment_source = std::string((Iterator(fragment_source_file)), Iterator());
+            std::ifstream shader_source_file(resolve_arg(filepath));
+            shader_source = std::string((Iterator(shader_source_file)), Iterator());
         }
         catch (const std::exception &exception)
         {
             throw std::runtime_error(std::string("Failed to read shader source files: ") + exception.what());
         }
-        auto shader = std::make_shared<gfx::Shader>(vertex_source.c_str(), fragment_source.c_str());
-        return shader;
+        return std::make_shared<gfx::Shader>(shader_source.c_str());
     }
 
     std::shared_ptr<gfx::TextFont> AssetLocator::load_text_font(const std::filesystem::path &filepath, float height) const
@@ -104,6 +98,7 @@ namespace sfg_trajectory_planner::engine::core::assets
         {
             throw std::runtime_error("Failed to open font file: " + filepath.string());
         }
+
         std::streamsize size = file.tellg();
         file.seekg(0, std::ios::beg);
         std::vector<std::uint8_t> data(size);
@@ -112,7 +107,6 @@ namespace sfg_trajectory_planner::engine::core::assets
         {
             throw std::runtime_error("Failed to read font file: " + filepath.string());
         }
-        auto text_font = std::make_shared<gfx::TextFont>(data.data(), height);
-        return text_font;
+        return std::make_shared<gfx::TextFont>(data.data(), height);
     }
 }

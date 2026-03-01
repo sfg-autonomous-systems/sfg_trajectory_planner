@@ -11,7 +11,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class Shader : public IBindable
     {
     public:
-        Shader(const char *vertex_source, const char *fragment_source);
+        Shader(const char *shader_source);
         Shader(const Shader &) = delete;
         Shader &operator=(const Shader &) = delete;
         Shader(Shader &&) noexcept;
@@ -27,6 +27,13 @@ namespace sfg_trajectory_planner::engine::core::gfx
         GLint get_uniform_location(const std::string &name) const;
 
     private:
+        enum class ShaderStage
+        {
+            None,
+            Vertex,
+            Fragment
+        };
+
         GLuint m_id = 0;
 
         // Uniform locations cached for performance since these are set frequently.

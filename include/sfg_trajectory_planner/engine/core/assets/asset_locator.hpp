@@ -25,7 +25,7 @@ namespace sfg_trajectory_planner::engine::core::assets
 
     private:
         std::shared_ptr<gfx::Material> load_material(const std::filesystem::path &filepath) const;
-        std::shared_ptr<gfx::Shader> load_shader(const std::filesystem::path &vertex_source_filepath, const std::filesystem::path &fragment_source_filepath) const;
+        std::shared_ptr<gfx::Shader> load_shader(const std::filesystem::path &filepath) const;
         std::shared_ptr<gfx::TextFont> load_text_font(const std::filesystem::path &filepath, float height) const;
 
         template <typename AssetType, typename... Args>

@@ -1,19 +1,72 @@
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 
-#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    Shader::Shader(const char *vertex_source, const char *fragment_source)
+    Shader::Shader(const char *shader_source)
     {
+
+        // Read the shader source line for line. The shader contents should be of the form:
+        // ... shared shader code for all stages ...
+        // #pragma stage vertex
+        // ... vertex shader source code ...
+        // #pragma stage fragment
+        // ... fragment shader source code ...
+
+        // Resolve #include directives in the shader source using stb_include.
+        std::string shared_source;
+        std::string vertex_source;
+        std::string fragment_source;
+
+        auto current_stage = ShaderStage::None;
+        std::istringstream shader_source_stream(shader_source);
+        std::string line;
+
+        while (std::getline(shader_source_stream, line))
+        {
+            if (line.find("#pragma stage vertex") != std::string::npos)
+            {
+                current_stage = ShaderStage::Vertex;
+            }
+            else if (line.find("#pragma stage fragment") != std::string::npos)
+            {
+                current_stage = ShaderStage::Fragment;
+            }
+            else
+            {
+                switch (current_stage)
+                {
+                    case ShaderStage::None:
+                        shared_source += line + "\n";
+                        break;
+                    case ShaderStage::Vertex:
+                        vertex_source += line + "\n";
+                        break;
+                    case ShaderStage::Fragment:
+                        fragment_source += line + "\n";
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
         auto success = 0;
         char info_log[512];
 
+        if (vertex_source.empty())
+        {
+            throw std::runtime_error("Shader source must contain vertex shader stage.");
+        }
+
+        vertex_source = shared_source + vertex_source;
         auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex_shader, 1, &vertex_source, nullptr);
+        auto vertex_source_c_str = vertex_source.c_str();
+        glShaderSource(vertex_shader, 1, &vertex_source_c_str, nullptr);
         glCompileShader(vertex_shader);
         glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 
@@ -23,8 +76,15 @@ namespace sfg_trajectory_planner::engine::core::gfx
             throw std::runtime_error(std::string("Vertex shader compilation failed: ") + info_log);
         }
 
+        if (fragment_source.empty())
+        {
+            throw std::runtime_error("Shader source must contain fragment shader stage.");
+        }
+
+        fragment_source = shared_source + fragment_source;
         auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment_shader, 1, &fragment_source, nullptr);
+        auto fragment_source_c_str = fragment_source.c_str();
+        glShaderSource(fragment_shader, 1, &fragment_source_c_str, nullptr);
         glCompileShader(fragment_shader);
         glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 
