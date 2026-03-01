@@ -1,6 +1,7 @@
 #include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
 
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -47,11 +48,22 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         glDeleteShader(vertex_shader);
         glDeleteShader(fragment_shader);
+
+        m_ls_to_ws_uniform_location = glGetUniformLocation(m_id, "u_LsToWsMatrix");
+        m_ws_to_cs_uniform_location = glGetUniformLocation(m_id, "u_WsToCsMatrix");
+        m_ls_to_cs_uniform_location = glGetUniformLocation(m_id, "u_LsToCsMatrix");
     }
 
-    Shader::Shader(Shader &&other) noexcept : m_id(other.m_id)
+    Shader::Shader(Shader &&other) noexcept
+        : m_id(other.m_id),
+          m_ls_to_ws_uniform_location(other.m_ls_to_ws_uniform_location),
+          m_ws_to_cs_uniform_location(other.m_ws_to_cs_uniform_location),
+          m_ls_to_cs_uniform_location(other.m_ls_to_cs_uniform_location)
     {
         other.m_id = 0;
+        other.m_ls_to_ws_uniform_location = 0;
+        other.m_ws_to_cs_uniform_location = 0;
+        other.m_ls_to_cs_uniform_location = 0;
     }
 
     Shader &Shader::operator=(Shader &&other) noexcept
@@ -64,7 +76,14 @@ namespace sfg_trajectory_planner::engine::core::gfx
             }
 
             m_id = other.m_id;
+            m_ls_to_ws_uniform_location = other.m_ls_to_ws_uniform_location;
+            m_ws_to_cs_uniform_location = other.m_ws_to_cs_uniform_location;
+            m_ls_to_cs_uniform_location = other.m_ls_to_cs_uniform_location;
+
             other.m_id = 0;
+            other.m_ls_to_ws_uniform_location = 0;
+            other.m_ws_to_cs_uniform_location = 0;
+            other.m_ls_to_cs_uniform_location = 0;
         }
         return *this;
     }
@@ -87,8 +106,34 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glUseProgram(0);
     }
 
+    void Shader::set_ls_to_ws_matrix(const glm::mat4 &matrix) const
+    {
+        glUniformMatrix4fv(m_ls_to_ws_uniform_location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void Shader::set_ws_to_cs_matrix(const glm::mat4 &matrix) const
+    {
+        glUniformMatrix4fv(m_ws_to_cs_uniform_location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void Shader::set_ls_to_cs_matrix(const glm::mat4 &matrix) const
+    {
+        glUniformMatrix4fv(m_ls_to_cs_uniform_location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
     GLuint Shader::get_id() const
     {
         return m_id;
+    }
+
+    GLint Shader::get_uniform_location(const std::string &name) const
+    {
+        if (m_uniform_location_cache.find(name) != m_uniform_location_cache.end())
+        {
+            return m_uniform_location_cache[name];
+        }
+        auto location = glGetUniformLocation(m_id, name.c_str());
+        m_uniform_location_cache[name] = location;
+        return location;
     }
 }

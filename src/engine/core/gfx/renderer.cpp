@@ -217,7 +217,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         if (!m_line_mesh.empty())
         {
             m_line_shader->bind();
-            glUniformMatrix4fv(glGetUniformLocation(m_line_shader->get_id(), "u_WsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ws_to_cs_matrix));
+            m_line_shader->set_ws_to_cs_matrix(ws_to_cs_matrix);
 
             if (m_line_mesh.get_topology() == Mesh<LineVertex>::Topology::Lines)
             {
@@ -236,7 +236,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
                 auto ls_to_cs_matrix = ws_to_cs_matrix * request.m_ls_to_ws_matrix;
 
                 request.m_shader->bind();
-                glUniformMatrix4fv(glGetUniformLocation(request.m_shader->get_id(), "u_LsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ls_to_cs_matrix));
+                request.m_shader->set_ls_to_cs_matrix(ls_to_cs_matrix);
                 request.m_renderable->render();
                 request.m_shader->unbind();
             }
