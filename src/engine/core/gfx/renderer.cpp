@@ -37,9 +37,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glm::vec3 clear_color)
         : m_camera(camera),
           m_framebuffer(clear_color, m_camera.get_cs_to_ss_vector().zw()),
-          m_line_mesh(Mesh<LineVertex>::Topology::Lines),
+          m_line_mesh(GL_LINES),
           m_line_material(line_material),
-          m_text_mesh(Mesh<TextVertex>::Topology::Triangles),
+          m_text_mesh(GL_TRIANGLES),
           m_text_material(text_material),
           m_text_font(text_font)
     {
@@ -218,10 +218,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
         // Render lines.
         if (!m_line_mesh.empty())
         {
+            m_line_material->set_uniform("u_WsToCsMatrix", ws_to_cs_matrix);
             m_line_material->bind();
-            m_line_material->get_shader()->set_ws_to_cs_matrix(ws_to_cs_matrix);
 
-            if (m_line_mesh.get_topology() == Mesh<LineVertex>::Topology::Lines)
+            if (m_line_mesh.get_topology() == GL_LINES)
             {
                 glLineWidth(2.0f);
             }
@@ -237,8 +237,10 @@ namespace sfg_trajectory_planner::engine::core::gfx
             {
                 auto ls_to_cs_matrix = ws_to_cs_matrix * request.m_ls_to_ws_matrix;
 
+                request.m_material->set_uniform("u_LsToWsMatrix", request.m_ls_to_ws_matrix);
+                request.m_material->set_uniform("u_LsToCsMatrix", ls_to_cs_matrix);
+                request.m_material->set_uniform("u_WsToCsMatrix", ws_to_cs_matrix);
                 request.m_material->bind();
-                request.m_material->get_shader()->set_ls_to_cs_matrix(ls_to_cs_matrix);
                 request.m_renderable->render();
                 request.m_material->unbind();
             }
@@ -268,9 +270,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
                 current_index += 4;
             }
 
+            m_text_material->set_uniform("u_WsToCsMatrix", ws_to_cs_matrix);
             m_text_material->bind();
-            m_text_material->get_shader()->set_ws_to_cs_matrix(ws_to_cs_matrix);
-
             m_text_mesh.render();
             m_text_material->unbind();
             m_text_mesh.clear();

@@ -7,123 +7,99 @@
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
-    Shader::Shader(const char *shader_source)
+    Shader::Shader(const std::string &shader_source)
     {
-
         // Read the shader source line for line. The shader contents should be of the form:
-        // ... shared shader code for all stages ...
+        // ... shared code for all stages ...
         // #pragma stage vertex
-        // ... vertex shader source code ...
+        // ... vertex stage source code ...
         // #pragma stage fragment
-        // ... fragment shader source code ...
-
-        // Resolve #include directives in the shader source using stb_include.
-        std::string shared_source;
-        std::string vertex_source;
-        std::string fragment_source;
-
-        auto current_stage = ShaderStage::None;
+        // ... fragment stage source code ...
+        std::array<std::string, s_stage_count> stage_sources;
+        std::array<bool, s_stage_count> stage_source_defined = {false};
+        // The index of the current shader stage source being read. An index of s_stage_count indicates shared source code that should be included in all stages.
+        auto current_stage_index = s_stage_count;
         std::istringstream shader_source_stream(shader_source);
         std::string line;
 
         while (std::getline(shader_source_stream, line))
         {
-            if (line.find("#pragma stage vertex") != std::string::npos)
-            {
-                current_stage = ShaderStage::Vertex;
-            }
-            else if (line.find("#pragma stage fragment") != std::string::npos)
-            {
-                current_stage = ShaderStage::Fragment;
-            }
-            else
-            {
-                switch (current_stage)
+            auto stage = std::find_if(
+                std::begin(s_stages),
+                std::end(s_stages),
+                [&](const auto &stage)
                 {
-                    case ShaderStage::None:
-                        shared_source += line + "\n";
-                        break;
-                    case ShaderStage::Vertex:
-                        vertex_source += line + "\n";
-                        break;
-                    case ShaderStage::Fragment:
-                        fragment_source += line + "\n";
-                        break;
-                    default:
-                        break;
+                    return line.find(stage.m_keyword) == 0;
+                });
+
+            // Switch to the correct stage source index based on the encountered stage keyword.
+            if (stage != std::end(s_stages))
+            {
+                current_stage_index = std::distance(std::begin(s_stages), stage);
+
+                if (stage_source_defined[current_stage_index])
+                {
+                    throw std::runtime_error(std::string(stage->m_name) + " shader stage is defined multiple times in shader.");
                 }
+                stage_source_defined[current_stage_index] = true;
+            }
+
+            auto is_shared_line = current_stage_index == s_stage_count;
+
+            for (size_t stage_index = 0; stage_index < s_stage_count; stage_index++)
+            {
+                auto is_current_stage_line = stage_index == current_stage_index;
+
+                if (is_shared_line || is_current_stage_line)
+                {
+                    stage_sources[stage_index] += line;
+                }
+                stage_sources[stage_index] += "\n";
             }
         }
 
         auto success = 0;
         char info_log[512];
-
-        if (vertex_source.empty())
-        {
-            throw std::runtime_error("Shader source must contain vertex shader stage. Source is:\n" + std::string(shader_source));
-        }
-
-        vertex_source = shared_source + vertex_source;
-        auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-        auto vertex_source_c_str = vertex_source.c_str();
-        glShaderSource(vertex_shader, 1, &vertex_source_c_str, nullptr);
-        glCompileShader(vertex_shader);
-        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-
-        if (!success)
-        {
-            glGetShaderInfoLog(vertex_shader, 512, nullptr, info_log);
-            throw std::runtime_error(std::string("Vertex shader compilation failed: ") + info_log);
-        }
-
-        if (fragment_source.empty())
-        {
-            throw std::runtime_error("Shader source must contain fragment shader stage.");
-        }
-
-        fragment_source = shared_source + fragment_source;
-        auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-        auto fragment_source_c_str = fragment_source.c_str();
-        glShaderSource(fragment_shader, 1, &fragment_source_c_str, nullptr);
-        glCompileShader(fragment_shader);
-        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-
-        if (!success)
-        {
-            glGetShaderInfoLog(fragment_shader, 512, nullptr, info_log);
-            throw std::runtime_error(std::string("Fragment shader compilation failed: ") + info_log);
-        }
-
         m_id = glCreateProgram();
-        glAttachShader(m_id, vertex_shader);
-        glAttachShader(m_id, fragment_shader);
+
+        for (size_t stage_index = 0; stage_index < s_stage_count; stage_index++)
+        {
+            if (!stage_source_defined[stage_index])
+            {
+                continue;
+            }
+            const auto &stage = s_stages[stage_index];
+            const auto stage_source = stage_sources[stage_index].c_str();
+
+            auto stage_id = glCreateShader(stage.m_shader_type);
+            glShaderSource(stage_id, 1, &stage_source, nullptr);
+            glCompileShader(stage_id);
+            glGetShaderiv(stage_id, GL_COMPILE_STATUS, &success);
+
+            if (!success)
+            {
+                glGetShaderInfoLog(stage_id, 512, nullptr, info_log);
+                throw std::runtime_error(std::string(stage.m_name) + " shader stage compilation failed: " + info_log);
+            }
+            glAttachShader(m_id, stage_id);
+            glDeleteShader(stage_id);
+        }
+
         glLinkProgram(m_id);
         glGetProgramiv(m_id, GL_LINK_STATUS, &success);
 
         if (!success)
         {
             glGetProgramInfoLog(m_id, 512, nullptr, info_log);
-            throw std::runtime_error(std::string("Shader program linking failed: ") + info_log);
+            throw std::runtime_error(std::string("Shader linking failed: ") + info_log);
         }
-
-        glDeleteShader(vertex_shader);
-        glDeleteShader(fragment_shader);
-
-        m_ls_to_ws_uniform_location = glGetUniformLocation(m_id, "u_LsToWsMatrix");
-        m_ws_to_cs_uniform_location = glGetUniformLocation(m_id, "u_WsToCsMatrix");
-        m_ls_to_cs_uniform_location = glGetUniformLocation(m_id, "u_LsToCsMatrix");
     }
 
     Shader::Shader(Shader &&other) noexcept
         : m_id(other.m_id),
-          m_ls_to_ws_uniform_location(other.m_ls_to_ws_uniform_location),
-          m_ws_to_cs_uniform_location(other.m_ws_to_cs_uniform_location),
-          m_ls_to_cs_uniform_location(other.m_ls_to_cs_uniform_location)
+          m_uniform_location_cache(std::move(other.m_uniform_location_cache))
     {
         other.m_id = 0;
-        other.m_ls_to_ws_uniform_location = 0;
-        other.m_ws_to_cs_uniform_location = 0;
-        other.m_ls_to_cs_uniform_location = 0;
     }
 
     Shader &Shader::operator=(Shader &&other) noexcept
@@ -134,16 +110,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
             {
                 glDeleteProgram(m_id);
             }
-
             m_id = other.m_id;
-            m_ls_to_ws_uniform_location = other.m_ls_to_ws_uniform_location;
-            m_ws_to_cs_uniform_location = other.m_ws_to_cs_uniform_location;
-            m_ls_to_cs_uniform_location = other.m_ls_to_cs_uniform_location;
-
+            m_uniform_location_cache = std::move(other.m_uniform_location_cache);
             other.m_id = 0;
-            other.m_ls_to_ws_uniform_location = 0;
-            other.m_ws_to_cs_uniform_location = 0;
-            other.m_ls_to_cs_uniform_location = 0;
         }
         return *this;
     }
@@ -166,21 +135,6 @@ namespace sfg_trajectory_planner::engine::core::gfx
         glUseProgram(0);
     }
 
-    void Shader::set_ls_to_ws_matrix(const glm::mat4 &matrix) const
-    {
-        glUniformMatrix4fv(m_ls_to_ws_uniform_location, 1, GL_FALSE, glm::value_ptr(matrix));
-    }
-
-    void Shader::set_ws_to_cs_matrix(const glm::mat4 &matrix) const
-    {
-        glUniformMatrix4fv(m_ws_to_cs_uniform_location, 1, GL_FALSE, glm::value_ptr(matrix));
-    }
-
-    void Shader::set_ls_to_cs_matrix(const glm::mat4 &matrix) const
-    {
-        glUniformMatrix4fv(m_ls_to_cs_uniform_location, 1, GL_FALSE, glm::value_ptr(matrix));
-    }
-
     GLuint Shader::get_id() const
     {
         return m_id;
@@ -188,9 +142,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     GLint Shader::get_uniform_location(const std::string &name) const
     {
-        if (m_uniform_location_cache.find(name) != m_uniform_location_cache.end())
+        if (auto iterator = m_uniform_location_cache.find(name); iterator != m_uniform_location_cache.end())
         {
-            return m_uniform_location_cache[name];
+            return iterator->second;
         }
         auto location = glGetUniformLocation(m_id, name.c_str());
         m_uniform_location_cache[name] = location;

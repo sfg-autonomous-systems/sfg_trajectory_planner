@@ -3,7 +3,7 @@
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     template <typename VertexType>
-    Mesh<VertexType>::Mesh(Topology topology)
+    Mesh<VertexType>::Mesh(GLenum topology)
         : m_topology(topology)
     {
         // Generate vertex array object and vertex buffer object.
@@ -106,11 +106,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         if (m_indices.empty())
         {
-            glDrawArrays(m_topology == Topology::Triangles ? GL_TRIANGLES : GL_LINES, 0, static_cast<GLsizei>(m_vertices.size()));
+            glDrawArrays(m_topology, 0, static_cast<GLsizei>(m_vertices.size()));
         }
         else
         {
-            glDrawElements(m_topology == Topology::Triangles ? GL_TRIANGLES : GL_LINES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, static_cast<void *>(0));
+            glDrawElements(m_topology, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, static_cast<void *>(0));
         }
         unbind();
     }
@@ -124,7 +124,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     }
 
     template <typename VertexType>
-    typename Mesh<VertexType>::Topology Mesh<VertexType>::get_topology() const
+    GLenum Mesh<VertexType>::get_topology() const
     {
         return m_topology;
     }

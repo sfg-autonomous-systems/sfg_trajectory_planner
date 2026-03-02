@@ -2,6 +2,9 @@
 
 #include <fstream>
 #include <sstream>
+#define STB_INCLUDE_IMPLEMENTATION
+#define STB_INCLUDE_LINE_GLSL
+#include <stb_include.h>
 #include <type_traits>
 #include <yaml-cpp/yaml.h>
 
@@ -85,9 +88,27 @@ namespace sfg_trajectory_planner::engine::core::assets
         }
         catch (const std::exception &exception)
         {
-            throw std::runtime_error(std::string("Failed to read shader source files: ") + exception.what());
+            throw std::runtime_error("Failed to read shader source file '" + filepath.string() + "': " + exception.what());
         }
-        return std::make_shared<gfx::Shader>(shader_source.c_str());
+
+        char error[256];
+        std::string filename = filepath.filename().string();
+
+        char *shader_source_processed = stb_include_string(
+            shader_source.data(),
+            nullptr,
+            const_cast<char *>(m_asset_directory.c_str()),
+            const_cast<char *>(filename.c_str()),
+            error);
+
+        if (shader_source_processed == nullptr)
+        {
+            throw std::runtime_error("Failed to preprocess shader source file '" + filepath.string() + "': " + error);
+        }
+
+        shader_source = shader_source_processed;
+        free(shader_source_processed);
+        return std::make_shared<gfx::Shader>(shader_source);
     }
 
     std::shared_ptr<gfx::TextFont> AssetLocator::load_text_font(const std::filesystem::path &filepath, float height) const

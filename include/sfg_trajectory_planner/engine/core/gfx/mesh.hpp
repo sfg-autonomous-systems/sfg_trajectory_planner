@@ -9,13 +9,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class Mesh : public IRenderable, public IBindable
     {
     public:
-        enum class Topology
-        {
-            Triangles,
-            Lines,
-        };
-
-        Mesh(Topology topology = Topology::Triangles);
+        Mesh(GLenum topology = GL_TRIANGLES);
         Mesh(const Mesh &) = delete;
         Mesh &operator=(const Mesh &) = delete;
         Mesh(Mesh &&) noexcept;
@@ -25,7 +19,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void render() override;
         void clear();
 
-        Topology get_topology() const;
+        GLenum get_topology() const;
         bool empty() const;
         size_t vertex_count() const;
 
@@ -40,7 +34,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void unbind() const override;
         void upload() const;
 
-        const Topology m_topology;
+        const GLenum m_topology;
         std::vector<VertexType> m_vertices;
         std::vector<std::uint32_t> m_indices;
 

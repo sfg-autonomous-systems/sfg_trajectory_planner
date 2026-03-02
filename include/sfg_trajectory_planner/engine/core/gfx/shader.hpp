@@ -11,7 +11,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
     class Shader : public IBindable
     {
     public:
-        Shader(const char *shader_source);
+        Shader(const std::string &shader_source);
         Shader(const Shader &) = delete;
         Shader &operator=(const Shader &) = delete;
         Shader(Shader &&) noexcept;
@@ -20,27 +20,24 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         void bind() const override;
         void unbind() const override;
-        void set_ls_to_ws_matrix(const glm::mat4 &matrix) const;
-        void set_ws_to_cs_matrix(const glm::mat4 &matrix) const;
-        void set_ls_to_cs_matrix(const glm::mat4 &matrix) const;
         GLuint get_id() const;
         GLint get_uniform_location(const std::string &name) const;
 
     private:
-        enum class ShaderStage
+        struct Stage
         {
-            None,
-            Vertex,
-            Fragment
+            const char *m_name;
+            const char *m_keyword;
+            GLuint m_shader_type;
         };
 
+        static constexpr Stage s_stages[] = {
+            {"Vertex", "#pragma stage vertex", GL_VERTEX_SHADER},
+            {"Geometry", "#pragma stage geometry", GL_GEOMETRY_SHADER},
+            {"Fragment", "#pragma stage fragment", GL_FRAGMENT_SHADER}};
+        static constexpr size_t s_stage_count = sizeof(s_stages) / sizeof(Stage);
+
         GLuint m_id = 0;
-
-        // Uniform locations cached for performance since these are set frequently.
-        GLuint m_ls_to_ws_uniform_location = 0;
-        GLuint m_ws_to_cs_uniform_location = 0;
-        GLuint m_ls_to_cs_uniform_location = 0;
-
         mutable std::unordered_map<std::string, GLint> m_uniform_location_cache;
     };
 }
