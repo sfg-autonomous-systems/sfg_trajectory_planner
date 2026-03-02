@@ -87,21 +87,21 @@ namespace sfg_trajectory_planner::app::editor
             return;
         }
 
-        if (ImGui::Button("Publish Trajectory", ImVec2(-1.0f, 0.0f)))
+        if (ImGui::Button("Follow Trajectory", ImVec2(-1.0f, 0.0f)))
         {
-            target()->publish_trajectory();
+            target()->follow_trajectory();
         }
 
         auto trajectory = target();
         auto dirty = false;
         auto record_object = false;
         auto add_waypoint = false;
-        auto topic_name = trajectory->get_topic_name();
+        auto action_name = trajectory->get_action_name();
         auto frame_id = trajectory->get_frame_id();
         auto time_from_start = trajectory->get_time_from_start();
         auto color = trajectory->get_color();
 
-        dirty |= ImGui::InputText("Topic Name", &topic_name, ImGuiInputTextFlags_EnterReturnsTrue);
+        dirty |= ImGui::InputText("Action Name", &action_name, ImGuiInputTextFlags_EnterReturnsTrue);
         record_object |= ImGui::IsItemActivated();
 
         dirty |= ImGui::InputText("Frame ID", &frame_id, ImGuiInputTextFlags_EnterReturnsTrue);
@@ -244,7 +244,7 @@ namespace sfg_trajectory_planner::app::editor
 
         if (dirty)
         {
-            trajectory->set_topic_name(topic_name);
+            trajectory->set_action_name(action_name);
             trajectory->set_frame_id(frame_id);
             trajectory->set_time_from_start(time_from_start);
             trajectory->set_color(color);

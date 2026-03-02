@@ -23,14 +23,14 @@ namespace sfg_trajectory_planner::app::core
         : SceneObject(key, scene, uuid),
           m_node(node)
     {
-        create_trajectory_publisher(m_topic_name);
+        create_follow_trajectory_client();
     }
 
     void Trajectory::serialize(engine::core::serialization::AbstractSerializer *serializer) const
     {
         SceneObject::serialize(serializer);
 
-        serializer->serialize("topic_name", m_topic_name);
+        serializer->serialize("action_name", m_action_name);
         serializer->serialize("frame_id", m_frame_id);
         serializer->serialize("time_from_start", m_time_from_start);
         serializer->serialize("color", std::vector<float>{m_color.r, m_color.g, m_color.b});
@@ -48,7 +48,7 @@ namespace sfg_trajectory_planner::app::core
     {
         SceneObject::deserialize(serializer);
 
-        set_topic_name(serializer->deserialize<std::string>("topic_name"));
+        set_action_name(serializer->deserialize<std::string>("action_name"));
         set_frame_id(serializer->deserialize<std::string>("frame_id"));
         set_time_from_start(serializer->deserialize<float>("time_from_start"));
         auto color = serializer->deserialize<std::vector<float>>("color");
@@ -96,9 +96,9 @@ namespace sfg_trajectory_planner::app::core
         }
     }
 
-    const std::string &Trajectory::get_topic_name() const
+    const std::string &Trajectory::get_action_name() const
     {
-        return m_topic_name;
+        return m_action_name;
     }
 
     const std::string &Trajectory::get_frame_id() const
@@ -121,14 +121,15 @@ namespace sfg_trajectory_planner::app::core
         return m_waypoints.size();
     }
 
-    void Trajectory::set_topic_name(std::string topic_name)
+    void Trajectory::set_action_name(std::string action_name)
     {
-        // ToDo: Validate topic name.
-        if (topic_name != m_topic_name)
+        // ToDo: Validate action name.
+        if (action_name == m_action_name)
         {
-            create_trajectory_publisher(topic_name);
+            return;
         }
-        m_topic_name = std::move(topic_name);
+        m_action_name = std::move(action_name);
+        create_follow_trajectory_client();
     }
 
     void Trajectory::set_frame_id(std::string frame_id)
@@ -265,18 +266,25 @@ namespace sfg_trajectory_planner::app::core
         return false;
     }
 
-    void Trajectory::publish_trajectory() const
+    void Trajectory::follow_trajectory() const
     {
-        if (!m_trajectory_publisher)
+        if (!m_follow_trajectory_client)
         {
+            RCLCPP_ERROR(m_node->get_logger(), "Action client is not initialized. Cannot follow trajectory.");
+            return;
+        }
+
+        if (!m_follow_trajectory_client->action_server_is_ready())
+        {
+            RCLCPP_ERROR(m_node->get_logger(), "Action server '%s' is not ready.", get_action_name().c_str());
             return;
         }
 
         auto ls_to_ws_matrix = get_ls_to_ws_matrix();
-
-        auto msg = std::make_unique<sfg_agent_msgs::msg::Trajectory>();
-        msg->header.stamp = m_node->now() + rclcpp::Duration::from_seconds(get_time_from_start());
-        msg->header.frame_id = get_frame_id();
+        auto action = sfg_agent_msgs::action::FollowTrajectory::Goal();
+        auto &trajectory = action.trajectory;
+        trajectory.header.stamp = m_node->now() + rclcpp::Duration::from_seconds(get_time_from_start());
+        trajectory.header.frame_id = get_frame_id();
 
         for (size_t index = 0; index < get_waypoint_count(); index++)
         {
@@ -284,30 +292,49 @@ namespace sfg_trajectory_planner::app::core
             glm::vec3 waypoint_position_ws = glm::vec3(waypoint_ws_matrix[3]);
             glm::quat waypoint_rotation_ws = glm::quat_cast(waypoint_ws_matrix);
 
-            sfg_agent_msgs::msg::Waypoint waypoint_msg;
-            waypoint_msg.pose.position.x = waypoint_position_ws.x;
-            waypoint_msg.pose.position.y = waypoint_position_ws.y;
-            waypoint_msg.pose.position.z = waypoint_position_ws.z;
-            waypoint_msg.pose.orientation.x = waypoint_rotation_ws.x;
-            waypoint_msg.pose.orientation.y = waypoint_rotation_ws.y;
-            waypoint_msg.pose.orientation.z = waypoint_rotation_ws.z;
-            waypoint_msg.pose.orientation.w = waypoint_rotation_ws.w;
-            waypoint_msg.time_from_last = rclcpp::Duration::from_seconds(get_waypoint_time_from_last(index));
-            msg->waypoints.push_back(waypoint_msg);
+            sfg_agent_msgs::msg::Waypoint waypoint;
+            waypoint.pose.position.x = waypoint_position_ws.x;
+            waypoint.pose.position.y = waypoint_position_ws.y;
+            waypoint.pose.position.z = waypoint_position_ws.z;
+            waypoint.pose.orientation.x = waypoint_rotation_ws.x;
+            waypoint.pose.orientation.y = waypoint_rotation_ws.y;
+            waypoint.pose.orientation.z = waypoint_rotation_ws.z;
+            waypoint.pose.orientation.w = waypoint_rotation_ws.w;
+            waypoint.time_from_last = rclcpp::Duration::from_seconds(get_waypoint_time_from_last(index));
+            trajectory.waypoints.push_back(waypoint);
         }
-        m_trajectory_publisher->publish(std::move(msg));
+
+        auto send_goal_options = rclcpp_action::Client<sfg_agent_msgs::action::FollowTrajectory>::SendGoalOptions();
+
+        send_goal_options.goal_response_callback = [](auto goal_handle)
+        {
+            (void)goal_handle;
+        };
+
+        send_goal_options.feedback_callback = [](auto goal_handle, const auto feedback)
+        {
+            (void)goal_handle;
+            (void)feedback;
+        };
+
+        send_goal_options.result_callback = [](const auto &result)
+        {
+            (void)result;
+        };
+
+        m_follow_trajectory_client->async_send_goal(action, send_goal_options);
     }
 
-    void Trajectory::create_trajectory_publisher(const std::string &topic_name)
+    void Trajectory::create_follow_trajectory_client()
     {
         try
         {
-            m_trajectory_publisher = m_node->template create_publisher<sfg_agent_msgs::msg::Trajectory>(topic_name, 10);
+            m_follow_trajectory_client = rclcpp_action::create_client<sfg_agent_msgs::action::FollowTrajectory>(m_node, get_action_name());
         }
         catch (const rclcpp::exceptions::InvalidTopicNameError &exception)
         {
-            RCLCPP_ERROR(m_node->get_logger(), "Failed to create trajectory publisher: %s", exception.what());
-            m_trajectory_publisher = nullptr;
+            RCLCPP_ERROR(m_node->get_logger(), "Failed to create follow trajectory client: %s", exception.what());
+            m_follow_trajectory_client = nullptr;
         }
     }
 

@@ -11,6 +11,7 @@
   <depend>fmt</depend>
   <depend>magic_enum</depend>
   <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
   <depend>rclcpp_components</depend>
   <depend>sfg_agent_msgs</depend>
   <depend>sfg_imgui_vendor</depend>
