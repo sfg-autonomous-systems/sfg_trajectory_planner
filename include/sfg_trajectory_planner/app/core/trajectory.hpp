@@ -1,5 +1,8 @@
 #pragma once
 
+#include <rclcpp/rclcpp.hpp>
+
+#include "sfg_agent_msgs/msg/trajectory.hpp"
 #include "sfg_trajectory_planner/app/core/waypoint.hpp"
 #include "sfg_trajectory_planner/engine/core/scene_object.hpp"
 
@@ -13,7 +16,7 @@ namespace sfg_trajectory_planner::app::core
     class Trajectory : public engine::core::SceneObject
     {
     public:
-        Trajectory(engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid, const engine::core::assets::AssetLocator &asset_locator);
+        Trajectory(engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid, const engine::core::assets::AssetLocator &asset_locator, rclcpp::Node *node);
         void serialize(engine::core::serialization::AbstractSerializer *serializer) const override;
         void deserialize(engine::core::serialization::AbstractSerializer *serializer) override;
         void render_object(engine::core::gfx::Renderer &renderer) override;
@@ -49,7 +52,10 @@ namespace sfg_trajectory_planner::app::core
         bool can_rotate_waypoint(size_t index) const;
         bool can_scale_waypoint(size_t index) const;
 
+        void publish_trajectory() const;
+
     private:
+        void create_trajectory_publisher(const std::string &topic_name);
         void enforce_waypoint_constraints(size_t index);
 
         std::string m_topic_name = "/trajectory";
@@ -57,6 +63,9 @@ namespace sfg_trajectory_planner::app::core
         float m_time_from_start = 0.0f;
         glm::vec3 m_color = {0.0f, 1.0f, 0.0f};
         std::vector<Waypoint> m_waypoints;
+
+        rclcpp::Publisher<sfg_agent_msgs::msg::Trajectory>::SharedPtr m_trajectory_publisher;
+        rclcpp::Node *m_node;
     };
 }
 

@@ -25,9 +25,8 @@ namespace sfg_trajectory_planner::app::editor
     static constexpr auto s_modify_waypoint_constraints_popup_id = "modify_waypoint_constraints_popup";
     static constexpr auto s_modify_waypoint_constraints_button_text = "C";
 
-    TrajectoryEditor::TrajectoryEditor(engine::editor::EditorContext &editor_context, rclcpp::Node *node) : SceneObjectEditor(editor_context), m_node(node)
+    TrajectoryEditor::TrajectoryEditor(engine::editor::EditorContext &editor_context) : SceneObjectEditor(editor_context)
     {
-        create_trajectory_publisher(target()->get_topic_name());
     }
 
     void TrajectoryEditor::render_editor(engine::core::gfx::Renderer &renderer)
@@ -72,7 +71,7 @@ namespace sfg_trajectory_planner::app::editor
                 }
             }
 
-            if (distance_from_camera_squared == std::numeric_limits<float>::max() && !ImGuizmo::IsUsingAny())
+            if (distance_from_camera_squared == std::numeric_limits<float>::max() && !ImGuizmo::IsUsingAny() && ImGui::IsWindowHovered())
             {
                 m_selected_waypoint_index = std::numeric_limits<size_t>::max();
             }
@@ -90,7 +89,7 @@ namespace sfg_trajectory_planner::app::editor
 
         if (ImGui::Button("Publish Trajectory", ImVec2(-1.0f, 0.0f)))
         {
-            publish_trajectory(m_node->now());
+            target()->publish_trajectory();
         }
 
         auto trajectory = target();
@@ -102,24 +101,10 @@ namespace sfg_trajectory_planner::app::editor
         auto time_from_start = trajectory->get_time_from_start();
         auto color = trajectory->get_color();
 
-        dirty |= ImGui::InputText("Topic Name", &topic_name);
+        dirty |= ImGui::InputText("Topic Name", &topic_name, ImGuiInputTextFlags_EnterReturnsTrue);
         record_object |= ImGui::IsItemActivated();
 
-        auto was_editing = ImGui::IsItemDeactivatedAfterEdit();
-        auto is_editing = ImGui::IsItemActive();
-        auto state_mismatch = (trajectory->get_topic_name() != m_trajectory_publisher->get_topic_name());
-
-        // We need to recreate the publisher if...
-        //     - the topic name was changed and the user has finished editing the text field.
-        //     - there is a mismatch between the trajectory's topic name and the publisher's
-        //       topic name which is not caused by the user currently editing the text field.
-        //       This can happen when the user undos a change to the topic name.
-        if (was_editing || (state_mismatch && !is_editing))
-        {
-            create_trajectory_publisher(topic_name);
-        }
-
-        dirty |= ImGui::InputText("Frame ID", &frame_id);
+        dirty |= ImGui::InputText("Frame ID", &frame_id, ImGuiInputTextFlags_EnterReturnsTrue);
         record_object |= ImGui::IsItemActivated();
 
         dirty |= ImGui::DragFloat("Time from start [s]", &time_from_start, 0.01f, 0.0f, std::numeric_limits<float>::max());
@@ -268,53 +253,6 @@ namespace sfg_trajectory_planner::app::editor
             {
                 trajectory->add_waypoint();
             }
-        }
-    }
-
-    void TrajectoryEditor::publish_trajectory(rclcpp::Time time)
-    {
-        if (!m_trajectory_publisher)
-        {
-            return;
-        }
-
-        auto trajectory = dynamic_cast<core::Trajectory *>(m_editor_context.m_selection_context.get_selected());
-        auto ls_to_ws_matrix = trajectory->get_ls_to_ws_matrix();
-
-        auto msg = std::make_unique<sfg_agent_msgs::msg::Trajectory>();
-        msg->header.stamp = time + rclcpp::Duration::from_seconds(trajectory->get_time_from_start());
-        msg->header.frame_id = trajectory->get_frame_id();
-
-        for (size_t index = 0; index < trajectory->get_waypoint_count(); index++)
-        {
-            glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * trajectory->get_waypoint_transform_ls(index).get_matrix();
-            glm::vec3 waypoint_position_ws = glm::vec3(waypoint_ws_matrix[3]);
-            glm::quat waypoint_rotation_ws = glm::quat_cast(waypoint_ws_matrix);
-
-            sfg_agent_msgs::msg::Waypoint waypoint_msg;
-            waypoint_msg.pose.position.x = waypoint_position_ws.x;
-            waypoint_msg.pose.position.y = waypoint_position_ws.y;
-            waypoint_msg.pose.position.z = waypoint_position_ws.z;
-            waypoint_msg.pose.orientation.x = waypoint_rotation_ws.x;
-            waypoint_msg.pose.orientation.y = waypoint_rotation_ws.y;
-            waypoint_msg.pose.orientation.z = waypoint_rotation_ws.z;
-            waypoint_msg.pose.orientation.w = waypoint_rotation_ws.w;
-            waypoint_msg.time_from_last = rclcpp::Duration::from_seconds(trajectory->get_waypoint_time_from_last(index));
-            msg->waypoints.push_back(waypoint_msg);
-        }
-        m_trajectory_publisher->publish(*msg);
-    }
-
-    void TrajectoryEditor::create_trajectory_publisher(const std::string &topic_name)
-    {
-        try
-        {
-            m_trajectory_publisher = m_node->template create_publisher<sfg_agent_msgs::msg::Trajectory>(topic_name, 10);
-        }
-        catch (const rclcpp::exceptions::InvalidTopicNameError &exception)
-        {
-            RCLCPP_ERROR(m_node->get_logger(), "Failed to create trajectory publisher: %s", exception.what());
-            m_trajectory_publisher = nullptr;
         }
     }
 }

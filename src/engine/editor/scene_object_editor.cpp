@@ -126,19 +126,16 @@ namespace sfg_trajectory_planner::engine::editor
         ImGui::BeginDisabled(!can_translate);
         dirty |= ImGui::DragFloat3(render_labels ? "Position [m]" : "##position", glm::value_ptr(translation), 0.01f);
         record_object |= ImGui::IsItemActivated();
-        ImGui::SetItemTooltip("Position [m]");
         ImGui::EndDisabled();
 
         ImGui::BeginDisabled(!can_rotate);
         dirty |= ImGui::DragFloat3(render_labels ? "Rotation [deg]" : "##rotation", glm::value_ptr(euler_angles), 0.01f);
         record_object |= ImGui::IsItemActivated();
-        ImGui::SetItemTooltip("Rotation [deg]");
         ImGui::EndDisabled();
 
         ImGui::BeginDisabled(!can_scale);
         dirty |= ImGui::DragFloat3(render_labels ? "Scale" : "##scale", glm::value_ptr(scale), 0.01f);
         record_object |= ImGui::IsItemActivated();
-        ImGui::SetItemTooltip("Scale");
         ImGui::EndDisabled();
 
         if (!render_labels)

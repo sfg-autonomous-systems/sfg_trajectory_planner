@@ -18,9 +18,12 @@ namespace sfg_trajectory_planner::app::core
         engine::core::SceneObject::ConstructionKey key,
         const engine::core::Scene &scene,
         uuids::uuid uuid,
-        const engine::core::assets::AssetLocator &)
-        : SceneObject(key, scene, uuid)
+        const engine::core::assets::AssetLocator &,
+        rclcpp::Node *node)
+        : SceneObject(key, scene, uuid),
+          m_node(node)
     {
+        create_trajectory_publisher(m_topic_name);
     }
 
     void Trajectory::serialize(engine::core::serialization::AbstractSerializer *serializer) const
@@ -45,11 +48,11 @@ namespace sfg_trajectory_planner::app::core
     {
         SceneObject::deserialize(serializer);
 
-        m_topic_name = serializer->deserialize<std::string>("topic_name");
-        m_frame_id = serializer->deserialize<std::string>("frame_id");
-        m_time_from_start = serializer->deserialize<float>("time_from_start");
+        set_topic_name(serializer->deserialize<std::string>("topic_name"));
+        set_frame_id(serializer->deserialize<std::string>("frame_id"));
+        set_time_from_start(serializer->deserialize<float>("time_from_start"));
         auto color = serializer->deserialize<std::vector<float>>("color");
-        m_color = glm::vec3(color[0], color[1], color[2]);
+        set_color(glm::vec3(color[0], color[1], color[2]));
 
         auto waypoint_count = serializer->begin_sequence("waypoints", engine::core::serialization::AbstractSerializer::Mode::Read);
         m_waypoints.clear();
@@ -121,6 +124,10 @@ namespace sfg_trajectory_planner::app::core
     void Trajectory::set_topic_name(std::string topic_name)
     {
         // ToDo: Validate topic name.
+        if (topic_name != m_topic_name)
+        {
+            create_trajectory_publisher(topic_name);
+        }
         m_topic_name = std::move(topic_name);
     }
 
@@ -217,15 +224,6 @@ namespace sfg_trajectory_planner::app::core
 
         using namespace magic_enum::bitwise_operators;
 
-        if (index == 0)
-        {
-            constraints &= ~Waypoint::Constraints::AlignWithPrevious;
-        }
-        else if (index == m_waypoints.size() - 1)
-        {
-            constraints &= ~Waypoint::Constraints::AlignWithNext;
-        }
-
         if ((constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None && (constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None)
         {
             if ((old_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None)
@@ -250,12 +248,12 @@ namespace sfg_trajectory_planner::app::core
     {
         using namespace magic_enum::bitwise_operators;
 
-        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None)
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None && index > 0)
         {
             return false;
         }
 
-        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None)
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None && index < m_waypoints.size() - 1)
         {
             return false;
         }
@@ -267,22 +265,63 @@ namespace sfg_trajectory_planner::app::core
         return false;
     }
 
-    void Trajectory::enforce_waypoint_constraints(size_t index)
+    void Trajectory::publish_trajectory() const
     {
-        if (index >= m_waypoints.size() || m_waypoints.size() < 2)
+        if (!m_trajectory_publisher)
         {
             return;
         }
 
+        auto ls_to_ws_matrix = get_ls_to_ws_matrix();
+
+        auto msg = std::make_unique<sfg_agent_msgs::msg::Trajectory>();
+        msg->header.stamp = m_node->now() + rclcpp::Duration::from_seconds(get_time_from_start());
+        msg->header.frame_id = get_frame_id();
+
+        for (size_t index = 0; index < get_waypoint_count(); index++)
+        {
+            glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * get_waypoint_transform_ls(index).get_matrix();
+            glm::vec3 waypoint_position_ws = glm::vec3(waypoint_ws_matrix[3]);
+            glm::quat waypoint_rotation_ws = glm::quat_cast(waypoint_ws_matrix);
+
+            sfg_agent_msgs::msg::Waypoint waypoint_msg;
+            waypoint_msg.pose.position.x = waypoint_position_ws.x;
+            waypoint_msg.pose.position.y = waypoint_position_ws.y;
+            waypoint_msg.pose.position.z = waypoint_position_ws.z;
+            waypoint_msg.pose.orientation.x = waypoint_rotation_ws.x;
+            waypoint_msg.pose.orientation.y = waypoint_rotation_ws.y;
+            waypoint_msg.pose.orientation.z = waypoint_rotation_ws.z;
+            waypoint_msg.pose.orientation.w = waypoint_rotation_ws.w;
+            waypoint_msg.time_from_last = rclcpp::Duration::from_seconds(get_waypoint_time_from_last(index));
+            msg->waypoints.push_back(waypoint_msg);
+        }
+        m_trajectory_publisher->publish(std::move(msg));
+    }
+
+    void Trajectory::create_trajectory_publisher(const std::string &topic_name)
+    {
+        try
+        {
+            m_trajectory_publisher = m_node->template create_publisher<sfg_agent_msgs::msg::Trajectory>(topic_name, 10);
+        }
+        catch (const rclcpp::exceptions::InvalidTopicNameError &exception)
+        {
+            RCLCPP_ERROR(m_node->get_logger(), "Failed to create trajectory publisher: %s", exception.what());
+            m_trajectory_publisher = nullptr;
+        }
+    }
+
+    void Trajectory::enforce_waypoint_constraints(size_t index)
+    {
         using namespace magic_enum::bitwise_operators;
 
-        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None)
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None && index > 0)
         {
             glm::vec3 direction_ls = m_waypoints[index].m_transform_ls.get_translation() - m_waypoints[index - 1].m_transform_ls.get_translation();
             m_waypoints[index].m_transform_ls.look_in(direction_ls);
         }
 
-        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None)
+        if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithNext) != Waypoint::Constraints::None && index < m_waypoints.size() - 1)
         {
             glm::vec3 direction_ls = m_waypoints[index + 1].m_transform_ls.get_translation() - m_waypoints[index].m_transform_ls.get_translation();
             m_waypoints[index].m_transform_ls.look_in(direction_ls);
