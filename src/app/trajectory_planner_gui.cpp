@@ -6,7 +6,7 @@
 #include "sfg_trajectory_planner/app/core/trajectory.hpp"
 #include "sfg_trajectory_planner/app/editor/grid_editor.hpp"
 #include "sfg_trajectory_planner/app/editor/trajectory_editor.hpp"
-#include "sfg_trajectory_planner/engine/core/gfx/shader.hpp"
+#include "sfg_trajectory_planner/engine/core/gfx/material.hpp"
 #include "sfg_trajectory_planner/engine/core/serialization/yaml_serializer.hpp"
 #include "sfg_trajectory_planner/engine/editor/history/action.hpp"
 
@@ -31,8 +31,8 @@ namespace sfg_trajectory_planner::app
         : m_asset_locator(ament_index_cpp::get_package_share_directory(STRINGIFY(sfg_trajectory_planner)) + "/assets"),
           m_scene(m_scene_object_factory),
           m_renderer(m_camera,
-                     m_asset_locator.load_asset<engine::core::gfx::Shader>(std::filesystem::path("shaders/line.shader")),
-                     m_asset_locator.load_asset<engine::core::gfx::Shader>(std::filesystem::path("shaders/text.shader")),
+                     m_asset_locator.load_asset<engine::core::gfx::Material>(std::filesystem::path("materials/line.mat")),
+                     m_asset_locator.load_asset<engine::core::gfx::Material>(std::filesystem::path("materials/text.mat")),
                      m_asset_locator.load_asset<engine::core::gfx::TextFont>(std::filesystem::path("fonts/roboto_regular.ttf"), 64.0f),
                      {0.0f, 0.0f, 0.0f}),
           m_editor_context(m_scene, m_scene_object_editor_factory),

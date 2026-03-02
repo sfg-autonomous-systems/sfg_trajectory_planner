@@ -13,11 +13,24 @@ namespace sfg_trajectory_planner::engine::core::gfx
     void Material::bind() const
     {
         m_shader->bind();
-        auto shader_id = m_shader->get_id();
+
+        for (const auto &[name, texture] : m_textures)
+        {
+            auto uniform_location = m_shader->get_uniform_location(name);
+
+            if (uniform_location == -1)
+            {
+                continue;
+            }
+
+            glActiveTexture(GL_TEXTURE0 + texture.m_unit);
+            glBindTexture(texture.m_type, texture.m_id);
+            glUniform1i(uniform_location, static_cast<int>(texture.m_unit));
+        }
 
         for (const auto &[name, value] : m_uniforms)
         {
-            auto uniform_location = glGetUniformLocation(shader_id, name.c_str());
+            auto uniform_location = m_shader->get_uniform_location(name);
 
             if (uniform_location == -1)
             {
@@ -60,12 +73,22 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     void Material::unbind() const
     {
+        for (const auto &[name, texture] : m_textures)
+        {
+            glActiveTexture(GL_TEXTURE0 + texture.m_unit);
+            glBindTexture(texture.m_type, 0);
+        }
         m_shader->unbind();
     }
 
     void Material::set_uniform(const std::string &name, const UniformValue &value)
     {
         m_uniforms[name] = value;
+    }
+
+    void Material::set_texture(const std::string &name, std::uint32_t id, std::uint32_t type, std::uint32_t unit)
+    {
+        m_textures[name] = TextureValue{id, type, unit};
     }
 
     Shader *Material::get_shader() const

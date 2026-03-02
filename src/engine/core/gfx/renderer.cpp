@@ -31,18 +31,19 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
     Renderer::Renderer(
         const Camera &camera,
-        std::shared_ptr<Shader> line_shader,
-        std::shared_ptr<Shader> text_shader,
+        std::shared_ptr<Material> line_material,
+        std::shared_ptr<Material> text_material,
         std::shared_ptr<TextFont> text_font,
         glm::vec3 clear_color)
         : m_camera(camera),
           m_framebuffer(clear_color, m_camera.get_cs_to_ss_vector().zw()),
           m_line_mesh(Mesh<LineVertex>::Topology::Lines),
-          m_line_shader(line_shader),
+          m_line_material(line_material),
           m_text_mesh(Mesh<TextVertex>::Topology::Triangles),
-          m_text_shader(text_shader),
+          m_text_material(text_material),
           m_text_font(text_font)
     {
+        m_text_material->set_texture("u_FontAtlas", m_text_font->get_font_atlas(), GL_TEXTURE_2D, 0);
         ImGuizmo::AllowAxisFlip(false);
     }
 
@@ -217,15 +218,15 @@ namespace sfg_trajectory_planner::engine::core::gfx
         // Render lines.
         if (!m_line_mesh.empty())
         {
-            m_line_shader->bind();
-            m_line_shader->set_ws_to_cs_matrix(ws_to_cs_matrix);
+            m_line_material->bind();
+            m_line_material->get_shader()->set_ws_to_cs_matrix(ws_to_cs_matrix);
 
             if (m_line_mesh.get_topology() == Mesh<LineVertex>::Topology::Lines)
             {
                 glLineWidth(2.0f);
             }
             m_line_mesh.render();
-            m_line_shader->unbind();
+            m_line_material->unbind();
             m_line_mesh.clear();
         }
 
@@ -267,14 +268,11 @@ namespace sfg_trajectory_planner::engine::core::gfx
                 current_index += 4;
             }
 
-            m_text_shader->bind();
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, m_text_font->get_font_atlas());
-            glUniform1i(glGetUniformLocation(m_text_shader->get_id(), "u_FontAtlas"), 0);
-            glUniformMatrix4fv(glGetUniformLocation(m_text_shader->get_id(), "u_WsToCsMatrix"), 1, GL_FALSE, glm::value_ptr(ws_to_cs_matrix));
+            m_text_material->bind();
+            m_text_material->get_shader()->set_ws_to_cs_matrix(ws_to_cs_matrix);
 
             m_text_mesh.render();
-            m_text_shader->unbind();
+            m_text_material->unbind();
             m_text_mesh.clear();
             m_render_text_requests.clear();
         }

@@ -60,7 +60,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         if (vertex_source.empty())
         {
-            throw std::runtime_error("Shader source must contain vertex shader stage.");
+            throw std::runtime_error("Shader source must contain vertex shader stage. Source is:\n" + std::string(shader_source));
         }
 
         vertex_source = shared_source + vertex_source;

@@ -18,8 +18,8 @@ namespace sfg_trajectory_planner::engine::core::assets
 
     std::shared_ptr<gfx::Material> AssetLocator::load_material(const std::filesystem::path &filepath) const
     {
-        auto material_file = YAML::LoadFile(resolve_arg(filepath).string());
-        auto shader_filepath = material_file["shader"].as<std::string>();
+        auto material_file = YAML::LoadFile(filepath.string());
+        auto shader_filepath = std::filesystem::path(material_file["shader"].as<std::string>());
         auto shader = load_asset<gfx::Shader>(shader_filepath);
         auto material = std::make_shared<gfx::Material>(shader);
 
@@ -80,7 +80,7 @@ namespace sfg_trajectory_planner::engine::core::assets
         try
         {
             using Iterator = std::istreambuf_iterator<char>;
-            std::ifstream shader_source_file(resolve_arg(filepath));
+            std::ifstream shader_source_file(filepath);
             shader_source = std::string((Iterator(shader_source_file)), Iterator());
         }
         catch (const std::exception &exception)
@@ -92,7 +92,7 @@ namespace sfg_trajectory_planner::engine::core::assets
 
     std::shared_ptr<gfx::TextFont> AssetLocator::load_text_font(const std::filesystem::path &filepath, float height) const
     {
-        std::ifstream file(resolve_arg(filepath), std::ios::binary | std::ios::ate);
+        std::ifstream file(filepath, std::ios::binary | std::ios::ate);
 
         if (!file.is_open())
         {

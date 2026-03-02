@@ -1,5 +1,6 @@
-#pragma stage vertex
 #version 330 core
+
+#pragma stage vertex
 layout(location = 0) in vec3 a_PositionWs;
 layout(location = 1) in vec4 a_Color;
 
@@ -13,7 +14,6 @@ void main() {
 }
 
 #pragma stage fragment
-#version 330 core
 in vec4 v_Color;
 out vec4 f_Color;
 

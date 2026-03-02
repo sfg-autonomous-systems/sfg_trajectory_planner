@@ -27,8 +27,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
     public:
         Renderer(
             const Camera &camera,
-            std::shared_ptr<Shader> line_shader,
-            std::shared_ptr<Shader> text_shader,
+            std::shared_ptr<Material> line_material,
+            std::shared_ptr<Material> text_material,
             std::shared_ptr<TextFont> text_font,
             glm::vec3 clear_color = glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -96,7 +96,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
 
         // Line related resources.
         Mesh<LineVertex> m_line_mesh;
-        std::shared_ptr<Shader> m_line_shader;
+        std::shared_ptr<Material> m_line_material;
 
         // Renderable related resources.
         std::vector<RenderRenderableRequest> m_render_renderable_requests;
@@ -104,7 +104,7 @@ namespace sfg_trajectory_planner::engine::core::gfx
         // Text related resources.
         std::vector<RenderTextRequest> m_render_text_requests;
         Mesh<TextVertex> m_text_mesh;
-        std::shared_ptr<Shader> m_text_shader;
+        std::shared_ptr<Material> m_text_material;
         std::shared_ptr<TextFont> m_text_font;
     };
 }
