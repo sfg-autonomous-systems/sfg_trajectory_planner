@@ -1,12 +1,11 @@
 #pragma once
 
-#include "sfg_trajectory_planner/engine/core/gfx/bindable.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderable.hpp"
 
 namespace sfg_trajectory_planner::engine::core::gfx
 {
     template <typename VertexType>
-    class Mesh : public IRenderable, public IBindable
+    class Mesh : public IRenderable
     {
     public:
         Mesh(GLenum topology = GL_TRIANGLES);
@@ -30,8 +29,8 @@ namespace sfg_trajectory_planner::engine::core::gfx
         void add_indices(const std::vector<std::uint32_t> &indices);
 
     private:
-        void bind() const override;
-        void unbind() const override;
+        void bind() const;
+        void unbind() const;
         void upload() const;
 
         const GLenum m_topology;
