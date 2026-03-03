@@ -48,9 +48,9 @@ namespace sfg_trajectory_planner::app::core
         SceneObject::deserialize(serializer);
 
         set_action_name(serializer->deserialize<std::string>("action_name"));
-        set_frame_id(serializer->deserialize<std::string>("frame_id"));
+        m_frame_id = serializer->deserialize<std::string>("frame_id");
         auto color = serializer->deserialize<std::vector<float>>("color");
-        set_color(glm::vec3(color[0], color[1], color[2]));
+        m_color = glm::vec3(color[0], color[1], color[2]);
 
         auto waypoint_count = serializer->begin_sequence("waypoints", engine::core::serialization::AbstractSerializer::Mode::Read);
         m_waypoints.clear();
@@ -81,13 +81,13 @@ namespace sfg_trajectory_planner::app::core
 
         for (size_t index = 0; index < m_waypoints.size(); index++)
         {
-            time_from_start += get_waypoint_time_from_last(index);
+            time_from_start += m_waypoints[index].m_time_from_last;
             auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 
             renderer.add_text(
                 ls_to_ws_matrix,
                 m_waypoints[index].m_transform_ls.get_translation(),
-                "t+" + fmt::format("{:.1f}", time_from_start),
+                fmt::format("t+{:.1f}", time_from_start),
                 2.0f * ImGui::GetFontSize(),
                 glm::vec3(color.x, color.y, color.z),
                 engine::core::gfx::TextAnchor::Center);
@@ -256,7 +256,7 @@ namespace sfg_trajectory_planner::app::core
 
     void Trajectory::follow_trajectory() const
     {
-        if (get_waypoint_count() == 0)
+        if (m_waypoints.size() == 0)
         {
             return;
         }
@@ -269,7 +269,7 @@ namespace sfg_trajectory_planner::app::core
 
         if (!m_follow_trajectory_client->action_server_is_ready())
         {
-            RCLCPP_ERROR(m_node->get_logger(), "Action server '%s' is not ready.", get_action_name().c_str());
+            RCLCPP_ERROR(m_node->get_logger(), "Action server '%s' is not ready.", m_action_name.c_str());
             return;
         }
 
@@ -277,12 +277,12 @@ namespace sfg_trajectory_planner::app::core
         auto action = sfg_agent_msgs::action::FollowTrajectory::Goal();
         auto &trajectory = action.trajectory;
         trajectory.header.stamp = m_node->now();
-        trajectory.header.frame_id = get_frame_id();
+        trajectory.header.frame_id = m_frame_id;
         auto time_from_start = 0.0f;
 
-        for (size_t index = 0; index < get_waypoint_count(); index++, time_from_start += get_waypoint_time_from_last(index))
+        for (size_t index = 0; index < m_waypoints.size(); index++, time_from_start += m_waypoints[index].m_time_from_last)
         {
-            glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * get_waypoint_transform_ls(index).get_matrix();
+            glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * m_waypoints[index].m_transform_ls.get_matrix();
             glm::vec3 waypoint_position_ws = glm::vec3(waypoint_ws_matrix[3]);
             glm::quat waypoint_rotation_ws = glm::quat_cast(waypoint_ws_matrix);
 
@@ -323,7 +323,7 @@ namespace sfg_trajectory_planner::app::core
     {
         try
         {
-            m_follow_trajectory_client = rclcpp_action::create_client<sfg_agent_msgs::action::FollowTrajectory>(m_node, get_action_name());
+            m_follow_trajectory_client = rclcpp_action::create_client<sfg_agent_msgs::action::FollowTrajectory>(m_node, m_action_name);
         }
         catch (const rclcpp::exceptions::InvalidTopicNameError &exception)
         {
