@@ -285,8 +285,9 @@ namespace sfg_trajectory_planner::app::core
         auto &trajectory = action.trajectory;
         trajectory.header.stamp = m_node->now() + rclcpp::Duration::from_seconds(get_time_from_start());
         trajectory.header.frame_id = get_frame_id();
+        auto time_from_start = 0.0f;
 
-        for (size_t index = 0; index < get_waypoint_count(); index++)
+        for (size_t index = 0; index < get_waypoint_count(); index++, time_from_start += get_waypoint_time_from_last(index))
         {
             glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * get_waypoint_transform_ls(index).get_matrix();
             glm::vec3 waypoint_position_ws = glm::vec3(waypoint_ws_matrix[3]);
@@ -300,7 +301,7 @@ namespace sfg_trajectory_planner::app::core
             waypoint.pose.orientation.y = waypoint_rotation_ws.y;
             waypoint.pose.orientation.z = waypoint_rotation_ws.z;
             waypoint.pose.orientation.w = waypoint_rotation_ws.w;
-            waypoint.time_from_last = rclcpp::Duration::from_seconds(get_waypoint_time_from_last(index));
+            waypoint.time_from_start = rclcpp::Duration::from_seconds(time_from_start);
             trajectory.waypoints.push_back(waypoint);
         }
 
