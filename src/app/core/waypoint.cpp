@@ -7,7 +7,6 @@
 
 namespace sfg_trajectory_planner::app::core
 {
-
     Waypoint::Waypoint(engine::core::Transform transform_ls, float time_from_last, Constraints constraints)
         : m_transform_ls(transform_ls),
           m_time_from_last(time_from_last),
