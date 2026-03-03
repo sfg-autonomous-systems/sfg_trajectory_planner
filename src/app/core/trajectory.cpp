@@ -32,7 +32,6 @@ namespace sfg_trajectory_planner::app::core
 
         serializer->serialize("action_name", m_action_name);
         serializer->serialize("frame_id", m_frame_id);
-        serializer->serialize("time_from_start", m_time_from_start);
         serializer->serialize("color", std::vector<float>{m_color.r, m_color.g, m_color.b});
         serializer->begin_sequence("waypoints", engine::core::serialization::AbstractSerializer::Mode::Write);
 
@@ -50,7 +49,6 @@ namespace sfg_trajectory_planner::app::core
 
         set_action_name(serializer->deserialize<std::string>("action_name"));
         set_frame_id(serializer->deserialize<std::string>("frame_id"));
-        set_time_from_start(serializer->deserialize<float>("time_from_start"));
         auto color = serializer->deserialize<std::vector<float>>("color");
         set_color(glm::vec3(color[0], color[1], color[2]));
 
@@ -79,11 +77,11 @@ namespace sfg_trajectory_planner::app::core
                 m_color);
         }
 
-        auto time_from_start = m_time_from_start;
+        auto time_from_start = 0.0f;
 
         for (size_t index = 0; index < m_waypoints.size(); index++)
         {
-            time_from_start += m_waypoints[index].m_time_from_last;
+            time_from_start += get_waypoint_time_from_last(index);
             auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 
             renderer.add_text(
@@ -104,11 +102,6 @@ namespace sfg_trajectory_planner::app::core
     const std::string &Trajectory::get_frame_id() const
     {
         return m_frame_id;
-    }
-
-    float Trajectory::get_time_from_start() const
-    {
-        return m_time_from_start;
     }
 
     glm::vec3 Trajectory::get_color() const
@@ -136,11 +129,6 @@ namespace sfg_trajectory_planner::app::core
     {
         // ToDo: Validate frame ID.
         m_frame_id = std::move(frame_id);
-    }
-
-    void Trajectory::set_time_from_start(float time_from_start)
-    {
-        m_time_from_start = glm::max(time_from_start, 0.0f);
     }
 
     void Trajectory::set_color(glm::vec3 color)
@@ -268,6 +256,11 @@ namespace sfg_trajectory_planner::app::core
 
     void Trajectory::follow_trajectory() const
     {
+        if (get_waypoint_count() == 0)
+        {
+            return;
+        }
+
         if (!m_follow_trajectory_client)
         {
             RCLCPP_ERROR(m_node->get_logger(), "Action client is not initialized. Cannot follow trajectory.");
@@ -283,7 +276,7 @@ namespace sfg_trajectory_planner::app::core
         auto ls_to_ws_matrix = get_ls_to_ws_matrix();
         auto action = sfg_agent_msgs::action::FollowTrajectory::Goal();
         auto &trajectory = action.trajectory;
-        trajectory.header.stamp = m_node->now() + rclcpp::Duration::from_seconds(get_time_from_start());
+        trajectory.header.stamp = m_node->now();
         trajectory.header.frame_id = get_frame_id();
         auto time_from_start = 0.0f;
 

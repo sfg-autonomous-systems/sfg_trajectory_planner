@@ -24,13 +24,11 @@ namespace sfg_trajectory_planner::app::core
 
         const std::string &get_action_name() const;
         const std::string &get_frame_id() const;
-        float get_time_from_start() const;
         glm::vec3 get_color() const;
         size_t get_waypoint_count() const;
 
         void set_action_name(std::string action_name);
         void set_frame_id(std::string frame_id);
-        void set_time_from_start(float time_from_start);
         void set_color(glm::vec3 color);
 
         bool empty() const;
@@ -61,7 +59,6 @@ namespace sfg_trajectory_planner::app::core
 
         std::string m_action_name = "/follow_trajectory";
         std::string m_frame_id = "base_link";
-        float m_time_from_start = 0.0f;
         glm::vec3 m_color = {0.0f, 1.0f, 0.0f};
         std::vector<Waypoint> m_waypoints;
 

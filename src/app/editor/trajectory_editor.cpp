@@ -98,16 +98,12 @@ namespace sfg_trajectory_planner::app::editor
         auto add_waypoint = false;
         auto action_name = trajectory->get_action_name();
         auto frame_id = trajectory->get_frame_id();
-        auto time_from_start = trajectory->get_time_from_start();
         auto color = trajectory->get_color();
 
         dirty |= ImGui::InputText("Action Name", &action_name, ImGuiInputTextFlags_EnterReturnsTrue);
         record_object |= ImGui::IsItemActivated();
 
         dirty |= ImGui::InputText("Frame ID", &frame_id, ImGuiInputTextFlags_EnterReturnsTrue);
-        record_object |= ImGui::IsItemActivated();
-
-        dirty |= ImGui::DragFloat("Time from start [s]", &time_from_start, 0.01f, 0.0f, std::numeric_limits<float>::max());
         record_object |= ImGui::IsItemActivated();
 
         dirty |= ImGui::ColorEdit3("Color", glm::value_ptr(color));
@@ -246,7 +242,6 @@ namespace sfg_trajectory_planner::app::editor
         {
             trajectory->set_action_name(action_name);
             trajectory->set_frame_id(frame_id);
-            trajectory->set_time_from_start(time_from_start);
             trajectory->set_color(color);
 
             if (add_waypoint)
