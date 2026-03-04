@@ -110,6 +110,7 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   ADDITIONAL_INCLUDE_DIRS
   PRIVATE
   "${PROJECT_SOURCE_DIR}/third_party/glad/include"
+  SYSTEM
   "${stb_SOURCE_DIR}"
   AMENT_DEPENDENCIES
   ament_index_cpp
