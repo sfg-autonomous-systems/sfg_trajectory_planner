@@ -177,7 +177,7 @@ namespace sfg_trajectory_planner::engine::editor
 
             index = magic_enum::enum_index(m_camera.get_projection()).value();
 
-            if (ImGui::Combo("Camera Projection", &index, "Perspective\0Orthographice\0"))
+            if (ImGui::Combo("Camera Projection", &index, "Perspective\0Orthographic\0"))
             {
                 m_camera.set_projection(magic_enum::enum_value<core::gfx::Camera::Projection>(index));
             }
