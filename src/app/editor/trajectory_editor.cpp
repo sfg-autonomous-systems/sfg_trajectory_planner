@@ -222,7 +222,7 @@ namespace sfg_trajectory_planner::app::editor
                         {
                             m_selected_waypoint_index = std::numeric_limits<size_t>::max();
                         }
-                        else if (m_selected_waypoint_index > index)
+                        else if (m_selected_waypoint_index > index && m_selected_waypoint_index != std::numeric_limits<size_t>::max())
                         {
                             m_selected_waypoint_index--;
                         }

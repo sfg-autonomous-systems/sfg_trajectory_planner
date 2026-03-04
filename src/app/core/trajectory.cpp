@@ -334,6 +334,11 @@ namespace sfg_trajectory_planner::app::core
 
     void Trajectory::enforce_waypoint_constraints(size_t index)
     {
+        if (index >= m_waypoints.size())
+        {
+            return;
+        }
+
         using namespace magic_enum::bitwise_operators;
 
         if ((m_waypoints[index].m_constraints & Waypoint::Constraints::AlignWithPrevious) != Waypoint::Constraints::None && index > 0)
