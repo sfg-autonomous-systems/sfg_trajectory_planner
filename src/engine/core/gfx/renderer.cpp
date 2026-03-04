@@ -87,8 +87,12 @@ namespace sfg_trajectory_planner::engine::core::gfx
         TextAnchor anchor)
     {
         const glm::mat4 &ws_to_vs_matrix = m_camera.get_ws_to_vs_matrix();
+        const glm::mat4 &vs_to_cs_matrix = m_camera.get_vs_to_cs_matrix();
+        const glm::vec4 &cs_to_ss_vector = m_camera.get_cs_to_ss_vector();
+
         glm::vec3 position_ws = ls_to_ws_matrix * glm::vec4(position_ls, 1.0f);
         glm::vec3 position_vs = ws_to_vs_matrix * glm::vec4(position_ws, 1.0f);
+        glm::vec4 position_cs = vs_to_cs_matrix * glm::vec4(position_vs, 1.0f);
         auto depth_vs = -position_vs.z;
 
         if (depth_vs <= 0.0f)
@@ -96,9 +100,9 @@ namespace sfg_trajectory_planner::engine::core::gfx
             return;
         }
 
-        auto projection_scaling = m_camera.get_vs_to_cs_matrix()[1][1];
-        auto viewport_height_ss = m_camera.get_cs_to_ss_vector().w;
-        auto pixel_height_ws = depth_vs / (projection_scaling * viewport_height_ss * 0.5f);
+        auto projection_scaling = vs_to_cs_matrix[1][1];
+        auto viewport_height_ss = cs_to_ss_vector.w;
+        auto pixel_height_ws = position_cs.w / (projection_scaling * viewport_height_ss * 0.5f);
         auto font_scale_factor = font_size_ss / m_text_font->get_baked_height();
         auto scale = pixel_height_ws * font_scale_factor;
 
