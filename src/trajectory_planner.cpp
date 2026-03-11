@@ -18,7 +18,6 @@ namespace sfg_trajectory_planner
                 }
                 return std::make_unique<sfg_trajectory_planner::app::TrajectoryPlannerGui>(this);
             },
-            ImVec2(800, 600),
-            ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+            sfg_imgui_vendor::MainWindow::Flags::Resizable);
     }
 }
