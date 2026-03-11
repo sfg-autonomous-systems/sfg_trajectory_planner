@@ -117,7 +117,7 @@ namespace sfg_trajectory_planner::app
 
         handle_file_dialog_result();
 
-        if (ImGui::BeginTable("TopColumns", 3, ImGuiTableFlags_Resizable))
+        if (ImGui::BeginTable("##main_layout", 3, ImGuiTableFlags_Resizable))
         {
             constexpr auto scene_hierarchy_displayname = "Scene Hierarchy";
             constexpr auto viewport_displayname = "Viewport";
