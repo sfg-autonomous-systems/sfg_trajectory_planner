@@ -1,7 +1,7 @@
 #include "sfg_trajectory_planner/engine/editor/viewport.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
-#include <magic_enum.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"

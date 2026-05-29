@@ -1,6 +1,6 @@
 #pragma once
 
-#include <magic_enum_flags.hpp>
+#include <magic_enum/magic_enum_flags.hpp>
 
 #include "sfg_trajectory_planner/engine/core/transform.hpp"
 

@@ -112,15 +112,14 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   "${PROJECT_SOURCE_DIR}/third_party/glad/include"
   SYSTEM
   "${stb_SOURCE_DIR}"
-  AMENT_DEPENDENCIES
-  ament_index_cpp
-  rclcpp
-  rclcpp_action
-  rclcpp_components
-  sfg_agent_msgs
-  sfg_imgui_vendor
-  sfg_utils
-  SYSTEM_DEPENDENCIES
+  DEPENDENCIES
+  ament_index_cpp::ament_index_cpp
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  rclcpp_components::component
+  ${sfg_agent_msgs_TARGETS}
+  sfg_imgui_vendor::sfg_imgui_vendor
+  sfg_utils::sfg_utils
   PRIVATE
   fmt::fmt
   glm::glm
