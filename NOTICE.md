@@ -1,6 +1,6 @@
 # Third-Party Software Notices
 
-This repository incorporates third-party software components. The following sections provide attribution, copyright notices, and license terms for these components.
+This software incorporates third-party software components. The following sections provide attribution, copyright notices, and license terms for these components.
 
 ## [Glad](https://github.com/Dav1dde/glad)
 
