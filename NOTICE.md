@@ -76,8 +76,6 @@ The EGL Specification and various headers:
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 
----
-
 ## [Roboto Font](https://fonts.google.com/specimen/Roboto)
 
 * **Author:** The Roboto Project Authors
