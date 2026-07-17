@@ -5,7 +5,7 @@ This software incorporates third-party software components. The following sectio
 ## [Glad](https://github.com/Dav1dde/glad)
 
 * **Author:** David Herberth, The Khronos Group Inc.
-* **License:** MIT and Apache-2.0
+* **License:** MIT and Apache 2.0
 * **Version:** 0.1.36
 * **Affected Directories/Files:**
     * [`glad/`](third_party/glad/)
