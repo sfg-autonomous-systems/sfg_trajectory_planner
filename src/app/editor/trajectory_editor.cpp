@@ -92,6 +92,20 @@ namespace sfg_trajectory_planner::app::editor
             target()->follow_trajectory();
         }
 
+        if (target()->follow_trajectory_active())
+        {
+            if (ImGui::Button("Cancel FollowPath", ImVec2(-1.0f, 0.0f)))
+            {
+                target()->cancel_follow_trajectory();
+            }
+        }
+
+        const auto follow_status = target()->get_follow_trajectory_status();
+        if (!follow_status.empty())
+        {
+            ImGui::TextWrapped("%s", follow_status.c_str());
+        }
+
         auto trajectory = target();
         auto dirty = false;
         auto record_object = false;

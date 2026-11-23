@@ -53,6 +53,9 @@ namespace sfg_trajectory_planner::app::core
         bool can_scale_waypoint(size_t index) const;
 
         void follow_trajectory();
+        void cancel_follow_trajectory();
+        bool follow_trajectory_active() const;
+        std::string get_follow_trajectory_status() const;
 
     private:
         void create_follow_trajectory_client();
@@ -62,11 +65,12 @@ namespace sfg_trajectory_planner::app::core
         std::string m_frame_id = "base_link";
         glm::vec3 m_color = {0.0f, 1.0f, 0.0f};
         std::vector<Waypoint> m_waypoints;
-        std::mutex m_follow_trajectory_mutex;
-        std::string m_follow_trajectory_status;
         float m_path_spacing = 0.05f;
 
         rclcpp_action::Client<nav2_msgs::action::FollowPath>::SharedPtr m_follow_trajectory_client;
+        rclcpp_action::Client<nav2_msgs::action::FollowPath>::GoalHandle::SharedPtr m_follow_trajectory_goal_handle;
+        std::mutex m_follow_trajectory_mutex;
+        std::string m_follow_trajectory_status;
         rclcpp::Node *m_node;
     };
 }

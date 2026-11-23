@@ -368,6 +368,8 @@ namespace sfg_trajectory_planner::app::core
 
             if (goal_handle)
             {
+                std::lock_guard lock(m_follow_trajectory_mutex);
+                m_follow_trajectory_goal_handle = goal_handle;
                 m_follow_trajectory_status = "FollowPath goal accepted.";
             }
             else
@@ -386,6 +388,7 @@ namespace sfg_trajectory_planner::app::core
         send_goal_options.result_callback = [this](const rclcpp_action::ClientGoalHandle<nav2_msgs::action::FollowPath>::WrappedResult &result)
         {
             std::lock_guard lock(m_follow_trajectory_mutex);
+            m_follow_trajectory_goal_handle.reset();
 
             if (result.result)
             {
@@ -407,6 +410,30 @@ namespace sfg_trajectory_planner::app::core
             m_follow_trajectory_status = "Sending FollowPath goal...";
         }
         m_follow_trajectory_client->async_send_goal(action, send_goal_options);
+    }
+
+    void Trajectory::cancel_follow_trajectory()
+    {
+        std::lock_guard lock(m_follow_trajectory_mutex);
+        if (!m_follow_trajectory_goal_handle)
+        {
+            m_follow_trajectory_status = "No active FollowPath goal.";
+            return;
+        }
+        m_follow_trajectory_client->async_cancel_goal(m_follow_trajectory_goal_handle);
+        m_follow_trajectory_status = "Cancelling FollowPath goal...";
+    }
+
+    bool Trajectory::follow_trajectory_active() const
+    {
+        std::lock_guard lock(m_follow_trajectory_mutex);
+        return m_follow_trajectory_goal_handle != nullptr;
+    }
+
+    std::string Trajectory::get_follow_trajectory_status() const
+    {
+        std::lock_guard lock(m_follow_trajectory_mutex);
+        return m_follow_trajectory_status;
     }
 
     void Trajectory::enforce_waypoint_constraints(size_t index)
