@@ -1,9 +1,12 @@
 #include "sfg_trajectory_planner/app/core/trajectory.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <fmt/format.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
+#include <nav_msgs/msg/path.hpp>
 
 #include "sfg_trajectory_planner/engine/core/gfx/camera.hpp"
 #include "sfg_trajectory_planner/engine/core/gfx/renderer.hpp"
@@ -254,82 +257,156 @@ namespace sfg_trajectory_planner::app::core
         return false;
     }
 
-    void Trajectory::follow_trajectory() const
-    {
-        if (m_waypoints.size() == 0)
-        {
-            return;
-        }
-
-        if (!m_follow_trajectory_client)
-        {
-            RCLCPP_ERROR(m_node->get_logger(), "Action client is not initialized. Cannot follow trajectory.");
-            return;
-        }
-
-        if (!m_follow_trajectory_client->action_server_is_ready())
-        {
-            RCLCPP_ERROR(m_node->get_logger(), "Action server '%s' is not ready.", m_action_name.c_str());
-            return;
-        }
-
-        auto ls_to_ws_matrix = get_ls_to_ws_matrix();
-        auto action = sfg_agent_msgs::action::FollowTrajectory::Goal();
-        auto &trajectory = action.trajectory;
-        trajectory.header.stamp = m_node->now();
-        trajectory.header.frame_id = m_frame_id;
-        auto time_from_start = 0.0f;
-
-        for (size_t index = 0; index < m_waypoints.size(); index++, time_from_start += m_waypoints[index].m_time_from_last)
-        {
-            glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * m_waypoints[index].m_transform_ls.get_matrix();
-            glm::vec3 waypoint_position_ws = glm::vec3(waypoint_ws_matrix[3]);
-            glm::quat waypoint_rotation_ws = glm::quat_cast(waypoint_ws_matrix);
-
-            sfg_agent_msgs::msg::Waypoint waypoint;
-            waypoint.pose.position.x = waypoint_position_ws.x;
-            waypoint.pose.position.y = waypoint_position_ws.y;
-            waypoint.pose.position.z = waypoint_position_ws.z;
-            waypoint.pose.orientation.x = waypoint_rotation_ws.x;
-            waypoint.pose.orientation.y = waypoint_rotation_ws.y;
-            waypoint.pose.orientation.z = waypoint_rotation_ws.z;
-            waypoint.pose.orientation.w = waypoint_rotation_ws.w;
-            waypoint.time_from_start = rclcpp::Duration::from_seconds(time_from_start);
-            trajectory.waypoints.push_back(waypoint);
-        }
-
-        auto send_goal_options = rclcpp_action::Client<sfg_agent_msgs::action::FollowTrajectory>::SendGoalOptions();
-
-        send_goal_options.goal_response_callback = [](auto goal_handle)
-        {
-            (void)goal_handle;
-        };
-
-        send_goal_options.feedback_callback = [](auto goal_handle, const auto feedback)
-        {
-            (void)goal_handle;
-            (void)feedback;
-        };
-
-        send_goal_options.result_callback = [](const auto &result)
-        {
-            (void)result;
-        };
-
-        m_follow_trajectory_client->async_send_goal(action, send_goal_options);
-    }
-
     void Trajectory::create_follow_trajectory_client()
     {
         try
         {
-            m_follow_trajectory_client = rclcpp_action::create_client<sfg_agent_msgs::action::FollowTrajectory>(m_node, m_action_name);
+            m_follow_trajectory_client = rclcpp_action::create_client<nav2_msgs::action::FollowPath>(m_node, m_action_name);
         }
         catch (const rclcpp::exceptions::InvalidTopicNameError &exception)
         {
             RCLCPP_ERROR(m_node->get_logger(), "Failed to create follow trajectory client: %s", exception.what());
             m_follow_trajectory_client = nullptr;
         }
+    }
+
+    void Trajectory::follow_trajectory()
+    {
+        if (m_waypoints.size() == 0)
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+            m_follow_trajectory_status = "Cannot follow an empty trajectory.";
+            RCLCPP_ERROR(m_node->get_logger(), "Cannot follow an empty trajectory.");
+            return;
+        }
+
+        if (m_path_spacing <= 0.0f)
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+            m_follow_trajectory_status = "Path spacing must be greater than zero.";
+            RCLCPP_ERROR(m_node->get_logger(), "Path spacing must be greater than zero.");
+            return;
+        }
+
+        if (!m_follow_trajectory_client)
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+            m_follow_trajectory_status = "Action client is not initialized. Cannot follow trajectory.";
+            RCLCPP_ERROR(m_node->get_logger(), "Action client is not initialized. Cannot follow trajectory.");
+            return;
+        }
+
+        if (!m_follow_trajectory_client->action_server_is_ready())
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+            m_follow_trajectory_status = "Action server '%s' is not ready.", m_action_name.c_str();
+            RCLCPP_ERROR(m_node->get_logger(), "Action server '%s' is not ready.", m_action_name.c_str());
+            return;
+        }
+
+        auto ls_to_ws_matrix = get_ls_to_ws_matrix();
+
+        auto action = nav2_msgs::action::FollowPath::Goal();
+        action.controller_id = "FollowPath";
+        auto &path = action.path;
+        path.header.frame_id = "map";
+
+        for (size_t index = 0; index < m_waypoints.size(); index++)
+        {
+            glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * m_waypoints[index].m_transform_ls.get_matrix();
+            glm::vec3 waypoint_position = glm::vec3(waypoint_ws_matrix[3]);
+            const glm::vec3 waypoint_forward = glm::vec3(waypoint_ws_matrix[0]);
+            const float curr_yaw = std::atan2(waypoint_forward.y, waypoint_forward.x);
+
+            if (index == 0)
+            {
+                geometry_msgs::msg::PoseStamped pose;
+                pose.header.frame_id = "map";
+                pose.pose.position.x = waypoint_position.x;
+                pose.pose.position.y = waypoint_position.y;
+                pose.pose.orientation.w = std::cos(curr_yaw * 0.5f);
+                pose.pose.orientation.z = std::sin(curr_yaw * 0.5f);
+                path.poses.push_back(pose);
+                continue;
+            }
+
+            glm::mat4 last_waypoint_ws_matrix = ls_to_ws_matrix * m_waypoints[index - 1].m_transform_ls.get_matrix();
+            glm::vec3 last_waypoint_position = glm::vec3(last_waypoint_ws_matrix[3]);
+            const glm::vec3 last_waypoint_forward = glm::vec3(last_waypoint_ws_matrix[0]);
+            const float last_yaw = std::atan2(last_waypoint_forward.y, last_waypoint_forward.x);
+            const float distance = glm::length(waypoint_position - last_waypoint_position);
+
+            if (distance < 1e-4f)
+            {
+                continue;
+            }
+
+            const float delta_yaw = std::atan2(std::sin(curr_yaw - last_yaw), std::cos(curr_yaw - last_yaw));
+            const size_t step_count = std::max<size_t>(1, static_cast<size_t>(std::ceil(distance / m_path_spacing)));
+
+            for (size_t step = 1; step <= step_count; step++)
+            {
+                const float step_amount = static_cast<float>(step) / static_cast<float>(step_count);
+                const glm::vec3 interpolated_pos = glm::mix(last_waypoint_position, waypoint_position, step_amount);
+                const float interpolated_yaw = last_yaw + delta_yaw * step_amount;
+
+                geometry_msgs::msg::PoseStamped pose;
+                pose.header.frame_id = "map";
+                pose.pose.position.x = interpolated_pos.x;
+                pose.pose.position.y = interpolated_pos.y;
+                pose.pose.orientation.z = std::sin(interpolated_yaw * 0.5f);
+                pose.pose.orientation.w = std::cos(interpolated_yaw * 0.5f);
+                path.poses.push_back(pose);
+            }
+        }
+
+        auto send_goal_options = rclcpp_action::Client<nav2_msgs::action::FollowPath>::SendGoalOptions();
+
+        send_goal_options.goal_response_callback = [this](rclcpp_action::Client<nav2_msgs::action::FollowPath>::GoalHandle::SharedPtr goal_handle)
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+
+            if (goal_handle)
+            {
+                m_follow_trajectory_status = "FollowPath goal accepted.";
+            }
+            else
+            {
+                m_follow_trajectory_status = "FollowPath goal rejected.";
+                RCLCPP_ERROR(m_node->get_logger(), "%s", m_follow_trajectory_status.c_str());
+            }
+        };
+
+        send_goal_options.feedback_callback = [this](rclcpp_action::Client<nav2_msgs::action::FollowPath>::GoalHandle::SharedPtr, const std::shared_ptr<const nav2_msgs::action::FollowPath::Feedback> feedback)
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+            m_follow_trajectory_status = "Following path: %.2f m remaining", feedback->distance_to_goal;
+        };
+
+        send_goal_options.result_callback = [this](const rclcpp_action::ClientGoalHandle<nav2_msgs::action::FollowPath>::WrappedResult &result)
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+
+            if (result.result)
+            {
+                m_follow_trajectory_status = "FollowPath finished.";
+
+                if (!result.result->error_msg.empty())
+                {
+                    RCLCPP_ERROR(m_node->get_logger(), "%s", result.result->error_msg.c_str());
+                }
+            }
+            else
+            {
+                m_follow_trajectory_status = "FollowPath finished without a result.";
+            }
+        };
+
+        {
+            std::lock_guard lock(m_follow_trajectory_mutex);
+            m_follow_trajectory_status = "Sending FollowPath goal...";
+        }
+        m_follow_trajectory_client->async_send_goal(action, send_goal_options);
     }
 
     void Trajectory::enforce_waypoint_constraints(size_t index)

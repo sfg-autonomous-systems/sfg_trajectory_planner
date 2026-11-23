@@ -1,9 +1,10 @@
 #pragma once
 
+#include <mutex>
+#include <nav2_msgs/action/follow_path.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 
-#include "sfg_agent_msgs/action/follow_trajectory.hpp"
 #include "sfg_trajectory_planner/app/core/waypoint.hpp"
 #include "sfg_trajectory_planner/engine/core/scene_object.hpp"
 
@@ -51,18 +52,21 @@ namespace sfg_trajectory_planner::app::core
         bool can_rotate_waypoint(size_t index) const;
         bool can_scale_waypoint(size_t index) const;
 
-        void follow_trajectory() const;
+        void follow_trajectory();
 
     private:
         void create_follow_trajectory_client();
         void enforce_waypoint_constraints(size_t index);
 
-        std::string m_action_name = "/follow_trajectory";
+        std::string m_action_name = "/follow_path";
         std::string m_frame_id = "base_link";
         glm::vec3 m_color = {0.0f, 1.0f, 0.0f};
         std::vector<Waypoint> m_waypoints;
+        std::mutex m_follow_trajectory_mutex;
+        std::string m_follow_trajectory_status;
+        float m_path_spacing = 0.05f;
 
-        rclcpp_action::Client<sfg_agent_msgs::action::FollowTrajectory>::SharedPtr m_follow_trajectory_client;
+        rclcpp_action::Client<nav2_msgs::action::FollowPath>::SharedPtr m_follow_trajectory_client;
         rclcpp::Node *m_node;
     };
 }

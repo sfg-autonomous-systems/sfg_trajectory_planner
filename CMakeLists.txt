@@ -15,6 +15,8 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
@@ -117,7 +119,8 @@ sfg_utils__add_component("trajectory_planner" "${PROJECT_NAME}::TrajectoryPlanne
   rclcpp::rclcpp
   rclcpp_action::rclcpp_action
   rclcpp_components::component
-  ${sfg_agent_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  ${nav2_msgs_TARGETS}
   sfg_imgui_vendor::sfg_imgui_vendor
   sfg_utils::sfg_utils
   PRIVATE
