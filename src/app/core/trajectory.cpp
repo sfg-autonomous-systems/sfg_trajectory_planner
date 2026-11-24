@@ -315,7 +315,8 @@ namespace sfg_trajectory_planner::app::core
         {
             glm::mat4 waypoint_ws_matrix = ls_to_ws_matrix * m_waypoints[index].m_transform_ls.get_matrix();
             glm::vec3 waypoint_position = glm::vec3(waypoint_ws_matrix[3]);
-            const glm::vec3 waypoint_forward = glm::vec3(waypoint_ws_matrix[0]);
+            // Normalize the forward vector to ensure correct yaw calculation
+            const glm::vec3 waypoint_forward = glm::normalize(glm::vec3(waypoint_ws_matrix[0]));
             const float curr_yaw = std::atan2(waypoint_forward.y, waypoint_forward.x);
 
             if (index == 0)
@@ -332,7 +333,8 @@ namespace sfg_trajectory_planner::app::core
 
             glm::mat4 last_waypoint_ws_matrix = ls_to_ws_matrix * m_waypoints[index - 1].m_transform_ls.get_matrix();
             glm::vec3 last_waypoint_position = glm::vec3(last_waypoint_ws_matrix[3]);
-            const glm::vec3 last_waypoint_forward = glm::vec3(last_waypoint_ws_matrix[0]);
+            // Normalize the forward vector to ensure correct yaw calculation
+            const glm::vec3 last_waypoint_forward = glm::normalize(glm::vec3(last_waypoint_ws_matrix[0]));
             const float last_yaw = std::atan2(last_waypoint_forward.y, last_waypoint_forward.x);
             const float distance = glm::length(waypoint_position - last_waypoint_position);
 
