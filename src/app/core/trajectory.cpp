@@ -299,7 +299,7 @@ namespace sfg_trajectory_planner::app::core
         if (!m_follow_trajectory_client->action_server_is_ready())
         {
             std::lock_guard lock(m_follow_trajectory_mutex);
-            m_follow_trajectory_status = "Action server '%s' is not ready.", m_action_name.c_str();
+            m_follow_trajectory_status = std::string("Action server '%s' is not ready.", m_action_name.c_str());
             RCLCPP_ERROR(m_node->get_logger(), "Action server '%s' is not ready.", m_action_name.c_str());
             return;
         }
@@ -368,7 +368,6 @@ namespace sfg_trajectory_planner::app::core
 
             if (goal_handle)
             {
-                std::lock_guard lock(m_follow_trajectory_mutex);
                 m_follow_trajectory_goal_handle = goal_handle;
                 m_follow_trajectory_status = "FollowPath goal accepted.";
             }
@@ -415,11 +414,13 @@ namespace sfg_trajectory_planner::app::core
     void Trajectory::cancel_follow_trajectory()
     {
         std::lock_guard lock(m_follow_trajectory_mutex);
+
         if (!m_follow_trajectory_goal_handle)
         {
             m_follow_trajectory_status = "No active FollowPath goal.";
             return;
         }
+
         m_follow_trajectory_client->async_cancel_goal(m_follow_trajectory_goal_handle);
         m_follow_trajectory_status = "Cancelling FollowPath goal...";
     }

@@ -69,7 +69,7 @@ namespace sfg_trajectory_planner::app::core
 
         rclcpp_action::Client<nav2_msgs::action::FollowPath>::SharedPtr m_follow_trajectory_client;
         rclcpp_action::Client<nav2_msgs::action::FollowPath>::GoalHandle::SharedPtr m_follow_trajectory_goal_handle;
-        std::mutex m_follow_trajectory_mutex;
+        mutable std::mutex m_follow_trajectory_mutex;
         std::string m_follow_trajectory_status;
         rclcpp::Node *m_node;
     };
