@@ -366,6 +366,7 @@ namespace sfg_trajectory_planner::app::core
 
         send_goal_options.goal_response_callback = [this](rclcpp_action::Client<nav2_msgs::action::FollowPath>::GoalHandle::SharedPtr goal_handle)
         {
+            auto self = shared_from_this();
             std::lock_guard lock(m_follow_trajectory_mutex);
 
             if (goal_handle)
@@ -382,12 +383,14 @@ namespace sfg_trajectory_planner::app::core
 
         send_goal_options.feedback_callback = [this](rclcpp_action::Client<nav2_msgs::action::FollowPath>::GoalHandle::SharedPtr, const std::shared_ptr<const nav2_msgs::action::FollowPath::Feedback> feedback)
         {
+            auto self = shared_from_this();
             std::lock_guard lock(m_follow_trajectory_mutex);
             m_follow_trajectory_status = "Following path: %.2f m remaining", feedback->distance_to_goal;
         };
 
         send_goal_options.result_callback = [this](const rclcpp_action::ClientGoalHandle<nav2_msgs::action::FollowPath>::WrappedResult &result)
         {
+            auto self = shared_from_this();
             std::lock_guard lock(m_follow_trajectory_mutex);
             m_follow_trajectory_goal_handle.reset();
 

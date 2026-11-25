@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <nav2_msgs/action/follow_path.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -15,7 +16,7 @@ namespace sfg_trajectory_planner::engine::core::assets
 
 namespace sfg_trajectory_planner::app::core
 {
-    class Trajectory : public engine::core::SceneObject
+    class Trajectory : public engine::core::SceneObject, public std::enable_shared_from_this<Trajectory>
     {
     public:
         Trajectory(engine::core::SceneObject::ConstructionKey key, const engine::core::Scene &scene, uuids::uuid uuid, const engine::core::assets::AssetLocator &asset_locator, rclcpp::Node *node);
