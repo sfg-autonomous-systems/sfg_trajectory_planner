@@ -187,6 +187,12 @@ namespace sfg_trajectory_planner::app::editor
 
                     for (auto constraint : magic_enum::enum_values<core::Waypoint::Constraints>())
                     {
+                        // magic_enum >= 0.10 reflects the named zero of flag enums, which is not a selectable constraint.
+                        if (constraint == core::Waypoint::Constraints::None)
+                        {
+                            continue;
+                        }
+
                         bool selected = (constraints & constraint) != core::Waypoint::Constraints::None;
 
                         if (ImGui::Selectable(magic_enum::enum_name(constraint).data(), selected, ImGuiSelectableFlags_DontClosePopups))
