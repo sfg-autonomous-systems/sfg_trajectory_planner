@@ -1,6 +1,10 @@
 #pragma once
 
 #include <magic_enum/magic_enum_flags.hpp>
+// magic_enum >= 0.10 moved the bitwise operators out of magic_enum.hpp.
+#if __has_include(<magic_enum/magic_enum_bitwise.hpp>)
+#include <magic_enum/magic_enum_bitwise.hpp>
+#endif
 
 #include "sfg_trajectory_planner/engine/core/transform.hpp"
 
